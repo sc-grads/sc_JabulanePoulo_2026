@@ -1,0 +1,145 @@
+Linux command cheat sheet
+Navigating the System
+ 
+
+ 
+
+pwd
+
+show current directory
+
+ls
+
+list files/folders
+
+ls -l
+
+detailed list
+
+ls -a
+
+include hidden files
+
+cd folder
+
+go into folder
+
+cd ..
+
+go up one level
+
+cd ~
+
+go to home directory
+
+Managing files and folders
+
+ 
+
+ 
+
+touch file.txt
+
+create file
+
+mkdir folder
+
+create foldercp file.txt folder/
+
+cp file.txt folder/
+
+copy file
+
+mv file.txt folder/
+
+move file
+
+mv old.txt new.txt
+
+rename file
+
+rm file.txt
+
+delete file
+
+rm -r folder
+
+delete folder
+
+Viewing and editing file
+
+ 
+
+ 
+
+cat file.txt
+
+view file content
+
+less file.txt
+
+view page by page
+
+nano file.txt
+
+Nano shortcuts:
+
+CTRL + O → Save
+
+CTRL + X → Exit
+
+edit file
+
+Info and Troubleshooting
+
+ 
+
+ 
+
+ 
+
+ 
+
+hostname
+
+computer name
+
+whoami
+
+current user
+
+uname -a
+
+system info
+
+top
+
+running processes
+
+ps
+
+process list
+
+Permissions
+
+ 
+
+ 
+
+chmod 755 file.txt
+
+change permissions
+
+chown user file.txt
+
+change owner
+
+clear
+
+clear terminal
+
+history
+
+show previous commands
+
+ 

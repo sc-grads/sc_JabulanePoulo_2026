@@ -1,0 +1,66 @@
+jabulanepoulo@LAPTOP-7LSAQSR0:/home$ cd ..
+jabulanepoulo@LAPTOP-7LSAQSR0:/$ cd ~
+jabulanepoulo@LAPTOP-7LSAQSR0:~$ script LinuxFundamentals.txt
+Script started, output log file is 'LinuxFundamentals.txt'.
+jabulanepoulo@LAPTOP-7LSAQSR0:~$ pwd
+/home/jabulanepoulo
+jabulanepoulo@LAPTOP-7LSAQSR0:~$ ls
+LinuxFundamentals.txt  myproject  outputs.txt
+jabulanepoulo@LAPTOP-7LSAQSR0:~$ ls -l
+total 8
+-rw-r--r-- 1 jabulanepoulo jabulanepoulo    0 Mar 24 21:09 LinuxFundamentals.txt
+drwxr-xr-x 2 jabulanepoulo jabulanepoulo 4096 Mar 24 20:09 myproject
+-rw-r--r-- 1 jabulanepoulo jabulanepoulo 2184 Mar 24 20:54 outputs.txt
+jabulanepoulo@LAPTOP-7LSAQSR0:~$ cd myproject
+jabulanepoulo@LAPTOP-7LSAQSR0:~/myproject$ cd ..
+jabulanepoulo@LAPTOP-7LSAQSR0:~$ touch testfile.txt
+jabulanepoulo@LAPTOP-7LSAQSR0:~$ mkdir Anotherfolder
+jabulanepoulo@LAPTOP-7LSAQSR0:~$ cp testfile.txt /Anotherfolder/
+cp: cannot create regular file '/Anotherfolder/': Not a directory
+jabulanepoulo@LAPTOP-7LSAQSR0:~$ cp testfile.txt Anotherfolder/
+jabulanepoulo@LAPTOP-7LSAQSR0:~$ ls
+Anotherfolder  LinuxFundamentals.txt  myproject  outputs.txt  testfile.txt
+jabulanepoulo@LAPTOP-7LSAQSR0:~$ cd Anotherfolder
+jabulanepoulo@LAPTOP-7LSAQSR0:~/Anotherfolder$ ls
+testfile.txt
+jabulanepoulo@LAPTOP-7LSAQSR0:~/Anotherfolder$ cd ..
+jabulanepoulo@LAPTOP-7LSAQSR0:~$ echo "Hello galaxy" >> testfile.txt
+jabulanepoulo@LAPTOP-7LSAQSR0:~$ cat testfile.txt
+Hello galaxy
+jabulanepoulo@LAPTOP-7LSAQSR0:~$ cd Anotherfolder
+jabulanepoulo@LAPTOP-7LSAQSR0:~/Anotherfolder$ nano testfile.txt
+jabulanepoulo@LAPTOP-7LSAQSR0:~/Anotherfolder$ ls
+testfile.txt  testfile1.txt
+jabulanepoulo@LAPTOP-7LSAQSR0:~/Anotherfolder$ cat testfile1.txt
+jabulanepoulo@LAPTOP-7LSAQSR0:~/Anotherfolder$ echo "Sleep is the cousin of death" >>testfile1.txt
+jabulanepoulo@LAPTOP-7LSAQSR0:~/Anotherfolder$ cat testfile.txt
+jabulanepoulo@LAPTOP-7LSAQSR0:~/Anotherfolder$ cat testfile1.txt
+Sleep is the cousin of death
+jabulanepoulo@LAPTOP-7LSAQSR0:~/Anotherfolder$ less testfile1.txt
+jabulanepoulo@LAPTOP-7LSAQSR0:~/Anotherfolder$ hostname
+LAPTOP-7LSAQSR0
+jabulanepoulo@LAPTOP-7LSAQSR0:~/Anotherfolder$ rm testfile.txt
+jabulanepoulo@LAPTOP-7LSAQSR0:~/Anotherfolder$ cd myproject
+bash: cd: myproject: No such file or directory
+jabulanepoulo@LAPTOP-7LSAQSR0:~/Anotherfolder$ cd Anotherfolder
+bash: cd: Anotherfolder: No such file or directory
+jabulanepoulo@LAPTOP-7LSAQSR0:~/Anotherfolder$ ls
+testfile1.txt
+jabulanepoulo@LAPTOP-7LSAQSR0:~/Anotherfolder$ rm -r myproject
+rm: cannot remove 'myproject': No such file or directory
+jabulanepoulo@LAPTOP-7LSAQSR0:~/Anotherfolder$ rm -r Anotherfolder
+rm: cannot remove 'Anotherfolder': No such file or directory
+jabulanepoulo@LAPTOP-7LSAQSR0:~/Anotherfolder$ cd ..
+jabulanepoulo@LAPTOP-7LSAQSR0:~$ rm -rf myproject
+jabulanepoulo@LAPTOP-7LSAQSR0:~$ ls
+Anotherfolder  LinuxFundamentals.txt  outputs.txt  testfile.txt
+jabulanepoulo@LAPTOP-7LSAQSR0:~$ rm -rf Anotherfolder
+jabulanepoulo@LAPTOP-7LSAQSR0:~$ ls
+LinuxFundamentals.txt  outputs.txt  testfile.txt
+jabulanepoulo@LAPTOP-7LSAQSR0:~$ pwd
+/home/jabulanepoulo
+jabulanepoulo@LAPTOP-7LSAQSR0:~$ rm testfile.txt
+jabulanepoulo@LAPTOP-7LSAQSR0:~$ ls
+LinuxFundamentals.txt  outputs.txt
+jabulanepoulo@LAPTOP-7LSAQSR0:~$ explorer.exe .
+jabulanepoulo@LAPTOP-7LSAQSR0:~$
