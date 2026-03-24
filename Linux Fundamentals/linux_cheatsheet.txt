@@ -1,48 +1,124 @@
-LINUX DIRECTORY STRUCTURE & COMMAND CHEAT SHEET
+Linux command cheat sheet
+Navigating the System
+ 
+pwd
 
-============================== ROOT DIRECTORY OVERVIEW
-============================== | Directory | Description | |———-|————| |
-/ | Root - top of file system | | /bin | Essential binaries | | /etc |
-Configuration files | | /home | User directories | | /opt | Third-party
-software | | /tmp | Temporary files | | /usr | User programs | | /var |
-Logs and variable data |
+show current directory
 
-============================== COMPREHENSIVE DIRECTORY LIST
-============================== | Directory | Description | |———-|————| |
-/boot | Boot files | | /dev | Device files | | /lib | Libraries | |
-/lib64 | 64-bit libraries | | /media | Removable media | | /mnt | Mount
-points | | /proc | Process info | | /root | Root user home | | /sbin |
-System binaries | | /srv | Service data | | /sys | Kernel/device info |
-| /usr/local | Local installs | | /var/log | Log files |
+ls
 
-============================== NAVIGATION COMMANDS
-============================== | Command | Description | |——–|————| |
-pwd | Show current directory | | ls | List files | | ls -l | Detailed
-list | | ls -a | Show hidden files | | cd folder | Enter folder | | cd
-.. | Go up | | cd ~ | Go home |
+list files/folders
 
-============================== FILE MANAGEMENT
-============================== | Command | Description | |——–|————| |
-touch file.txt | Create file | | mkdir folder | Create folder | | cp
-file.txt folder/ | Copy file | | mv file.txt folder/ | Move file | | mv
-old.txt new.txt | Rename | | rm file.txt | Delete file | | rm -r folder
-| Delete folder |
+ls -l
 
-============================== VIEW & EDIT FILES
-============================== | Command | Description | |——–|————| |
-cat file.txt | View content | | less file.txt | Paginated view | | nano
-file.txt | Edit file | | CTRL + O | Save | | CTRL + X | Exit |
+detailed list
 
-============================== SYSTEM INFO & TROUBLESHOOTING
-============================== | Command | Description | |——–|————| |
-hostname | Computer name | | whoami | Current user | | uname -a | System
-info | | top | Running processes | | ps | Process list |
+ls -a
 
-============================== PERMISSIONS
-============================== | Command | Description | |——–|————| |
-chmod 755 file.txt | Change permissions | | chown user file.txt | Change
-owner |
+include hidden files
 
-============================== UTILITY ============================== |
-Command | Description | |——–|————| | clear | Clear terminal | | history
-| Command history |
+cd folder
+
+go into folder
+
+cd ..
+
+go up one level
+
+cd ~
+
+go to home directory
+
+Managing files and folders
+
+
+touch file.txt
+
+create file
+
+mkdir folder
+
+create foldercp file.txt folder/
+
+cp file.txt folder/
+
+copy file
+
+mv file.txt folder/
+
+move file
+
+mv old.txt new.txt
+
+rename file
+
+rm file.txt
+
+delete file
+
+rm -r folder
+
+delete folder
+
+Viewing and editing file
+
+cat file.txt
+
+view file content
+
+less file.txt
+
+view page by page
+
+nano file.txt
+
+Nano shortcuts:
+
+CTRL + O → Save
+
+CTRL + X → Exit
+
+edit file
+
+Info and Troubleshooting
+
+hostname
+
+computer name
+
+whoami
+
+current user
+
+uname -a
+
+system info
+
+top
+
+running processes
+
+ps
+
+process list
+
+Permissions
+
+ 
+chmod 755 file.txt
+
+change permissions
+
+chown user file.txt
+
+change owner
+
+clear
+
+clear terminal
+
+history
+
+show previous commands
+
+ 
