@@ -1,5 +1,6 @@
 ############################################################
 #                LINUX DOCUMENTATION SCRIPT                #
+#                     EXPANDED EDITION                     #
 ############################################################
 
 ##############################
@@ -371,940 +372,666 @@
 
 
 ##############################
-# 6. FILE AND DIRECTORY     #
-#    MANAGEMENT             #
+# 6. CUSTOMIZING THE SHELL  #
+#     PROMPT                #
 ##############################
 
-# Directory Navigation Shortcuts:
+# Shell Prompt Environment Variables:
 
-# .
-#   This directory
+# Shell: Bash, ksh, sh
+#   Variable: PS1
+#   Description: Primary prompt variable for Bourne-style shells
 
-# ..
-#   Parent directory
+# Shell: Csh, tcsh, zsh
+#   Variable: prompt
+#   Description: Prompt variable for C-style shells
 
-# cd -
-#   Change to previous directory
+# PS1 Special Characters:
 
-# cd ~
-#   Go to home directory
+# @
+#   Current time in 12-hour am/pm format
 
-# /
-#   Directory separator (forward slash)
+# \A
+#   Current time in 24-hour HH:MM format
 
-# Creating and Removing Directories:
+# \u
+#   Username of the current user
 
-# mkdir directory
-#   Create a directory
+# \w
+#   Current working directory (full path)
 
-# mkdir -p directory
-#   Create directory with parent directories
-
-# rmdir directory
-#   Remove an empty directory
-
-# rm -rf directory
-#   Recursively remove directory (force)
-
-# ./command
-#   Execute command in current directory
-
-# Listing Files Commands:
-
-# ls -F
-#   Reveal file types (/ = directory, @ = link, * = executable)
-
-# ls -t
-#   List files by time (newest first)
-
-# ls -r
-#   Reverse order
-
-# ls -latr
-#   Long listing including all files, reverse sorted by time
-
-# ls -d
-#   List directory name, not contents
-
-# tree
-#   Visual directory structure output
-
-# tree -d
-#   List directories only
-
-# tree -C
-#   Colorize output
-
-# Decoding ls -l Output:
-
-# First character
-#   File type (- = file, d = directory, l = link)
-
-# Next 9 characters
-#   Permissions (rwx for user, group, other)
-
-# Number
-#   Link count
-
-# Owner
-#   User who owns the file
-
-# Group
-#   Group that owns the file
-
-# Size
-#   File size in bytes
-
-# Date/Time
-#   Last modification time
-
-# Name
-#   File or directory name
-
-# Handling Spaces in Names:
-
-# Recommendation
-#   Avoid spaces in file and directory names
-
-# Alternatives
-#   Use hyphens (-) instead
-#   Use underscores (_) instead
-#   Use CamelCase (MyFile.txt)
-
-
-##############################
-# 7. PERMISSIONS            #
-##############################
-
-# Permission Symbols:
-
-# -
-#   Regular file
-
-# d
-#   Directory
-
-# l
-#   Symbolic link
-
-# r
-#   Read
-
-# w
-#   Write
-
-# x
-#   Execute
-
-# Permissions: Files vs Directories:
-
-# Read (r)
-#   File: Allows file to be read
-#   Directory: Allows file names in directory to be read
-
-# Write (w)
-#   File: Allows file to be modified
-#   Directory: Allows entries to be modified within directory
-
-# Execute (x)
-#   File: Allows execution of file
-#   Directory: Allows access to contents and metadata for entries
-
-# Permission Categories:
-
-# u
-#   User (owner)
-
-# g
-#   Group
-
-# o
-#   Other (everyone else)
-
-# a
-#   All (user, group, other)
-
-# Groups Commands:
-
-# groups
-#   Display a user's groups
-
-# id -Gn
-#   Alternative group display
-
-# chgrp group file
-#   Change group ownership
-
-# Changing Permissions - Symbolic Method:
-
-# chmod u+x file
-#   Add execute for user
-
-# chmod go-w file
-#   Remove write for group and others
-
-# chmod a+rx file
-#   Add read and execute for all
-
-# chmod u=rwx,g=rx,o= file
-#   Set specific permissions
-
-# Numeric (Octal) Permission Values:
-
-# 0
-#   Binary: 000, String: ---, Description: No permissions
-
-# 1
-#   Binary: 001, String: --x, Description: Execute only
-
-# 2
-#   Binary: 010, String: -w-, Description: Write only
-
-# 3
-#   Binary: 011, String: -wx, Description: Write and execute
-
-# 4
-#   Binary: 100, String: r--, Description: Read only
-
-# 5
-#   Binary: 101, String: r-x, Description: Read and execute
-
-# 6
-#   Binary: 110, String: rw-, Description: Read and write
-
-# 7
-#   Binary: 111, String: rwx, Description: Read, write, execute
-
-# Common Permission Sets:
-
-# -rwx------ (700)
-#   User: read, write, execute; group/others: none
-
-# -rwxr-xr-x (755)
-#   User: read, write, execute; group/others: read and execute
-
-# -rw-rw-r-- (664)
-#   User/group: read and write; others: read
-
-# -rw-rw---- (660)
-#   User/group: read and write; others: no access
-
-# -rw-r--r-- (644)
-#   User: read and write; group/others: read
-
-# drwx------ (700)
-#   Private directory
-
-# drwxr-xr-x (755)
-#   Public directory
-
-# File Creation Mask (umask):
-
-# umask
-#   Display current mask
-
-# umask 022
-#   Set mask to 022
-
-# umask -S
-#   Display symbolic notation
-
-# Default Permissions Without Mask:
-
-# Directories
-#   777 (rwxrwxrwx)
-
-# Files
-#   666 (rw-rw-rw-)
-
-# Common umask Values:
-
-# umask 022
-#   Owner: Full access
-#   Group: Read/execute (dirs), read (files)
-#   Others: Read/execute (dirs), read (files)
-
-# umask 002
-#   Owner: Full access
-#   Group: Full access
-#   Others: Read/execute (dirs), read (files)
-
-# umask 077
-#   Owner: Full access
-#   Group: No access
-#   Others: No access
-
-# umask 007
-#   Owner: Full access
-#   Group: Full access
-#   Others: No access
-
-
-##############################
-# 8. FILE OPERATIONS        #
-##############################
-
-# Removing Files:
-
-# rm file
-#   Remove file
-
-# rm -r dir
-#   Remove directory and contents recursively
-
-# rm -f file
-#   Force removal, never prompt for confirmation
-
-# rm -rf dir
-#   Force remove directory and contents
-
-# Copying Files:
-
-# cp source destination
-#   Copy source_file to destination_file
-
-# cp src1 src2 dest_dir
-#   Copy multiple files to destination directory
-
-# cp -i source destination
-#   Interactive prompt before overwriting
-
-# cp -r source_dir dest_dir
-#   Copy directory recursively
-
-# Moving and Renaming Files:
-
-# mv source destination
-#   Move or rename files and directories
-
-# mv -i source destination
-#   Interactive prompt before overwriting
-
-# mv file1 file2 file3 dest_dir
-#   Move multiple files to directory
-
-# Wildcards:
-
-# *
-#   Matches zero or more characters
-#   Examples: ls *.txt, ls a*
-
-# ?
-#   Matches exactly one character
-#   Examples: ls ?, ls a?.txt
-
-# [chars]
-#   Matches any single character in set
-#   Examples: ls [aeiou]*, ls [0-9].txt
-
-# Compression and Archiving:
-
-# tar -cvf archive.tar files
-#   Create a tar archive with verbose output
-
-# tar -xvf archive.tar
-#   Extract archive with verbose output
-
-# tar -tvf archive.tar
-#   Display table of contents
-
-# tar -czvf archive.tar.gz files
-#   Create compressed archive with gzip
-
-# tar -xzvf archive.tar.gz
-#   Extract compressed archive
-
-# tar Options:
-
-# -c
-#   Create archive
-
-# -x
-#   Extract archive
-
-# -t
-#   List contents
-
-# -v
-#   Verbose (show progress)
-
-# -z
-#   Use gzip compression
-
-# -f file
-#   Use this file
-
-# Compression Commands:
-
-# gzip file
-#   Compress file (creates file.gz)
-
-# gunzip file.gz
-#   Uncompress file
-
-# gzcat file.gz
-#   Concatenate compressed file
-
-# zcat file.gz
-#   Concatenate compressed file
-
-# Disk Usage:
-
-# du
-#   Estimates file usage
-
-# du -k
-#   Display sizes in kilobytes
-
-# du -h
-#   Display sizes in human readable format
-
-# du -sh directory
-#   Summary total for directory
-
-# du -ah
-#   All files with human readable sizes
-
-
-##############################
-# 9. FINDING FILES          #
-##############################
-
-# The find Command:
-
-# find [path...] [expression]
-#   Recursively finds files in path that match expression
-
-# find . -name "*.txt"
-#   Find all .txt files in current directory
-
-# find / -name "filename"
-#   Search entire system for filename
-
-# find . -iname "*.TXT"
-#   Case-insensitive search
-
-# find . -type f
-#   Find only files
-
-# find . -type d
-#   Find only directories
-
-# find . -size +10M
-#   Find files larger than 10MB
-
-# find . -mtime -7
-#   Find files modified in last 7 days
-
-# find . -mtime +30
-#   Find files modified more than 30 days ago
-
-# find . -empty
-#   Find empty files and directories
-
-# find . -exec ls -l {} \;
-#   Execute command on found files
-
-# find . -name "*.tmp" -delete
-#   Find and delete matching files
-
-# The locate Command:
-
-# locate pattern
-#   Lists files that match pattern (faster than find)
-
-# locate -i pattern
-#   Case-insensitive search
-
-# updatedb
-#   Update locate database
-
-# find vs locate:
-
-# find
-#   Speed: Slower
-#   Real-time: Yes
-#   Search criteria: Many options
-#   Availability: Always available
-
-# locate
-#   Speed: Very fast
-#   Real-time: No (uses index)
-#   Search criteria: Limited
-#   Availability: May need installation
-
-
-##############################
-# 10. VIEWING AND EDITING   #
-#     FILES                 #
-##############################
-
-# Viewing Commands:
-
-# cat file
-#   Display entire file
-
-# less file
-#   Browse file page by page
-
-# more file
-#   Browse file forward only
-
-# head file
-#   Display first 10 lines
-
-# head -20 file
-#   Display first 20 lines
-
-# tail file
-#   Display last 10 lines
-
-# tail -20 file
-#   Display last 20 lines
-
-# tail -f file
-#   Follow file (real-time updates)
-
-# nl file
-#   Display with line numbers
-
-# less Navigation:
-
-# Space or Page Down
-#   Next page
-
-# b or Page Up
-#   Previous page
-
-# Enter or Down Arrow
-#   Next line
-
-# y or Up Arrow
-#   Previous line
-
-# g
-#   Go to beginning
-
-# G
-#   Go to end
-
-# /pattern
-#   Search forward
-
-# ?pattern
-#   Search backward
-
-# n
-#   Next match
-
-# N
-#   Previous match
-
-# q
-#   Quit
-
-# Vi/Vim Editor - Starting:
-
-# vi file
-#   Edit file with vi
-
-# vim file
-#   Edit file with vim (improved)
-
-# view file
-#   Open file in read-only mode
-
-# Vi/Vim - Three Modes:
-
-# Command Mode
-#   Purpose: Navigation, deleting, copying, pasting
-#   How to Enter: Default mode; press Esc to return
-
-# Insert Mode
-#   Purpose: Typing/editing text
-#   How to Enter: i, I, a, A
-
-# Line Mode
-#   Purpose: Save, quit, search, set options
-#   How to Enter: : (colon)
-
-# Vi/Vim - Command Mode Navigation:
-
-# k or Up Arrow
-#   Up one line
-
-# j or Down Arrow
-#   Down one line
-
-# h or Left Arrow
-#   Left one character
-
-# l or Right Arrow
-#   Right one character
-
-# w
-#   Right one word
-
-# b
-#   Left one word
-
-# 0 or ^
-#   Beginning of line
+# \W
+#   Basename of the current working directory
 
 # $
-#   End of line
+#   If the effective UID is 0 (root), a #; otherwise a $
 
-# gg
-#   Beginning of file
+# Examples of PS1 Customization:
 
-# G
-#   End of file
+# export PS1="\u@\h:\w\$ "
+#   Standard prompt showing user@host:full/path$
 
-# Vi/Vim - Insert Mode Commands:
+# export PS1="[\u@\h \W]\$ "
+#   Prompt showing [user@host folder]$
 
-# i
-#   Insert at cursor position
+# export PS1="\A \u \$ "
+#   Prompt showing time username $
 
-# I
-#   Insert at beginning of line
+# Making PS1 Changes Permanent:
 
-# a
-#   Append after cursor
+# echo 'export PS1="[\u@\h \W]\$ "' >> ~/.bash_profile
+#   Add PS1 customization to user's shell profile file
 
-# A
-#   Append at end of line
+# source ~/.bash_profile
+#   Apply changes immediately without logging out
 
-# o
-#   Open new line below
+# Summary of Shell Prompt:
 
-# O
-#   Open new line above
+# Environment Variable
+#   PS1 (or prompt) controls the shell prompt appearance
 
-# Esc
-#   Return to Command Mode
+# Persistence
+#   Set the environment variable in dot files to retain changes across sessions
 
-# Vi/Vim - Editing Commands:
-
-# x
-#   Delete character under cursor
-
-# dw
-#   Delete word
-
-# dd
-#   Delete current line
-
-# d$
-#   Delete from cursor to end of line
-
-# yy
-#   Yank (copy) current line
-
-# yw
-#   Yank word
-
-# p
-#   Paste after cursor (or below line)
-
-# P
-#   Paste before cursor (or above line)
-
-# u
-#   Undo
-
-# Ctrl + r
-#   Redo
-
-# .
-#   Repeat last command
-
-# Vi/Vim - Line Mode Commands:
-
-# :w
-#   Save file
-
-# :w!
-#   Force save
-
-# :q
-#   Quit
-
-# :q!
-#   Quit without saving
-
-# :wq or :x
-#   Save and quit
-
-# :n
-#   Go to line number n
-
-# :$
-#   Go to last line
-
-# :set nu
-#   Turn on line numbers
-
-# :set nonu
-#   Turn off line numbers
-
-# :/pattern
-#   Search forward
-
-# :?pattern
-#   Search backward
-
-# :%s/old/new/g
-#   Replace all occurrences
-
-# :help
-#   Get help
+# Common dot files
+#   .bashrc, .bash_profile, .profile
 
 
 ##############################
-# 11. INPUT, OUTPUT, AND    #
-#     REDIRECTION           #
+# 7. SHELL ALIASES          #
 ##############################
 
-# Three I/O Types:
+# What Are Aliases:
 
-# Standard Input (stdin)
-#   File Descriptor: 0
-#   Data stream that provides input to a command
-#   Typically from keyboard
+# Purpose: Shortcuts
+#   Create shorter versions of long commands
 
-# Standard Output (stdout)
-#   File Descriptor: 1
-#   Data stream where command sends normal results
-#   Typically displayed on screen
+# Purpose: Efficiency
+#   Use for commands you type often
 
-# Standard Error (stderr)
-#   File Descriptor: 2
-#   Separate data stream for error messages
-#   Allows handling independently from normal output
+# Purpose: Productivity
+#   Reduce typing and minimize errors
 
-# Redirection Operators:
+# Creating Aliases:
 
-# >
-#   Redirect standard output to a file (overwrites existing content)
+# alias
+#   List all current aliases
 
-# >>
-#   Redirect standard output to a file (appends to existing content)
+# alias name='value'
+#   Create a new alias where name is the shortcut and value is the command
 
-# <
-#   Redirect input from a file to a command
+# Alias Examples:
 
-# 2>
-#   Redirect standard error to a file
+# alias ll='ls -la'
+#   Creates a shortcut for detailed listing with all files
 
-# 2>>
-#   Redirect standard error to a file (append)
+# alias grep='grep --color=auto'
+#   Adds color highlighting to grep output
 
-# &>
-#   Redirect both stdout and stderr
+# alias cls='clear'
+#   Makes Linux behave like Windows/DOS
 
-# 2>&1
-#   Redirect stderr to stdout
+# alias ..='cd ..'
+#   Quickly go up one directory
 
-# |
-#   Pipe output to next command
+# alias home='cd ~'
+#   Quickly go to home directory
 
-# Redirection Examples:
+# Removing Aliases:
 
-# ls > files.txt
-#   Save directory listing to file
+# unalias name
+#   Remove the specified alias
 
-# ls >> files.txt
-#   Append directory listing to file
+# unalias -a
+#   Remove all aliases
 
-# sort < file.txt
-#   Read input from file and sort
+# Persisting Aliases:
 
-# ls 2> errors.txt
-#   Save error messages to file
+# echo 'alias ll="ls -la"' >> ~/.bashrc
+#   Add alias to bash configuration file
 
-# ls > out.txt 2>&1
-#   Save both output and errors to file
+# source ~/.bashrc
+#   Apply changes immediately
 
-# ls &> output.txt
-#   Same as above (bash)
+# Summary of Aliases:
 
-# ls 2> /dev/null
-#   Suppress error messages
+# alias
+#   Command to list and create aliases
 
-# ls > /dev/null 2>&1
-#   Suppress all output
+# unalias
+#   Command to delete aliases
 
-# ls | grep pattern
-#   Pipe output to grep
-
-# The Null Device (/dev/null):
-
-# > /dev/null
-#   Discard standard output
-
-# 2> /dev/null
-#   Discard error messages
-
-# &> /dev/null
-#   Discard all output
-
-# /dev/null
-#   Special device file that discards any data written to it
-#   Functions like a black hole or trash can
+# Persistence
+#   Store aliases in dot files to make them permanent across sessions
 
 
 ##############################
-# 12. FILE COMPARISON       #
+# 8. ENVIRONMENT VARIABLES  #
 ##############################
 
-# Comparison Commands:
+# Definition and Purpose:
 
-# diff file1 file2
-#   Compare two files line by line
+# Environment Variables
+#   Name/value pairs that influence how programs operate
 
-# diff -u file1 file2
-#   Unified format (shows context)
+# Example
+#   $EDITOR specifies the preferred text editor for various commands
 
-# sdiff file1 file2
-#   Side-by-side comparison
+# Viewing Environment Variables:
 
-# vimdiff file1 file2
-#   Highlight differences in vim
+# printenv
+#   List all current environment variables with their values
 
-# cmp file1 file2
-#   Compare byte by byte
+# env
+#   Alternative command to list all environment variables
 
-# diff Output Format:
+# Common Environment Variables:
 
-# 5c5
-#   Line 5 changed in file1 vs file2
+# HOSTNAME
+#   Provides the system's name
 
-# 3a4
-#   After line 3, add line from file2
+# PATH
+#   Specifies the directories to search for executable files
 
-# 7d6
-#   Delete line 7 from file1 to match file2
+# HOME
+#   Path to the current user's home directory
 
-# <
-#   Line from first file
+# USER or LOGNAME
+#   Current username
 
-# >
-#   Line from second file
+# SHELL
+#   Path to the current user's shell
 
-# ---
-#   Separator between files
+# Displaying Specific Variables:
 
-# sort Command:
+# printenv PATH
+#   Display the value of the PATH variable
 
-# sort file
-#   Sort file alphabetically
+# echo $PATH
+#   Display PATH using echo with dollar sign prefix
 
-# sort -r file
-#   Sort in reverse order
+# Creating and Updating Variables:
 
-# sort -n file
-#   Sort numerically
+# export MY_VAR=value
+#   Create or update an environment variable
 
-# sort -u file
-#   Sort and remove duplicates
+# Important Rule:
+#   No spaces around equals sign
+#   Correct: export MY_VAR=example
+#   Incorrect: export MY_VAR = example
 
-# sort -k 2 file
-#   Sort by second field
+# Removing Variables:
 
-# sort -t: -k 1 file
-#   Sort using colon delimiter, first field
+# unset MY_VAR
+#   Remove an environment variable
 
-# sort file | uniq
-#   Sort and count unique lines
+# Persistence of Variables:
+
+# echo 'export EDITOR=vim' >> ~/.bashrc
+#   Add variable to shell configuration file
+
+# source ~/.bashrc
+#   Apply changes immediately
+
+# Program-Specific Variables:
+
+# man program_name
+#   Review the "ENVIRONMENT" section to understand which variables a program uses
+
+# Examples of Program Variables:
+
+# LESS
+#   Controls options for the less pager
+
+# GREP_OPTIONS
+#   Sets default options for grep
+
+# LS_COLORS
+#   Controls color output for ls command
+
+# Summary of Environment Variables:
+
+# Definition
+#   Name/value pairs that influence program behavior
+
+# View
+#   Use printenv or echo $VARIABLE
+
+# Create
+#   Use export VAR=value with no spaces around =
+
+# Remove
+#   Use unset VAR
+
+# Persist
+#   Add to .bash_profile or .bashrc
+
+# Program Variables
+#   Check the ENVIRONMENT section in man pages
 
 
 ##############################
-# 13. PROCESS MANAGEMENT    #
+# 9. PROCESSES AND JOB      #
+#     CONTROL               #
 ##############################
 
-# Process Commands:
+# Listing Processes with ps:
 
 # ps
-#   Show current processes
+#   Display process status for current terminal
 
-# ps aux
-#   Show all processes (detailed)
+# ps -e
+#   Display all processes
 
 # ps -ef
-#   Show all processes (standard format)
+#   Display all processes with full format details
+
+# ps -eH
+#   Display a process tree
+
+# ps -e --forest
+#   Display a process tree in hierarchical view
+
+# ps -u username
+#   Display processes owned by a specific user
+
+# ps -p pid
+#   Display information for a specific process ID
+
+# Other Ways to View Processes:
+
+# pstree
+#   Display processes in a tree format
 
 # top
-#   Interactive process viewer
+#   Interactive process viewer with real-time updates
 
 # htop
-#   Enhanced interactive viewer
+#   Enhanced interactive process viewer with color and mouse support
 
-# kill PID
-#   Terminate process by PID
+# Background and Foreground Processes:
 
-# kill -9 PID
-#   Force terminate process
+# command &
+#   Start command in the background
 
-# pkill process
-#   Kill processes by name
+# Ctrl-c
+#   Kill the foreground process
+
+# Ctrl-z
+#   Suspend the foreground process
+
+# Job Control Commands:
 
 # jobs
-#   Show background jobs
+#   List all background and suspended processes in current session
 
-# bg
-#   Resume job in background
+# bg [%num]
+#   Resume a suspended process in the background
 
-# fg
-#   Bring job to foreground
+# fg [%num]
+#   Bring a background process to the foreground
 
-# &
-#   Run command in background
+# kill [%num or PID]
+#   Kill a process by job number or process ID
 
-# Ctrl + Z
-#   Suspend current process
+# Killing Processes:
 
-# Ctrl + C
-#   Interrupt current process
+# Ctrl-c
+#   Kill the foreground process
+
+# kill PID
+#   Send the default TERM signal to process
+
+# kill -9 PID
+#   Send SIGKILL to process (forceful termination)
+
+# kill -15 PID
+#   Send SIGTERM to process (graceful termination)
+
+# kill -TERM PID
+#   Send SIGTERM using signal name
+
+# kill -1
+#   Display a list of available signals
+
+# Summary of Process Control:
+
+# Listing Processes
+#   ps, pstree, top, htop
+
+# Job Control
+#   Ctrl-c, Ctrl-z, bg, fg, jobs
+
+# Terminating Processes
+#   kill with different signals
 
 
 ##############################
-# 14. SYSTEM INFORMATION    #
+# 10. SCHEDULING REPEATED   #
+#     JOBS WITH CRON        #
 ##############################
 
-# System Commands:
+# Cron Overview:
 
-# uname -a
-#   Show all system information
+# cron
+#   A time-based job scheduling service that runs continuously in the background
 
-# hostname
-#   Show computer name
+# crontab
+#   A program to create, read, update, and delete job schedules
+
+# Crontab Format Structure:
+
+# Field 1: Minute
+#   Range: 0-59
+
+# Field 2: Hour
+#   Range: 0-23
+
+# Field 3: Day of Month
+#   Range: 1-31
+
+# Field 4: Month
+#   Range: 1-12
+
+# Field 5: Day of Week
+#   Range: 0-6 (0 = Sunday, 6 = Saturday)
+
+# Field 6: Command
+#   The command to execute
+
+# Example Crontab Entry:
+
+# 0 7 * * 1 /opt/sales/bin/weekly-report
+#   Run every Monday at 07:00
+
+# Redirecting Output:
+
+# 0 2 * * * /root/backupdb > /tmp/db.log 2>&1
+#   Run at 02:00 every day and send output to a log file
+
+# Advanced Crontab Scheduling:
+
+# 0,30 * * * * /opt/acme/bin/half-hour-check
+#   Run every 30 minutes (comma for multiple values)
+
+# */2 * * * * /opt/acme/bin/half-hour-check
+#   Another way to run every 30 minutes (slash for intervals)
+
+# 0-4 * * * * /opt/acme/bin/first-five-mins
+#   Run for the first 5 minutes of each hour (hyphen for ranges)
+
+# Crontab Shortcuts:
+
+# @yearly or @annually
+#   Equivalent to: 0 0 1 1 *
+#   Run once per year at midnight on January 1
+
+# @monthly
+#   Equivalent to: 0 0 1 * *
+#   Run once per month at midnight on the 1st
+
+# @weekly
+#   Equivalent to: 0 0 * * 0
+#   Run once per week at midnight on Sunday
+
+# @daily or @midnight
+#   Equivalent to: 0 0 * * *
+#   Run once per day at midnight
+
+# @hourly
+#   Equivalent to: 0 * * * *
+#   Run once per hour at minute 0
+
+# Crontab Command Usage:
+
+# crontab file
+#   Install a new crontab from a file
+
+# crontab -l
+#   List your current cron jobs
+
+# crontab -e
+#   Edit your cron jobs using the default text editor
+
+# crontab -r
+#   Remove all of your cron jobs
+
+# Summary of Cron:
+
+# cron
+#   The service that runs scheduled jobs in the background
+
+# crontab
+#   The command used to create, edit, list, and remove scheduled jobs
+
+# Format
+#   Minute, Hour, Day of Month, Month, Day of Week, Command
+
+
+##############################
+# 11. SWITCHING USERS AND   #
+#     RUNNING COMMANDS      #
+#     AS OTHERS             #
+##############################
+
+# The su Command:
+
+# su [username]
+#   Change user ID or become superuser
+
+# su -
+#   Switch to root with root's environment
+
+# su - username
+#   Switch to username with that user's environment
+
+# su -c "command" username
+#   Run a single command as another user
+
+# whoami Command:
 
 # whoami
-#   Show current user
+#   Displays the effective username of the current session
 
-# who
-#   Show who is logged in
+# Example of su Usage:
 
-# uptime
-#   Show system uptime
+# whoami
+#   Output: jason
 
-# date
-#   Show current date and time
+# su oracle
+#   (prompt for oracle password)
 
-# cal
-#   Show calendar
+# whoami
+#   Output: oracle
 
-# df -h
-#   Show disk space usage
+# exit
+#   Return to original user
 
-# free -h
-#   Show memory usage
+# sudo - Super User Do:
+
+# sudo
+#   Execute a command as another user, typically the superuser
+
+# sudo -l
+#   List available commands the user is allowed to run
+
+# sudo command
+#   Run command as root
+
+# sudo -u user command
+#   Run command as the specified user
+
+# Using sudo for Shell Access:
+
+# sudo su
+#   Switch to the superuser account
+
+# sudo su -
+#   Switch to the superuser account with root's environment
+
+# sudo su - username
+#   Switch to the username account
+
+# sudo -s
+#   Start a shell as root
+
+# sudo -u root -s
+#   Same as sudo -s
+
+# sudo -u user -s
+#   Start a shell as the specified user
+
+# Changing the sudo Configuration:
+
+# visudo
+#   Edit the /etc/sudoers file safely with syntax checking
+
+# Sudoers Format:
+
+# user host=(users) [NOPASSWD:]commands
+#   Define sudo privileges for a user
+
+# Sudoers Examples:
+
+# adminuser ALL=(ALL) NOPASSWD:ALL
+#   adminuser can run any command as any user on any host without password
+
+# jason linuxsvr=(root) /etc/init.d/oracle
+#   jason can run the oracle init.d script as root only on linuxsvr
+
+# %wheel ALL=(ALL) ALL
+#   Users in the wheel group can run any command as any user
+
+# Summary of Switching Users:
+
+# su
+#   Switch users, requiring the target user's password
+
+# whoami
+#   Display the effective username of the current session
+
+# sudo
+#   Run programs as other users using your own password
+
+# Shell Access
+#   Use sudo -s or sudo su to switch users with sudo
+
+# Configuration
+#   Use visudo to safely edit the sudoers file
+
+
+##############################
+# 12. SHELL HISTORY         #
+##############################
+
+# Concept of Shell History:
+
+# History Storage
+#   Executed commands are added to the history
+
+# Memory and Disk
+#   Shell history is stored in memory during the session and saved to disk when the session ends
+
+# History Files
+#   ~/.bash_history (Bash), ~/.history, ~/.histfile (other shells)
+
+# history Command and HISTSIZE:
 
 # history
-#   Show command history
+#   Displays the shell history with line numbers
 
-# history -c
-#   Clear command history
+# HISTSIZE
+#   Controls the number of commands to retain in memory during the session
+
+# export HISTSIZE=1000
+#   Set history to retain 1000 commands
+
+# HISTFILESIZE
+#   Controls how many commands are saved to the history file on disk
+
+# Exclamation Mark Syntax - Basic:
+
+# !N
+#   Repeat command line number N
+
+# !!
+#   Repeat the previous command line
+
+# !string
+#   Repeat the most recent command starting with "string"
+
+# Exclamation Mark Syntax - Word Selection:
+
+# !^
+#   Represents the first argument of the previous command
+
+# !$
+#   Represents the last argument of the previous command
+
+# !:N
+#   Represents a word on the command line (0 = command, 1 = first argument, etc.)
+
+# History Expansion Examples:
+
+# head files.txt sorted_files.txt notes.txt
+#   Original command
+
+# !!
+#   Repeats the entire command
+
+# vi !:2
+#   Opens vi with the second argument (sorted_files.txt)
+
+# !^
+#   Expands to files.txt (first argument)
+
+# !$
+#   Expands to notes.txt (last argument)
+
+# Searching Shell History:
+
+# Ctrl-r
+#   Reverse shell history search (incremental)
+
+# Ctrl-r again
+#   Cycle through older matches
+
+# Enter
+#   Execute the selected command
+
+# Arrow keys (Up/Down)
+#   Navigate and edit the selected command
+
+# Ctrl-g
+#   Cancel the search and return to an empty prompt
+
+# Tab Completion:
+
+# Tab once
+#   Completes unambiguous text
+
+# Tab twice
+#   Displays a list of possible completions
+
+# Completion Types:
+#   Commands (based on PATH)
+#   Files and directories
+#   Environment variables (when preceded by $)
+#   Usernames (when preceded by ~)
+
+# Summary of Shell History:
+
+# Shell History
+#   Commands are stored in memory and disk; view with history
+
+# Exclamation Mark Syntax
+#   Use !N, !!, !string, !^, !$ to repeat commands and reuse arguments
+
+# History Search
+#   Use Ctrl-r to interactively search through previous commands
+
+# Autocompletion
+#   Use Tab to complete commands, paths, variables, and usernames
 
 
 ############################################################
@@ -1373,10 +1100,10 @@
 #   Make executable
 
 # chmod 755 file
-#   Set 755 permissions
+#   Set 755 permissions (rwxr-xr-x)
 
 # chmod 644 file
-#   Set 644 permissions
+#   Set 644 permissions (rw-r--r--)
 
 # chown user file
 #   Change owner
@@ -1389,6 +1116,125 @@
 
 # umask -S
 #   View umask
+
+# Shell Prompt Quick Reference:
+
+# export PS1="\u@\h:\w\$ "
+#   Standard prompt: user@host:full/path$
+
+# export PS1="[\u@\h \W]\$ "
+#   Short prompt: [user@host folder]$
+
+# export PS1="\A \u \$ "
+#   Time prompt: HH:MM username $
+
+# Aliases Quick Reference:
+
+# alias
+#   List all aliases
+
+# alias ll='ls -la'
+#   Create alias for detailed listing
+
+# unalias ll
+#   Remove specific alias
+
+# unalias -a
+#   Remove all aliases
+
+# Environment Variables Quick Reference:
+
+# printenv
+#   List all environment variables
+
+# echo $PATH
+#   Display specific variable
+
+# export EDITOR=vim
+#   Create or update variable
+
+# unset EDITOR
+#   Remove variable
+
+# Process Control Quick Reference:
+
+# ps -ef
+#   List all processes
+
+# top
+#   Interactive process viewer
+
+# command &
+#   Run command in background
+
+# Ctrl-z
+#   Suspend foreground process
+
+# bg
+#   Resume in background
+
+# fg
+#   Bring to foreground
+
+# kill PID
+#   Terminate process
+
+# kill -9 PID
+#   Force terminate
+
+# Cron Quick Reference:
+
+# crontab -e
+#   Edit cron jobs
+
+# crontab -l
+#   List cron jobs
+
+# */5 * * * * command
+#   Run every 5 minutes
+
+# 0 2 * * * command
+#   Run daily at 2:00 AM
+
+# @daily command
+#   Run once per day
+
+# Switching Users Quick Reference:
+
+# su - username
+#   Switch to user with their environment
+
+# sudo command
+#   Run command as root
+
+# sudo -u user command
+#   Run command as specific user
+
+# sudo -s
+#   Start root shell
+
+# whoami
+#   Show current user
+
+# Shell History Quick Reference:
+
+# history
+#   Show command history
+
+# !!
+#   Repeat last command
+
+# !123
+#   Repeat command number 123
+
+# !string
+#   Repeat last command starting with "string"
+
+# !$
+#   Use last argument of previous command
+
+# Ctrl-r
+#   Search history
 
 # Vi/Vim Quick Reference:
 
