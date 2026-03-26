@@ -842,7 +842,7 @@
 #   (prompt for oracle password)
 
 # whoami
-#   Output: oracle
+#   Output: jabulanepoulo
 
 # exit
 #   Return to original user
