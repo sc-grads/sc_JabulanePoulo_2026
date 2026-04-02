@@ -41,6 +41,16 @@ Date: 2024
 # 24. For Loops
 # 25. Break and Continue
 # 26. Else with Loops
+#27	Functions (definition, syntax, docstrings, benefits)
+#28	Parameters vs. Arguments (positional, keyword, default)
+#29	Return Statements (multiple returns, early exit, vs print)
+#30	Lambda Functions (anonymous functions, map, filter, sorted)
+#31	Recursion (base case, recursive case, factorial, fibonacci, palindrome)
+#32	*args and **kwargs (variable arguments, unpacking)
+#33	Slash (/) and Asterisk (*) (positional-only, keyword-only parameters)
+#34	Pass Keyword (placeholder, empty functions/classes, vs continue/break)
+#35	Chat Bot (practical project with random responses)
+#Quick Reference	Function syntax and built-in functions
 # =============================================================================
 
 
