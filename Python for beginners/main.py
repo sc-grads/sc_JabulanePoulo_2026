@@ -396,9 +396,9 @@ print(f"lower(): '{text.lower()}'")
 print(f"replace(): '{text.replace('Python', 'Java')}'")
 
 # String formatting (f-strings)
-name = "Alice"
-age = 25
-greeting = f"Hello, {name}! You are {age} years old."
+name1 = "Alice"
+age1 = 25
+greeting = f"Hello, {name1}! You are {age1} years old."
 print(greeting)
 
 # String formatting (format method)
