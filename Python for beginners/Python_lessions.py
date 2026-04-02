@@ -1019,3 +1019,319 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+#!/usr/bin/env python3
+"""
+===============================================================================
+                    PYTHON LEARNING FILE
+===============================================================================
+
+This file contains all the Python code examples including:
+- Simple Adder
+- Lists and Dictionaries
+- Mad Libs
+- While Loops
+- For Loops with else
+- Rock, Paper, Scissors Game
+
+Author: Python Learner
+===============================================================================
+"""
+
+import time
+import random
+
+
+# =============================================================================
+# SIMPLE ADDER
+# =============================================================================
+
+def simple_adder():
+    """A simple program that adds two numbers."""
+    print("\n" + "=" * 50)
+    print("SIMPLE ADDER")
+    print("=" * 50)
+    
+    print("Welcome to your simple adder")
+    print(30 * "-")
+    
+    a: str = input("Enter a value for a : ")
+    b: str = input("Enter another value for b : ")
+    
+    print(30 * "-")
+    
+    print("The result is : ", int(a) + int(b))
+    print("=" * 50)
+
+
+# =============================================================================
+# LISTS EXAMPLE
+# =============================================================================
+
+def list_example():
+    """Demonstrates list operations."""
+    print("\n" + "=" * 50)
+    print("LISTS EXAMPLE")
+    print("=" * 50)
+    
+    my_list = ["Alice", 30, True, [1, 2, 3]]
+    
+    my_first = my_list[0]
+    print(f"First element: {my_first}")
+    
+    my_second = my_list[1]
+    print(f"Second element: {my_second}")
+    
+    print("=" * 50)
+
+
+# =============================================================================
+# DICTIONARY EXAMPLE
+# =============================================================================
+
+def dictionary_example():
+    """Demonstrates dictionary operations."""
+    print("\n" + "=" * 50)
+    print("DICTIONARY EXAMPLE")
+    print("=" * 50)
+    
+    users = {"bob": 1, "luigi": 2}
+    user_id = users["bob"]
+    print(f"Bob's ID: {user_id}")
+    
+    # Adds a new key-value pair
+    users["mario"] = 3
+    print(f"After adding Mario: {users}")
+    
+    # Modifies the existing key-value pair
+    users["luigi"] = 4
+    print(f"After modifying Luigi: {users}")
+    
+    # Removes the key "bob" and its associated value
+    del users["bob"]
+    print(f"After deleting Bob: {users}")
+    
+    # Nested dictionary
+    weather_data = {
+        "time": "12:00",
+        "weather": {
+            "morning": "rain",
+            "evening": "more rain"
+        }
+    }
+    print(f"Weather data: {weather_data}")
+    print(f"Morning weather: {weather_data['weather']['morning']}")
+    print("=" * 50)
+
+
+# =============================================================================
+# MAD LIBS EXAMPLE
+# =============================================================================
+
+def mad_libs():
+    """A fun Mad Libs game where users create a silly story."""
+    print("\n" + "=" * 50)
+    print("MAD LIBS GAME")
+    print("=" * 50)
+    
+    name: str = input('Enter a name: ')
+    noun_a: str = input('Enter a noun: ')
+    verb_a: str = input('Enter a verb: ')
+    number_a: str = input('Enter a number: ')
+    number_b: str = input('Enter another number: ')
+    
+    story: str = f"""
+    ----------------------------------------------------------------------
+    This is a story about {name}, a strong and beautiful {noun_a} 
+    who loved to {verb_a}.
+    
+    One day, {name} found {number_a} magical {noun_a}s and
+    {verb_a}ed all the way to the castle.
+    After {number_b} hours, {name} became a legend!
+    ----------------------------------------------------------------------
+    """
+    
+    print(story)
+    print("=" * 50)
+
+
+# =============================================================================
+# WHILE LOOP EXAMPLE (INTERNET CONNECTION)
+# =============================================================================
+
+def internet_connection_demo():
+    """Demonstrates a while loop with a connection simulation."""
+    print("\n" + "=" * 50)
+    print("WHILE LOOP DEMO - INTERNET CONNECTION")
+    print("=" * 50)
+    
+    connected: bool = True
+    
+    while connected:
+        print("Using internet...")
+        time.sleep(1)  # Using 1 second instead of 10 for demo
+        connected = False
+    
+    print("Connection ended")
+    print("=" * 50)
+
+
+# =============================================================================
+# WHILE LOOP WITH USER INPUT
+# =============================================================================
+
+def chat_bot_demo():
+    """Demonstrates a simple chat bot using a while loop."""
+    print("\n" + "=" * 50)
+    print("CHAT BOT DEMO (Type 'quit' to exit)")
+    print("=" * 50)
+    
+    while True:
+        user_input: str = input("You: ")
+        
+        if user_input.lower() == "quit":
+            print("Bot: Goodbye!")
+            break
+        
+        if user_input == "Hello":
+            print('Bot: Hello World!')
+        else:
+            print("Bot: yes, that is interesting.")
+    
+    print("=" * 50)
+
+
+# =============================================================================
+# FOR LOOP WITH ELSE EXAMPLES
+# =============================================================================
+
+def for_loop_with_else_demo():
+    """Demonstrates for loops with else clauses."""
+    print("\n" + "=" * 50)
+    print("FOR LOOP WITH ELSE DEMO")
+    print("=" * 50)
+    
+    print("\n--- Without break - else executes ---")
+    for i in range(5):
+        print(i, end=" ")
+    else:
+        print("\nLoop completed normally")
+    
+    print("\n--- With break - else does NOT execute ---")
+    for i in range(5):
+        if i == 3:
+            break
+        print(i, end=" ")
+    else:
+        print("\nThis will not print")
+    
+    print("\n" + "=" * 50)
+
+
+# =============================================================================
+# ROCK, PAPER, SCISSORS GAME
+# =============================================================================
+
+def rock_paper_scissors():
+    """A complete Rock, Paper, Scissors game against the AI."""
+    print("\n" + "=" * 50)
+    print("ROCK, PAPER, SCISSORS GAME")
+    print("=" * 50)
+    
+    # Define the game moves with emojis
+    moves = {
+        "rock": "🪨",
+        "paper": "📄",
+        "scissors": "✂️"
+    }
+    
+    valid_moves = list(moves.keys())
+    
+    print("Welcome to Rock, Paper, Scissors!")
+    print("Type 'exit' to quit the game.")
+    print("Let's start!")
+    print("-" * 30)
+    
+    # Score tracking
+    player_wins = 0
+    ai_wins = 0
+    ties = 0
+    
+    while True:
+        user_input = input("\nEnter rock, paper, or scissors: ").lower()
+        
+        # Check if the user wants to exit
+        if user_input == "exit":
+            print("\n" + "-" * 30)
+            print("FINAL SCORE:")
+            print(f"  You: {player_wins}")
+            print(f"  AI: {ai_wins}")
+            print(f"  Ties: {ties}")
+            print("Thanks for playing! Goodbye.")
+            break
+        
+        # Validate user input
+        if user_input not in valid_moves:
+            print("Invalid input, please try again.")
+            continue
+        
+        # Generate AI move
+        ai_move = random.choice(valid_moves)
+        
+        # Show moves
+        print(f"\nYou chose: {user_input} {moves[user_input]}")
+        print(f"AI chose:  {ai_move} {moves[ai_move]}")
+        
+        # Determine the outcome
+        if user_input == ai_move:
+            print("It's a tie!")
+            ties += 1
+        elif (user_input == "rock" and ai_move == "scissors") or \
+             (user_input == "scissors" and ai_move == "paper") or \
+             (user_input == "paper" and ai_move == "rock"):
+            print("You win!")
+            player_wins += 1
+        else:
+            print("You lose!")
+            ai_wins += 1
+        
+        # Show current score
+        print(f"\nScore - You: {player_wins} | AI: {ai_wins} | Ties: {ties}")
+        print("-" * 30)
+
+
+# =============================================================================
+# MAIN FUNCTION - RUN ALL EXAMPLES
+# =============================================================================
+
+def main():
+    """Main function to run all examples."""
+    print("\n" + "=" * 60)
+    print("PYTHON LEARNING EXAMPLES")
+    print("=" * 60)
+    
+    # Run all examples
+    simple_adder()
+    list_example()
+    dictionary_example()
+    mad_libs()
+    internet_connection_demo()
+    for_loop_with_else_demo()
+    
+    # Chat bot demo (commented by default - uncomment to run)
+    # chat_bot_demo()
+    
+    # Run the Rock, Paper, Scissors game
+    rock_paper_scissors()
+    
+    print("\n" + "=" * 60)
+    print("THANK YOU FOR LEARNING PYTHON!")
+    print("=" * 60)
+
+
+# =============================================================================
+# RUN THE PROGRAM
+# =============================================================================
+
+if __name__ == "__main__":
+    main()
