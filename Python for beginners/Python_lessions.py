@@ -113,6 +113,7 @@ print(f"x={x}, y={y}, z={z}")
 a = b = c = 100
 print(f"a={a}, b={b}, c={c}")
 
+
 # =============================================================================
 # 4. CONSTANTS
 # =============================================================================
@@ -130,6 +131,7 @@ PI = 3.14159
 GRAVITY = 9.81
 MAX_USERS = 100
 DEFAULT_COLOR = "blue"
+
 
 # =============================================================================
 # 5. DATA TYPES
@@ -157,6 +159,7 @@ Immutable (cannot change): int, float, str, tuple, bool, frozenset
 x = 10
 print(f"Type of x: {type(x)}")  # <class 'int'>
 print(f"Is x an int? {isinstance(x, int)}")  # True
+
 
 # =============================================================================
 # 6. SEQUENCE TYPES
@@ -189,6 +192,7 @@ my_string = "Hello, World!"
 print(f"String: {my_string}")
 print(f"First char: {my_string[0]}")
 
+
 # =============================================================================
 # 7. TYPE HINTS (TYPE ANNOTATIONS)
 # =============================================================================
@@ -207,18 +211,16 @@ name_hint: str = "Alice"
 age_hint: int = 25
 prices_hint: list[float] = [19.99, 29.99, 39.99]
 
-
 # Function type hints
 def greet(name: str) -> str:
     return f"Hello, {name}"
 
-
 def add_numbers(a: int, b: int) -> int:
     return a + b
 
-
 print(greet("Bob"))
 print(f"5 + 3 = {add_numbers(5, 3)}")
+
 
 # =============================================================================
 # 8. INTEGERS
@@ -248,6 +250,7 @@ print(f"Floor Division: 15 // 2 = {15 // 2}")
 print(f"Modulus: 15 % 2 = {15 % 2}")
 print(f"Exponent: 2 ** 4 = {2 ** 4}")
 
+
 # =============================================================================
 # 9. FLOATS
 # =============================================================================
@@ -271,9 +274,9 @@ print(f"Rounded: {round(0.1 + 0.2, 1)}")  # 0.3
 
 # For exact decimal calculations
 from decimal import Decimal
-
 exact_result = Decimal('0.1') + Decimal('0.2')
 print(f"Decimal exact: {exact_result}")  # 0.3
+
 
 # =============================================================================
 # 10. COMPARISON OPERATORS
@@ -298,10 +301,11 @@ c = 10
 
 print(f"a == b: {a == b}")  # True
 print(f"a != c: {a != c}")  # True
-print(f"a > c: {a > c}")  # False
-print(f"a < c: {a < c}")  # True
+print(f"a > c: {a > c}")    # False
+print(f"a < c: {a < c}")    # True
 print(f"a >= b: {a >= b}")  # True
 print(f"a <= b: {a <= b}")  # True
+
 
 # =============================================================================
 # 11. LOGICAL OPERATORS
@@ -322,8 +326,9 @@ y = 20
 z = 30
 
 print(f"(x < y) and (y < z): {(x < y) and (y < z)}")  # True
-print(f"(x > y) or (y < z): {(x > y) or (y < z)}")  # True
-print(f"not (x > y): {not (x > y)}")  # True
+print(f"(x > y) or (y < z): {(x > y) or (y < z)}")    # True
+print(f"not (x > y): {not (x > y)}")                  # True
+
 
 # =============================================================================
 # 12. BOOLEAN DATA TYPE
@@ -347,15 +352,16 @@ FALSY VALUES (convert to False):
 is_connected = True
 has_money = False
 
-print(f"int(True): {int(True)}")  # 1
+print(f"int(True): {int(True)}")   # 1
 print(f"int(False): {int(False)}")  # 0
 
 # Truthy/falsy examples
-print(f"bool(1): {bool(1)}")  # True
-print(f"bool(0): {bool(0)}")  # False
+print(f"bool(1): {bool(1)}")       # True
+print(f"bool(0): {bool(0)}")       # False
 print(f"bool('Hello'): {bool('Hello')}")  # True
-print(f"bool(''): {bool('')}")  # False
-print(f"bool([]): {bool([])}")  # False
+print(f"bool(''): {bool('')}")      # False
+print(f"bool([]): {bool([])}")      # False
+
 
 # =============================================================================
 # 13. STRINGS (DETAILED)
@@ -396,14 +402,15 @@ print(f"lower(): '{text.lower()}'")
 print(f"replace(): '{text.replace('Python', 'Java')}'")
 
 # String formatting (f-strings)
-name1 = "Alice"
-age1 = 25
-greeting = f"Hello, {name1}! You are {age1} years old."
+name = "Alice"
+age = 25
+greeting = f"Hello, {name}! You are {age} years old."
 print(greeting)
 
 # String formatting (format method)
 greeting2 = "Hello, {}! You are {} years old.".format(name, age)
 print(greeting2)
+
 
 # =============================================================================
 # 14. TYPE CONVERSION
@@ -483,12 +490,13 @@ fruits.remove("banana")
 print(f"After remove: {fruits}")
 
 # List comprehension
-squares = [x ** 2 for x in range(10)]
+squares = [x**2 for x in range(10)]
 print(f"Squares: {squares}")
 
 # Iterating over lists
 for fruit in fruits:
     print(f"Fruit: {fruit}")
+
 
 # =============================================================================
 # 16. TUPLES (DETAILED)
@@ -529,6 +537,7 @@ locations = {
 }
 print(f"Location: {locations[(40.7128, -74.0060)]}")
 
+
 # =============================================================================
 # 17. SETS (DETAILED)
 # =============================================================================
@@ -552,10 +561,10 @@ print(f"Set with duplicates removed: {unique_numbers}")
 set_a = {1, 2, 3, 4}
 set_b = {3, 4, 5, 6}
 
-print(f"Union: {set_a | set_b}")  # {1,2,3,4,5,6}
-print(f"Intersection: {set_a & set_b}")  # {3,4}
-print(f"Difference (A-B): {set_a - set_b}")  # {1,2}
-print(f"Symmetric Diff: {set_a ^ set_b}")  # {1,2,5,6}
+print(f"Union: {set_a | set_b}")           # {1,2,3,4,5,6}
+print(f"Intersection: {set_a & set_b}")     # {3,4}
+print(f"Difference (A-B): {set_a - set_b}") # {1,2}
+print(f"Symmetric Diff: {set_a ^ set_b}")   # {1,2,5,6}
 
 # Adding and removing
 set_a.add(7)
@@ -567,6 +576,7 @@ print(f"After discard: {set_a}")
 duplicates = [1, 2, 2, 3, 3, 3, 4, 4, 4, 4]
 unique = list(set(duplicates))
 print(f"Unique list: {unique}")
+
 
 # =============================================================================
 # 18. FROZENSETS (DETAILED)
@@ -603,6 +613,7 @@ print(f"Set of frozensets: {set_of_frozensets}")
 a = frozenset([1, 2, 3])
 b = frozenset([3, 4, 5])
 print(f"Union: {a | b}")
+
 
 # =============================================================================
 # 19. DICTIONARIES (DETAILED)
@@ -645,7 +656,7 @@ for key, value in person.items():
     print(f"{key}: {value}")
 
 # Dictionary comprehension
-squares = {x: x ** 2 for x in range(5)}
+squares = {x: x**2 for x in range(5)}
 print(f"Squares dict: {squares}")
 
 # Nested dictionary
@@ -657,6 +668,7 @@ weather_data = {
     }
 }
 print(f"Morning weather: {weather_data['weather']['morning']}")
+
 
 # =============================================================================
 # 20. NONE
@@ -675,11 +687,9 @@ Use 'is None' or 'is not None' (not ==)
 
 no_value = None
 
-
 def find_user(user_id):
     users = {1: "Alice", 2: "Bob"}
     return users.get(user_id)  # Returns None if not found
-
 
 result = find_user(3)
 if result is None:
@@ -693,6 +703,7 @@ if no_value:
 else:
     print("None is falsy")
 
+
 # =============================================================================
 # 21. MAD LIBS PROJECT
 # =============================================================================
@@ -701,18 +712,17 @@ Mad Libs is a game where users input words to create a silly story.
 This is great practice for string manipulation and user input.
 """
 
-
 def mad_libs():
     print("\n=== MAD LIBS GAME ===")
     print("Enter the following words to create a story:\n")
-
+    
     # Get user inputs
     name = input("Enter a name: ")
     noun = input("Enter a noun: ")
     verb = input("Enter a verb: ")
     adjective = input("Enter an adjective: ")
     place = input("Enter a place: ")
-
+    
     # Create the story
     story = f"""
     Once upon a time, there was a {adjective} person named {name}.
@@ -720,12 +730,11 @@ def mad_libs():
     Every morning, {name} would {verb} to the market.
     One day, something magical happened that changed {name}'s life forever!
     """
-
+    
     print("\n" + "=" * 50)
     print("YOUR MAD LIBS STORY")
     print("=" * 50)
     print(story)
-
 
 # Uncomment to run:
 # mad_libs()
@@ -744,7 +753,6 @@ WHEN TO USE:
 - if-elif-else: multiple conditions with default
 """
 
-
 def check_age(age):
     if age >= 21:
         return "Full access: You may enter any area."
@@ -755,11 +763,11 @@ def check_age(age):
     else:
         return "Access denied: You are too young."
 
-
 print(f"Age 25: {check_age(25)}")
 print(f"Age 19: {check_age(19)}")
 print(f"Age 15: {check_age(15)}")
 print(f"Age 10: {check_age(10)}")
+
 
 # =============================================================================
 # 23. TERNARY OPERATOR
@@ -794,6 +802,7 @@ print(f"Max of {x} and {y}: {max_value}")
 numbers = [1, 2, 3, 4, 5]
 labels = ["Even" if n % 2 == 0 else "Odd" for n in numbers]
 print(f"Labels: {labels}")
+
 
 # =============================================================================
 # 24. FOR LOOPS
@@ -838,8 +847,9 @@ for name, score in zip(names, scores):
     print(f"  {name}: {score}")
 
 # List comprehension (concise loop)
-squares = [x ** 2 for x in range(10)]
+squares = [x**2 for x in range(10)]
 print(f"Squares: {squares}")
+
 
 # =============================================================================
 # 25. BREAK AND CONTINUE
@@ -869,7 +879,6 @@ for i in range(10):
         continue
     print(f"  {i}")
 
-
 # Practical example: input validation
 def get_valid_number():
     while True:
@@ -881,7 +890,6 @@ def get_valid_number():
             print("Invalid input. Please enter a number.")
             continue
         return int(user_input)
-
 
 # Uncomment to test:
 # number = get_valid_number()
@@ -901,7 +909,6 @@ WHEN TO USE:
 - Prime number checking
 """
 
-
 # Search example
 def find_item(items, target):
     for item in items:
@@ -911,11 +918,9 @@ def find_item(items, target):
     else:
         print(f"{target} not found.")
 
-
 fruits = ["apple", "banana", "cherry"]
 find_item(fruits, "banana")  # Found banana!
-find_item(fruits, "grape")  # grape not found.
-
+find_item(fruits, "grape")   # grape not found.
 
 # Prime number checker
 def is_prime(n):
@@ -930,11 +935,92 @@ def is_prime(n):
         return True
     return False
 
-
 is_prime(17)  # 17 is prime!
 is_prime(20)  # 20 is divisible by 2
 
-# !/usr/bin/env python3
+
+# =============================================================================
+# SUMMARY TABLE
+# =============================================================================
+"""
+DATA TYPE QUICK REFERENCE:
+Type     | Description              | Example
+---------|--------------------------|-----------------
+int      | Whole numbers            | age = 25
+float    | Decimal numbers          | price = 19.99
+str      | Text                     | name = "Alice"
+bool     | True/False               | is_valid = True
+list     | Ordered, mutable         | colors = ["red", "green"]
+tuple    | Ordered, immutable       | point = (10, 20)
+dict     | Key-value pairs          | {"name": "Alice"}
+set      | Unordered, unique        | {1, 2, 3}
+NoneType | Absence of value         | result = None
+
+OPERATOR QUICK REFERENCE:
+Category     | Operators
+-------------|------------------------------------------
+Arithmetic   | +, -, *, /, //, %, **
+Comparison   | ==, !=, >, <, >=, <=
+Logical      | and, or, not
+Assignment   | =, +=, -=, *=, /=
+"""
+
+
+# =============================================================================
+# MAIN EXECUTION (Examples)
+# =============================================================================
+
+def main():
+    """Run demonstration examples."""
+    print("\n" + "=" * 60)
+    print("PYTHON FUNDAMENTALS DEMONSTRATION")
+    print("=" * 60)
+    
+    # Variables demonstration
+    print("\n--- VARIABLES ---")
+    my_name = "Python Learner"
+    my_age = 25
+    print(f"Name: {my_name}, Age: {my_age}")
+    
+    # List demonstration
+    print("\n--- LISTS ---")
+    colors = ["red", "green", "blue"]
+    colors.append("yellow")
+    print(f"Colors: {colors}")
+    
+    # Dictionary demonstration
+    print("\n--- DICTIONARIES ---")
+    person = {"name": "Alice", "age": 30}
+    print(f"Person: {person}")
+    
+    # Conditional demonstration
+    print("\n--- CONDITIONALS ---")
+    score = 85
+    if score >= 90:
+        grade = "A"
+    elif score >= 80:
+        grade = "B"
+    elif score >= 70:
+        grade = "C"
+    else:
+        grade = "F"
+    print(f"Score: {score}, Grade: {grade}")
+    
+    # Loop demonstration
+    print("\n--- LOOPS ---")
+    print("Counting to 5:")
+    for i in range(1, 6):
+        print(f"  {i}")
+    
+    print("\n" + "=" * 60)
+    print("Documentation complete! Use this file for reference.")
+    print("=" * 60)
+
+
+if __name__ == "__main__":
+    main()
+
+#!/usr/bin/env python3
 """
 ===============================================================================
                     PYTHON LEARNING FILE
@@ -965,15 +1051,15 @@ def simple_adder():
     print("\n" + "=" * 50)
     print("SIMPLE ADDER")
     print("=" * 50)
-
+    
     print("Welcome to your simple adder")
     print(30 * "-")
-
+    
     a: str = input("Enter a value for a : ")
     b: str = input("Enter another value for b : ")
-
+    
     print(30 * "-")
-
+    
     print("The result is : ", int(a) + int(b))
     print("=" * 50)
 
@@ -987,15 +1073,15 @@ def list_example():
     print("\n" + "=" * 50)
     print("LISTS EXAMPLE")
     print("=" * 50)
-
+    
     my_list = ["Alice", 30, True, [1, 2, 3]]
-
+    
     my_first = my_list[0]
     print(f"First element: {my_first}")
-
+    
     my_second = my_list[1]
     print(f"Second element: {my_second}")
-
+    
     print("=" * 50)
 
 
@@ -1008,23 +1094,23 @@ def dictionary_example():
     print("\n" + "=" * 50)
     print("DICTIONARY EXAMPLE")
     print("=" * 50)
-
+    
     users = {"bob": 1, "luigi": 2}
     user_id = users["bob"]
     print(f"Bob's ID: {user_id}")
-
+    
     # Adds a new key-value pair
     users["mario"] = 3
     print(f"After adding Mario: {users}")
-
+    
     # Modifies the existing key-value pair
     users["luigi"] = 4
     print(f"After modifying Luigi: {users}")
-
+    
     # Removes the key "bob" and its associated value
     del users["bob"]
     print(f"After deleting Bob: {users}")
-
+    
     # Nested dictionary
     weather_data = {
         "time": "12:00",
@@ -1047,24 +1133,24 @@ def mad_libs():
     print("\n" + "=" * 50)
     print("MAD LIBS GAME")
     print("=" * 50)
-
+    
     name: str = input('Enter a name: ')
     noun_a: str = input('Enter a noun: ')
     verb_a: str = input('Enter a verb: ')
     number_a: str = input('Enter a number: ')
     number_b: str = input('Enter another number: ')
-
+    
     story: str = f"""
     ----------------------------------------------------------------------
     This is a story about {name}, a strong and beautiful {noun_a} 
     who loved to {verb_a}.
-
+    
     One day, {name} found {number_a} magical {noun_a}s and
     {verb_a}ed all the way to the castle.
     After {number_b} hours, {name} became a legend!
     ----------------------------------------------------------------------
     """
-
+    
     print(story)
     print("=" * 50)
 
@@ -1078,14 +1164,14 @@ def internet_connection_demo():
     print("\n" + "=" * 50)
     print("WHILE LOOP DEMO - INTERNET CONNECTION")
     print("=" * 50)
-
+    
     connected: bool = True
-
+    
     while connected:
         print("Using internet...")
         time.sleep(1)  # Using 1 second instead of 10 for demo
         connected = False
-
+    
     print("Connection ended")
     print("=" * 50)
 
@@ -1099,19 +1185,19 @@ def chat_bot_demo():
     print("\n" + "=" * 50)
     print("CHAT BOT DEMO (Type 'quit' to exit)")
     print("=" * 50)
-
+    
     while True:
         user_input: str = input("You: ")
-
+        
         if user_input.lower() == "quit":
             print("Bot: Goodbye!")
             break
-
+        
         if user_input == "Hello":
             print('Bot: Hello World!')
         else:
             print("Bot: yes, that is interesting.")
-
+    
     print("=" * 50)
 
 
@@ -1124,13 +1210,13 @@ def for_loop_with_else_demo():
     print("\n" + "=" * 50)
     print("FOR LOOP WITH ELSE DEMO")
     print("=" * 50)
-
+    
     print("\n--- Without break - else executes ---")
     for i in range(5):
         print(i, end=" ")
     else:
         print("\nLoop completed normally")
-
+    
     print("\n--- With break - else does NOT execute ---")
     for i in range(5):
         if i == 3:
@@ -1138,7 +1224,7 @@ def for_loop_with_else_demo():
         print(i, end=" ")
     else:
         print("\nThis will not print")
-
+    
     print("\n" + "=" * 50)
 
 
@@ -1151,29 +1237,29 @@ def rock_paper_scissors():
     print("\n" + "=" * 50)
     print("ROCK, PAPER, SCISSORS GAME")
     print("=" * 50)
-
+    
     # Define the game moves with emojis
     moves = {
         "rock": "🪨",
         "paper": "📄",
         "scissors": "✂️"
     }
-
+    
     valid_moves = list(moves.keys())
-
+    
     print("Welcome to Rock, Paper, Scissors!")
     print("Type 'exit' to quit the game.")
     print("Let's start!")
     print("-" * 30)
-
+    
     # Score tracking
     player_wins = 0
     ai_wins = 0
     ties = 0
-
+    
     while True:
         user_input = input("\nEnter rock, paper, or scissors: ").lower()
-
+        
         # Check if the user wants to exit
         if user_input == "exit":
             print("\n" + "-" * 30)
@@ -1183,32 +1269,32 @@ def rock_paper_scissors():
             print(f"  Ties: {ties}")
             print("Thanks for playing! Goodbye.")
             break
-
+        
         # Validate user input
         if user_input not in valid_moves:
             print("Invalid input, please try again.")
             continue
-
+        
         # Generate AI move
         ai_move = random.choice(valid_moves)
-
+        
         # Show moves
         print(f"\nYou chose: {user_input} {moves[user_input]}")
         print(f"AI chose:  {ai_move} {moves[ai_move]}")
-
+        
         # Determine the outcome
         if user_input == ai_move:
             print("It's a tie!")
             ties += 1
         elif (user_input == "rock" and ai_move == "scissors") or \
-                (user_input == "scissors" and ai_move == "paper") or \
-                (user_input == "paper" and ai_move == "rock"):
+             (user_input == "scissors" and ai_move == "paper") or \
+             (user_input == "paper" and ai_move == "rock"):
             print("You win!")
             player_wins += 1
         else:
             print("You lose!")
             ai_wins += 1
-
+        
         # Show current score
         print(f"\nScore - You: {player_wins} | AI: {ai_wins} | Ties: {ties}")
         print("-" * 30)
@@ -1223,7 +1309,7 @@ def main():
     print("\n" + "=" * 60)
     print("PYTHON LEARNING EXAMPLES")
     print("=" * 60)
-
+    
     # Run all examples
     simple_adder()
     list_example()
@@ -1231,22 +1317,665 @@ def main():
     mad_libs()
     internet_connection_demo()
     for_loop_with_else_demo()
-
+    
     # Chat bot demo (commented by default - uncomment to run)
     # chat_bot_demo()
-
+    
     # Run the Rock, Paper, Scissors game
     rock_paper_scissors()
-
+    
     print("\n" + "=" * 60)
     print("THANK YOU FOR LEARNING PYTHON!")
     print("=" * 60)
 
 
 # =============================================================================
-# RUN THE PROGRAM
+# 27. FUNCTIONS
 # =============================================================================
+"""
+A function is a block of organized, reusable code that performs a specific task.
 
-if __name__ == "__main__":
-    main()
+WHY USE FUNCTIONS:
+--------------------------------------------------------------------------------
+Reason          | Explanation
+----------------|----------------------------------------------------------
+Reusability     | Write code once and use it multiple times
+Maintainability | Update code in one place instead of multiple locations
+Organization    | Break code into logical sections for better understanding
+Debugging       | Isolate and test individual pieces of code
+Abstraction     | Hide complex logic behind a simple function call
 
+FUNCTION SYNTAX:
+--------------------------------------------------------------------------------
+def function_name(parameters):
+    '''Optional docstring describing the function.'''
+    # Function body
+    return value  # Optional
+"""
+
+
+# Basic function examples
+def say_hello():
+    """Function with no parameters and no return value."""
+    print("Hello, World!")
+
+
+def greet(name):
+    """Function with a parameter but no return value."""
+    print(f"Hello, {name}!")
+
+
+def add(a, b):
+    """Function with parameters and a return value."""
+    return a + b
+
+
+# Calling functions
+say_hello()  # Output: Hello, World!
+greet("Alice")  # Output: Hello, Alice!
+result = add(5, 3)  # result = 8
+print(f"5 + 3 = {result}")
+
+
+# Docstrings (function documentation)
+def calculate_area(length, width):
+    """
+    Calculate the area of a rectangle.
+
+    Parameters:
+    length (float): The length of the rectangle.
+    width (float): The width of the rectangle.
+
+    Returns:
+    float: The area of the rectangle.
+    """
+    return length * width
+
+
+# Access the docstring
+print(calculate_area.__doc__)
+
+
+# =============================================================================
+# 28. PARAMETERS VS. ARGUMENTS
+# =============================================================================
+"""
+Parameters are variables in a function definition.
+Arguments are actual values passed to the function when called.
+
+DEFINITIONS:
+--------------------------------------------------------------------------------
+Term        | Definition                          | Location
+------------|-------------------------------------|--------------------
+Parameter   | Variable in function definition    | Function definition
+Argument    | Actual value passed to function     | Function call
+
+TYPES OF ARGUMENTS:
+--------------------------------------------------------------------------------
+Type                | Description                          | Example
+--------------------|--------------------------------------|-----------------
+Positional          | Assigned by order/position           | func(1, 2, 3)
+Keyword             | Assigned by parameter name           | func(a=1, b=2)
+Default parameters  | Have default values if not provided  | def func(a=10)
+"""
+
+
+def introduce(name, age, city):
+    """Function with multiple parameters."""
+    print(f"{name} is {age} years old and lives in {city}")
+
+
+# Positional arguments (order matters)
+introduce("Alice", 25, "New York")
+# Output: Alice is 25 years old and lives in New York
+
+# Keyword arguments (order doesn't matter)
+introduce(city="London", name="Bob", age=30)
+# Output: Bob is 30 years old and lives in London
+
+# Default parameters
+def greet_person(name="Guest"):
+    print(f"Hello, {name}!")
+
+
+greet_person()  # Output: Hello, Guest!
+greet_person("Alice")  # Output: Hello, Alice!
+
+
+# =============================================================================
+# 29. RETURN STATEMENTS
+# =============================================================================
+"""
+The return statement exits a function and sends a value back to the caller.
+
+KEY POINTS:
+--------------------------------------------------------------------------------
+- Functions without return return None
+- return immediately exits the function
+- Can return multiple values as a tuple
+- Can have multiple return statements (conditional returns)
+"""
+
+
+def add_numbers(a, b):
+    """Returns the sum of two numbers."""
+    return a + b
+
+
+result = add_numbers(5, 3)
+print(f"add_numbers(5, 3) = {result}")  # Output: 8
+
+
+# Function without return (returns None)
+def say_hello(name):
+    print(f"Hello, {name}!")
+
+
+result = say_hello("Alice")
+print(f"Return value: {result}")  # Output: None
+
+
+# Multiple return statements
+def compare(a, b):
+    if a > b:
+        return "a is greater"
+    elif b > a:
+        return "b is greater"
+    else:
+        return "Both are equal"
+
+
+print(compare(10, 5))   # Output: a is greater
+print(compare(3, 7))    # Output: b is greater
+print(compare(4, 4))    # Output: Both are equal
+
+
+# Returning multiple values
+def get_min_max(numbers):
+    return min(numbers), max(numbers)
+
+
+lowest, highest = get_min_max([10, 20, 5, 30, 15])
+print(f"Lowest: {lowest}, Highest: {highest}")  # Output: Lowest: 5, Highest: 30
+
+
+# Return vs Print
+def add_return(a, b):
+    return a + b  # Value can be stored
+
+
+def add_print(a, b):
+    print(a + b)  # Only displays, cannot store
+
+
+result_return = add_return(5, 3)  # result_return = 8
+result_print = add_print(5, 3)  # Output: 8, result_print = None
+
+
+# =============================================================================
+# 30. LAMBDA FUNCTIONS
+# =============================================================================
+"""
+Lambda functions are small, anonymous functions defined in one line.
+
+SYNTAX: lambda parameters: expression
+
+WHEN TO USE:
+- Simple one-line operations
+- As arguments to map(), filter(), sorted()
+- When a small function is needed temporarily
+"""
+
+# Regular function vs Lambda
+def square(x):
+    return x ** 2
+
+
+square_lambda = lambda x: x ** 2
+
+print(square(5))          # Output: 25
+print(square_lambda(5))   # Output: 25
+
+# Lambda with multiple parameters
+add_lambda = lambda a, b: a + b
+print(add_lambda(3, 5))   # Output: 8
+
+# Using lambda with map()
+numbers = [1, 2, 3, 4, 5]
+squared = list(map(lambda x: x ** 2, numbers))
+print(f"Squared: {squared}")  # Output: [1, 4, 9, 16, 25]
+
+# Using lambda with filter()
+evens = list(filter(lambda x: x % 2 == 0, numbers))
+print(f"Evens: {evens}")  # Output: [2, 4]
+
+# Using lambda with sorted()
+pairs = [(1, 2), (3, 1), (5, 0)]
+sorted_pairs = sorted(pairs, key=lambda x: x[1])
+print(f"Sorted by second element: {sorted_pairs}")  # Output: [(5, 0), (3, 1), (1, 2)]
+
+
+# =============================================================================
+# 31. RECURSION
+# =============================================================================
+"""
+Recursion is a technique where a function calls itself to solve a problem.
+
+KEY COMPONENTS:
+--------------------------------------------------------------------------------
+Component       | Description
+----------------|----------------------------------------------------------
+Base Case       | Stops recursion (prevents infinite loops)
+Recursive Case  | Function calls itself with modified arguments
+Call Stack      | Each function call is placed on the stack
+
+WHEN TO USE RECURSION:
+- Tree and graph traversal
+- Divide and conquer algorithms
+- Problems with recursive definition (factorial, Fibonacci)
+- Backtracking problems
+"""
+
+
+def factorial(n):
+    """Calculate factorial using recursion."""
+    # Base case
+    if n == 0:
+        return 1
+    # Recursive case
+    return n * factorial(n - 1)
+
+
+print(f"factorial(5) = {factorial(5)}")  # Output: 120
+
+
+def fibonacci(n):
+    """Return the nth Fibonacci number."""
+    if n <= 0:
+        return 0
+    elif n == 1:
+        return 1
+    else:
+        return fibonacci(n - 1) + fibonacci(n - 2)
+
+
+print(f"fibonacci(7) = {fibonacci(7)}")  # Output: 13
+
+
+def sum_numbers(n):
+    """Return sum of numbers from 1 to n."""
+    if n <= 0:
+        return 0
+    return n + sum_numbers(n - 1)
+
+
+print(f"sum_numbers(5) = {sum_numbers(5)}")  # Output: 15
+
+
+def power(base, exp):
+    """Calculate base raised to exponent."""
+    if exp == 0:
+        return 1
+    return base * power(base, exp - 1)
+
+
+print(f"power(2, 4) = {power(2, 4)}")  # Output: 16
+
+
+def is_palindrome(text):
+    """Check if a string is a palindrome."""
+    # Remove spaces and convert to lowercase
+    text = text.lower().replace(" ", "")
+    if len(text) <= 1:
+        return True
+    if text[0] != text[-1]:
+        return False
+    return is_palindrome(text[1:-1])
+
+
+print(f"is_palindrome('racecar'): {is_palindrome('racecar')}")  # Output: True
+print(f"is_palindrome('hello'): {is_palindrome('hello')}")  # Output: False
+
+# Recursion limit
+import sys
+
+print(f"Default recursion limit: {sys.getrecursionlimit()}")  # Usually 1000
+
+
+# =============================================================================
+# 32. *ARGS AND **KWARGS
+# =============================================================================
+"""
+*args and **kwargs allow functions to accept a variable number of arguments.
+
+DEFINITIONS:
+--------------------------------------------------------------------------------
+Syntax      | Name          | What it receives           | Type
+------------|---------------|----------------------------|----------
+*args       | Star args     | Variable positional args   | Tuple
+**kwargs    | Double star   | Variable keyword args      | Dict
+"""
+
+
+def sum_all(*args):
+    """Sum any number of positional arguments."""
+    total = 0
+    for num in args:
+        total += num
+    return total
+
+
+print(f"sum_all(1, 2, 3, 4) = {sum_all(1, 2, 3, 4)}")  # Output: 10
+print(f"sum_all(5, 10, 15) = {sum_all(5, 10, 15)}")  # Output: 30
+print(f"sum_all() = {sum_all()}")  # Output: 0
+
+
+def print_info(**kwargs):
+    """Print any number of keyword arguments."""
+    for key, value in kwargs.items():
+        print(f"  {key}: {value}")
+
+
+print("print_info(name='Alice', age=25, city='New York'):")
+print_info(name="Alice", age=25, city="New York")
+
+
+def mixed_arguments(param1, *args, **kwargs):
+    """Function combining regular params, *args, and **kwargs."""
+    print(f"param1: {param1}")
+    print(f"*args: {args}")
+    print(f"**kwargs: {kwargs}")
+
+
+print("\nmixed_arguments(1, 2, 3, name='Bob', age=30):")
+mixed_arguments(1, 2, 3, name="Bob", age=30)
+
+# Unpacking arguments
+def add_three(a, b, c):
+    return a + b + c
+
+
+numbers = [1, 2, 3]
+print(f"\nUnpacking list: add_three(*[1,2,3]) = {add_three(*numbers)}")  # Output: 6
+
+person = {"name": "Alice", "age": 25, "city": "Boston"}
+print("\nUnpacking dictionary:")
+print_info(**person)
+
+
+# =============================================================================
+# 33. SLASH (/) AND ASTERISK (*) IN FUNCTION SIGNATURES
+# =============================================================================
+"""
+The / and * symbols control how arguments can be passed to functions.
+
+SLASH (/) - Positional-Only Parameters:
+--------------------------------------------------------------------------------
+Parameters before / must be passed as positional arguments (not keyword).
+
+ASTERISK (*) - Keyword-Only Parameters:
+--------------------------------------------------------------------------------
+Parameters after * must be passed as keyword arguments (not positional).
+"""
+
+
+# Positional-only parameters (before /)
+def positional_only_func(a, b, /):
+    return a + b
+
+
+print(f"\npositional_only_func(1, 2) = {positional_only_func(1, 2)}")
+# positional_only_func(a=1, b=2)  # TypeError!
+
+
+# Keyword-only parameters (after *)
+def keyword_only_func(a, *, b):
+    return a + b
+
+
+print(f"keyword_only_func(1, b=2) = {keyword_only_func(1, b=2)}")
+# keyword_only_func(1, 2)  # TypeError!
+
+
+# Combining both
+def combined_func(pos1, pos2, /, standard, *, kw1, kw2):
+    print(f"Positional-only: {pos1}, {pos2}")
+    print(f"Standard (positional or keyword): {standard}")
+    print(f"Keyword-only: {kw1}, {kw2}")
+
+
+print("\ncombined_func(1, 2, 3, kw1=4, kw2=5):")
+combined_func(1, 2, 3, kw1=4, kw2=5)
+
+# Practical example
+def divide(dividend, divisor, /, *, round_result=False):
+    """
+    Divide dividend by divisor.
+    dividend and divisor must be positional.
+    round_result must be keyword-only.
+    """
+    result = dividend / divisor
+    if round_result:
+        return round(result)
+    return result
+
+
+print(f"\ndivide(10, 3) = {divide(10, 3)}")
+print(f"divide(10, 3, round_result=True) = {divide(10, 3, round_result=True)}")
+
+
+# =============================================================================
+# 34. PASS KEYWORD
+# =============================================================================
+"""
+The pass keyword is a placeholder where Python expects an indented block of code
+but you don't want to execute any action.
+
+WHEN TO USE PASS:
+- Empty functions (to be implemented later)
+- Empty classes
+- Placeholder in conditional statements
+- Placeholder in loops
+- Exception handling (when you want to ignore an exception)
+
+WHY USE PASS:
+- Allows you to structure your program without full implementation
+- Prevents syntax errors from empty blocks
+- Serves as a clear placeholder/marker for future code
+"""
+
+
+# Empty function placeholder
+def future_function():
+    pass  # TODO: Implement this function later
+
+
+# Empty class placeholder
+class FutureClass:
+    pass  # TODO: Add methods and attributes
+
+
+# Conditional placeholder
+condition = True
+if condition:
+    pass  # TODO: Add logic here
+else:
+    print("Condition is false")
+
+
+# Loop placeholder
+for i in range(5):
+    pass  # TODO: Add loop body
+
+
+# Exception handling (ignore specific error)
+try:
+    file = open("config.txt", "r")
+except FileNotFoundError:
+    pass  # File doesn't exist, use defaults
+
+# pass vs continue vs break
+print("\npass example (does nothing):")
+for i in range(5):
+    if i == 2:
+        pass  # Nothing happens, continues with i=3
+    print(i, end=" ")
+
+print("\n\ncontinue example (skips iteration):")
+for i in range(5):
+    if i == 2:
+        continue  # Skips printing 2
+    print(i, end=" ")
+
+print("\n\nbreak example (exits loop):")
+for i in range(5):
+    if i == 2:
+        break  # Stops loop when i=2
+    print(i, end=" ")
+print()
+
+
+# =============================================================================
+# 35. CHAT BOT (PRACTICAL PROJECT)
+# =============================================================================
+"""
+A simple rule-based chat bot that responds to user input.
+
+FEATURES:
+- Responds to keywords with predefined answers
+- Handles unknown inputs with default responses
+- Exit command to quit the conversation
+"""
+
+import datetime
+import random
+
+
+def get_response(user_input):
+    """
+    Get a response from the bot based on user input.
+
+    Parameters:
+    user_input (str): The message from the user
+
+    Returns:
+    str: The bot's response
+    """
+    # Define the bot's responses (lists for variety)
+    responses = {
+        "hello": ["Hey there!", "Hi!", "Hello!", "Greetings!"],
+        "how are you": ["I'm good, thanks!", "Doing great!", "All good here!"],
+        "what time is it": [str(datetime.datetime.now().time())],
+        "goodbye": ["It was nice talking to you, bye!", "See you later!", "Take care!"],
+        "your name": ["I'm Bot, your virtual assistant!", "They call me Bot!"],
+        "joke": [
+            "Why do programmers prefer dark mode? Because light attracts bugs!",
+            "What do you call a snake that codes? A python!",
+            "Why did the programmer quit his job? Because he didn't get arrays!"
+        ],
+        "thanks": ["You're welcome!", "Happy to help!", "Anytime!"]
+    }
+
+    # Normalize input to lower case
+    message = user_input.lower()
+
+    # Check for specific keywords
+    for key in responses:
+        if key in message:
+            return random.choice(responses[key])
+
+    # Default responses for unknown inputs
+    default_responses = [
+        "I do not understand.",
+        "Could you please rephrase that?",
+        "Interesting... tell me more!",
+        "I'm not sure what you mean."
+    ]
+    return random.choice(default_responses)
+
+
+def chat():
+    """Main chat function that runs the bot conversation loop."""
+    print("=" * 50)
+    print("WELCOME TO THE CHAT BOT")
+    print("=" * 50)
+
+    # Get user's name
+    name = input("What's your name? ").strip()
+    if not name:
+        name = "Friend"
+    print(f"\nNice to meet you, {name}!")
+    print("You can start talking to me. Type 'help' for commands.")
+    print("-" * 50)
+
+    while True:
+        user_input = input(f"{name}: ")
+
+        # Check for exit commands
+        if user_input.lower() in ["exit", "quit", "bye", "goodbye"]:
+            print(f"\nBot: It was a pleasure talking to you, {name}! Goodbye!")
+            break
+
+        # Help command
+        if user_input.lower() == "help":
+            print("\nBot: Here are some things you can ask me:")
+            print("  - hello, hi")
+            print("  - how are you")
+            print("  - what time is it")
+            print("  - your name")
+            print("  - tell me a joke")
+            print("  - thank you, thanks")
+            print("  - type 'exit' to quit")
+            print("-" * 50)
+            continue
+
+        # Get bot response
+        bot_response = get_response(user_input)
+        print(f"Bot: {bot_response}")
+
+
+# Uncomment to run the chat bot:
+# if __name__ == "__main__":
+#     chat()
+
+
+# =============================================================================
+# QUICK REFERENCE ADDITIONS
+# =============================================================================
+"""
+FUNCTION RELATED QUICK REFERENCE:
+--------------------------------------------------------------------------------
+Concept                 | Syntax
+------------------------|------------------------------------------
+Basic function          | def func(): pass
+Function with params    | def func(a, b): return a + b
+Default parameter       | def func(a=10): pass
+Return value            | return value
+Lambda function         | lambda x: x * 2
+*args                   | def func(*args): pass
+**kwargs                | def func(**kwargs): pass
+Positional-only (/)     | def func(a, b, /): pass
+Keyword-only (*)        | def func(*, a, b): pass
+pass placeholder        | def func(): pass
+
+COMMON BUILT-IN FUNCTIONS:
+--------------------------------------------------------------------------------
+Function    | Description                    | Example
+------------|--------------------------------|-----------------
+print()     | Output to console              | print("Hello")
+input()     | Get user input                 | name = input()
+len()       | Get length of object           | len([1,2,3]) -> 3
+type()      | Get type of object             | type(10) -> int
+int()       | Convert to integer             | int("123") -> 123
+float()     | Convert to float               | float("3.14") -> 3.14
+str()       | Convert to string              | str(123) -> "123"
+list()      | Convert to list                | list("abc") -> ['a','b','c']
+sum()       | Sum an iterable                | sum([1,2,3]) -> 6
+max()       | Get maximum value              | max([1,5,3]) -> 5
+min()       | Get minimum value              | min([1,5,3]) -> 1
+round()     | Round a number                 | round(3.14159, 2) -> 3.14
+"""
+
+# =============================================================================
+# END OF DOCUMENTATION
+# =============================================================================
