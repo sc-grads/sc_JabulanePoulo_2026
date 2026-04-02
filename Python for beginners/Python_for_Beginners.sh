@@ -22,7 +22,14 @@ TABLE OF CONTENTS
 12. Boolean Data Type
 13. Strings
 14. Type Conversion
-
+15	Functions (definition, syntax, scope, docstrings)
+16	Parameters vs. Arguments (positional, keyword, default)
+17	Return Statements (multiple returns, early exit, returning multiple values)
+18	Lambda Functions (anonymous functions, map, filter, sorted)
+19	Recursion (base case, recursive case, factorial, fibonacci)
+20	*args and **kwargs (variable arguments, unpacking)
+21	Slash (/) and Asterisk (*) (positional-only, keyword-only)
+22	Chat Bot (practical project with random responses)
 
 ===============================================================================
 1. SYNTAX
