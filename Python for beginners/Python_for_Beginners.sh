@@ -22,7 +22,7 @@ TABLE OF CONTENTS
 12. Boolean Data Type
 13. Strings
 14. Type Conversion
-
+15. EXCEPTION HANDLING (TRY, EXCEPT, ELSE, FINALLY)
 
 ===============================================================================
 1. SYNTAX
