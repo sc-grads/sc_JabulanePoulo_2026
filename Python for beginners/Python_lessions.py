@@ -4,11 +4,7 @@
                     PYTHON FUNDAMENTALS DOCUMENTATION
 ===============================================================================
 
-This file contains comprehensive documentation of Python fundamentals.
-Use this as a reference guide and for version control on GitHub.
 
-Author: Python Learner
-Date: 2024
 ===============================================================================
 """
 
