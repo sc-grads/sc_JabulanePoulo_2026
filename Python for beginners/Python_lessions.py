@@ -41,6 +41,7 @@ Date: 2024
 # 24. For Loops
 # 25. Break and Continue
 # 26. Else with Loops
+# 28. EXCEPTION HANDLING (TRY, EXCEPT, ELSE, FINALLY)
 # =============================================================================
 
 
@@ -2000,7 +2001,439 @@ max()       | Get maximum value              | max([1,5,3]) -> 5
 min()       | Get minimum value              | min([1,5,3]) -> 1
 round()     | Round a number                 | round(3.14159, 2) -> 3.14
 """
+# =============================================================================
+# 36. EXCEPTION HANDLING (TRY, EXCEPT, ELSE, FINALLY)
+# =============================================================================
+"""
+Exception handling allows your program to respond gracefully to errors that may
+arise during execution.
+
+WHY USE EXCEPTION HANDLING:
+--------------------------------------------------------------------------------
+Reason              | Explanation
+--------------------|------------------------------------------------------
+Error Management    | Prevents program crashes on unexpected input
+User Feedback       | Provides clear error messages to users
+Program Stability   | Allows program to continue running after errors
+Resource Cleanup    | Ensures files/connections are closed properly
+
+BASIC TRY/EXCEPT STRUCTURE:
+--------------------------------------------------------------------------------
+    try:
+        # Code that might raise an exception
+        risky_operation()
+    except ExceptionType:
+        # Code that runs if exception occurs
+        handle_error()
+
+CATCHING SPECIFIC EXCEPTIONS:
+--------------------------------------------------------------------------------
+"""
+
+try:
+    number = int(input("Enter a number: "))
+    result = 100 / number
+except ValueError:
+    print("Error: Please enter a valid number!")
+except ZeroDivisionError:
+    print("Error: Cannot divide by zero!")
+
+"""
+CATCHING MULTIPLE EXCEPTIONS:
+--------------------------------------------------------------------------------
+"""
+
+try:
+    number = int(input("Enter a number: "))
+    result = 100 / number
+except (ValueError, ZeroDivisionError) as e:
+    print(f"Error: {e}")
+
+"""
+TRY-EXCEPT-ELSE:
+--------------------------------------------------------------------------------
+The else block runs only if no exception occurred.
+"""
+
+try:
+    number = int(input("Enter a number: "))
+except ValueError:
+    print("Invalid input!")
+else:
+    # This runs only if conversion succeeded
+    print(f"You entered: {number}")
+
+"""
+TRY-EXCEPT-ELSE-FINALLY:
+--------------------------------------------------------------------------------
+The finally block ALWAYS runs, regardless of exceptions.
+"""
+
+try:
+    file = open("data.txt", "r")
+    content = file.read()
+except FileNotFoundError:
+    print("File not found!")
+else:
+    print(f"File has {len(content)} characters")
+finally:
+    # This ALWAYS runs - cleanup
+    print("Closing file...")
+    if 'file' in locals():
+        file.close()
+
+"""
+COMMON EXCEPTION TYPES:
+--------------------------------------------------------------------------------
+Exception           | When It Occurs
+--------------------|------------------------------------------------------
+ValueError          | Invalid value conversion (int("abc"))
+TypeError           | Operation on wrong type (5 + "hello")
+ZeroDivisionError   | Division by zero
+FileNotFoundError   | File does not exist
+KeyError            | Dictionary key not found
+IndexError          | List index out of range
+AttributeError      | Object has no such attribute
+ImportError         | Module or function not found
+"""
+
+
+# =============================================================================
+# 37. THE RAISE KEYWORD
+# =============================================================================
+"""
+The raise keyword is used to intentionally trigger an exception.
+
+WHY USE RAISE:
+--------------------------------------------------------------------------------
+Reason              | Explanation
+--------------------|------------------------------------------------------
+Input Validation    | Signal when input doesn't meet requirements
+Precondition Check  | Ensure conditions are met before execution
+Error Propagation   | Pass errors up the call stack
+API Design          | Create clear error behavior for functions
+
+BASIC SYNTAX:
+--------------------------------------------------------------------------------
+    raise ExceptionType("Error message")
+
+EXAMPLES:
+--------------------------------------------------------------------------------
+"""
+
+def set_age(age):
+    if age < 0:
+        raise ValueError("Age cannot be negative")
+    if age > 150:
+        raise ValueError("Age cannot exceed 150")
+    return age
+
+try:
+    set_age(-5)
+except ValueError as e:
+    print(f"Error: {e}")
+
+"""
+CUSTOM EXCEPTIONS:
+--------------------------------------------------------------------------------
+"""
+
+class InsufficientFundsError(Exception):
+    """Raised when withdrawal exceeds balance."""
+    pass
+
+class NegativeDepositError(Exception):
+    """Raised when deposit amount is negative."""
+    pass
+
+def withdraw(balance, amount):
+    if amount < 0:
+        raise NegativeDepositError("Cannot withdraw negative amount")
+    if amount > balance:
+        raise InsufficientFundsError(f"Insufficient funds: {balance}")
+    return balance - amount
+
+"""
+RE-RAISING EXCEPTIONS:
+--------------------------------------------------------------------------------
+"""
+
+def process_file(filename):
+    try:
+        file = open(filename, 'r')
+        return file.read()
+    except FileNotFoundError as e:
+        print(f"Log: File {filename} not found")
+        raise  # Re-raise the same exception
+
+
+# =============================================================================
+# 38. TRUTHY AND FALSY VALUES
+# =============================================================================
+"""
+Every value in Python has an inherent truth value when evaluated in a boolean
+context.
+
+DEFINITIONS:
+--------------------------------------------------------------------------------
+Term        | Definition
+------------|----------------------------------------------------------
+Truthy      | Value that evaluates to True in a boolean context
+Falsy       | Value that evaluates to False in a boolean context
+
+TRUTHY VALUES (Evaluate to True):
+--------------------------------------------------------------------------------
+Category            | Examples
+--------------------|------------------------------------------------------
+Non-empty strings   | "hello", " ", "0"
+Non-zero numbers    | 1, -1, 3.14, -5.5
+Non-empty lists     | [1, 2], [0], ["a"]
+Non-empty tuples    | (1,), ("a", "b")
+Non-empty dicts     | {"key": "value"}, {1: "one"}
+Non-empty sets      | {1, 2, 3}, {"a"}
+Boolean True        | True
+
+FALSY VALUES (Evaluate to False):
+--------------------------------------------------------------------------------
+Category            | Examples
+--------------------|------------------------------------------------------
+None                | None
+Boolean False       | False
+Zero numbers        | 0, 0.0, 0j
+Empty strings       | ""
+Empty lists         | []
+Empty tuples        | ()
+Empty dicts         | {}
+Empty sets          | set()
+
+WHY USE TRUTHINESS:
+--------------------------------------------------------------------------------
+Benefit             | Explanation
+--------------------|------------------------------------------------------
+Cleaner Code        | if data: vs if len(data) > 0:
+More Readable       | Natural language feel
+Type Flexible       | Works with strings, lists, dicts, None, numbers
+Pythonic            | Follows community best practices
+
+EXAMPLES:
+--------------------------------------------------------------------------------
+"""
+
+# Check if list has items
+shopping_cart = []
+if shopping_cart:
+    print("Cart has items")
+else:
+    print("Cart is empty")
+
+# Provide default value
+name = input("Enter name: ") or "Guest"
+
+# Filter falsy values
+data = [1, 0, "hello", "", None, 42]
+clean = [x for x in data if x]
+print(clean)  # [1, "hello", 42]
+
+
+# =============================================================================
+# 39. MODULES
+# =============================================================================
+"""
+A module is a single file containing Python code that can be imported and used
+in other scripts.
+
+WHY USE MODULES:
+--------------------------------------------------------------------------------
+Benefit             | Explanation
+--------------------|------------------------------------------------------
+Organization        | Groups related code into logical files
+Reusability         | Write once, use across multiple scripts
+Maintainability     | Update code in one place
+Namespace Management| Prevents naming conflicts
+Scalability         | Makes large projects manageable
+
+CREATING A MODULE:
+--------------------------------------------------------------------------------
+    # Save as greetings.py
+    def say_hello(name):
+        return f"Hello, {name}!"
+
+    def say_goodbye(name):
+        return f"Goodbye, {name}!"
+
+    DEFAULT_GREETING = "Hello"
+
+IMPORTING MODULES:
+--------------------------------------------------------------------------------
+Method                      | Syntax
+----------------------------|-----------------------------------------------
+Import entire module        | import greetings
+Import specific function    | from greetings import say_hello
+Import with alias           | import greetings as gr
+Import all (not recommended)| from greetings import *
+Import multiple items       | from greetings import say_hello, say_goodbye
+
+EXAMPLE:
+--------------------------------------------------------------------------------
+    # main.py
+    import greetings
+
+    name = input("Enter your name: ")
+    print(greetings.say_hello(name))
+
+THE if __name__ == "__main__" GUARD:
+--------------------------------------------------------------------------------
+    # This code only runs when the file is executed directly
+    # Not when imported as a module
+    if __name__ == "__main__":
+        print("This runs only when script is executed directly")
+        main()
+
+BENEFITS OF THE GUARD:
+--------------------------------------------------------------------------------
+Benefit                     | Explanation
+----------------------------|------------------------------------------------------
+Prevents Unintended Execution | Code doesn't run on import
+Enables Testing             | Test code can be included in module
+Dual Purpose                | Same file can be library AND script
+Clean Imports               | No side effects when importing
+"""
+
+
+# =============================================================================
+# 40. PACKAGES
+# =============================================================================
+"""
+A package is a directory containing multiple modules and an __init__.py file.
+
+PACKAGE STRUCTURE:
+--------------------------------------------------------------------------------
+    my_package/
+        __init__.py
+        module1.py
+        module2.py
+        subpackage/
+            __init__.py
+            submodule.py
+
+THE __init__.py FILE:
+--------------------------------------------------------------------------------
+    # Can be empty or contain initialization code
+    # Marks directory as a Python package
+
+    # __init__.py example
+    __version__ = "1.0.0"
+    __author__ = "Python Developer"
+
+    from .module1 import important_function
+    from .module2 import another_function
+
+    __all__ = ['important_function', 'another_function']
+
+IMPORTING FROM PACKAGES:
+--------------------------------------------------------------------------------
+    # Import entire module from package
+    from my_package import module1
+
+    # Import specific function
+    from my_package.module1 import important_function
+
+    # Import subpackage
+    from my_package.subpackage import submodule
+
+    # Import using package alias
+    import my_package as mp
+"""
+
+
+# =============================================================================
+# 41. LIBRARIES VS. PACKAGES VS. MODULES
+# =============================================================================
+"""
+Understanding the hierarchy of code organization in Python.
+
+DEFINITIONS:
+--------------------------------------------------------------------------------
+Term        | Definition                          | Example
+------------|-------------------------------------|-------------------
+Module      | Single .py file                    | math.py
+Package     | Directory with __init__.py          | urllib/
+Library     | Collection of packages/modules      | requests, pandas
+
+RELATIONSHIP HIERARCHY:
+--------------------------------------------------------------------------------
+    LIBRARY (Collection)
+        │
+        ├── PACKAGE 1 (Directory)
+        │       ├── __init__.py
+        │       └── module1.py
+        │
+        ├── PACKAGE 2 (Directory)
+        │       ├── __init__.py
+        │       └── module2.py
+        │
+        └── STANDALONE MODULE (single file)
+
+KEY TAKEAWAYS:
+--------------------------------------------------------------------------------
+Takeaway                            | Explanation
+------------------------------------|----------------------------------------
+Libraries are broader than packages | A library can contain multiple packages
+A package organizes modules         | Packages contain __init__.py
+Modules are single files            | Smallest unit of code organization
+Terminology is often loose          | "Library" used generically in conversation
+
+EXAMPLES:
+--------------------------------------------------------------------------------
+    # Module (single file)
+    import math          # math is a module
+
+    # Package (directory with __init__.py)
+    import urllib        # urllib is a package
+
+    # Library (collection - term used loosely)
+    import requests      # requests is called a library
+    import numpy as np   # numpy is called a library
+"""
+
+
+# =============================================================================
+# QUICK REFERENCE ADDITIONS
+# =============================================================================
+"""
+EXCEPTION HANDLING QUICK REFERENCE:
+--------------------------------------------------------------------------------
+Concept                 | Syntax
+------------------------|------------------------------------------
+Basic try/except        | try: risky() except: handle()
+Specific exception      | except ValueError as e:
+Multiple exceptions     | except (TypeError, ValueError):
+Try-except-else         | try: ... except: ... else: ...
+Try-except-finally      | try: ... except: ... finally: ...
+Raise exception         | raise ValueError("message")
+Custom exception        | class MyError(Exception): pass
+
+TRUTHINESS QUICK REFERENCE:
+--------------------------------------------------------------------------------
+Truthy values:          | if "text":, if 1:, if [1,2]:, if {"a":1}:
+Falsy values:           | if not None:, if not 0:, if not "":, if not []:
+Check truthiness        | bool(value)
+Default value pattern   | value = user_input or "default"
+Filter falsy values     | clean = [x for x in data if x]
+
+MODULE/PACKAGE QUICK REFERENCE:
+--------------------------------------------------------------------------------
+Concept                 | Syntax
+------------------------|------------------------------------------
+Import module           | import module_name
+Import function         | from module import function
+Import with alias       | import module as alias
+Module guard            | if __name__ == "__main__":
+Create package          | directory + __init__.py
+Import from package     | from package import module
+"""
 
 # =============================================================================
 # END OF DOCUMENTATION
 # =============================================================================
+
