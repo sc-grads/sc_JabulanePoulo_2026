@@ -19,32 +19,46 @@ TABLE OF CONTENTS
 12. Boolean Data Type
 13. Strings
 14. Type Conversion
-15. Functions
-16. Parameters vs. Arguments
-17. Return Statements
-18. Lambda Functions
-19. Recursion
-20. *args and **kwargs
-21. Slash (/) and Asterisk (*) in Function Signatures
-22. Chat Bot (Practical Project)
-23. Exception Handling (Try, Except, Else, Finally)
-24. The raise Keyword
-25. Truthy and Falsy Values
-26. Modules
-27. Packages
-28. Libraries vs. Packages vs. Modules
-29. Docstrings
-30. Assertions
-31. Unpacking
-32. Equality (==) vs. Identity (is)
-33. Dataclasses
-34. Fields in Dataclasses
-35. __post_init__ Method
-36. @cached_property
-37. Monkey Patching
-38. Timing Code with timeit
-39. File Handling (Writing)
-40. JSON in Python
+15. Control & Flow (If, Elif, Else, Loops, Break, Continue)
+16. Functions
+17. Parameters vs. Arguments
+18. Return Statements
+19. Lambda Functions
+20. Recursion
+21. *args and **kwargs
+22. Slash (/) and Asterisk (*) in Function Signatures
+23. Object-Oriented Programming (OOP) in Python
+24. Classes and Objects
+25. __init__ Method (Constructor)
+26. self Parameter
+27. Class Attributes vs. Instance Attributes
+28. Methods vs. Functions
+29. Inheritance
+30. super() Function
+31. @staticmethod
+32. @classmethod
+33. @abstractmethod
+34. Name Mangling
+35. Dunder Methods (__str__, __repr__, __eq__)
+36. Chat Bot (Practical Project)
+37. Exception Handling (Try, Except, Else, Finally)
+38. The raise Keyword
+39. Truthy and Falsy Values
+40. Modules
+41. Packages
+42. Libraries vs. Packages vs. Modules
+43. Docstrings
+44. Assertions
+45. Unpacking
+46. Equality (==) vs. Identity (is)
+47. Dataclasses
+48. Fields in Dataclasses
+49. __post_init__ Method
+50. @cached_property
+51. Monkey Patching
+52. Timing Code with timeit
+53. File Handling (Writing)
+54. JSON in Python
 
 
 ===============================================================================
@@ -335,15 +349,6 @@ Advanced Type Hints:
     def process(data: int | str) -> str:
         return str(data)
 
-Type Checkers:
---------------------------------------------------------------------------------
-    Tool        | Purpose
-    ------------|------------------------------------------
-    mypy        | Static type checker (most popular)
-    pyright     | Microsoft's type checker
-    pylance     | Python language server for VS Code
-    PyCharm     | Built-in type checking
-
 
 ===============================================================================
 8. INTEGERS
@@ -409,11 +414,6 @@ Special Float Values:
     negative_inf = float('-inf')
     not_a_number = float('nan')
 
-Type Hint:
---------------------------------------------------------------------------------
-    price: float = 19.99
-    temperature: float = 98.6
-
 
 ===============================================================================
 10. COMPARISON OPERATORS
@@ -432,18 +432,6 @@ Operators:
     >=          | Greater Than or Equal    | 5 >= 5       | True
     <=          | Less Than or Equal       | 5 <= 3       | False
 
-Examples:
---------------------------------------------------------------------------------
-    a = 5
-    b = 5
-
-    print(a == b)   # True
-    print(a != b)   # False
-    print(a > b)    # False
-    print(a < b)    # False
-    print(a >= b)   # True
-    print(a <= b)   # True
-
 
 ===============================================================================
 11. LOGICAL OPERATORS
@@ -461,48 +449,12 @@ Operators:
 
 Truth Tables:
 --------------------------------------------------------------------------------
-    A       | B       | A and B
-    --------|---------|--------
-    True    | True    | True
-    True    | False   | False
-    False   | True    | False
-    False   | False   | False
-
-    A       | B       | A or B
-    --------|---------|-------
-    True    | True    | True
-    True    | False   | True
-    False   | True    | True
-    False   | False   | False
-
-    A       | not A
-    --------|-------
-    True    | False
-    False   | True
-
-Examples:
---------------------------------------------------------------------------------
-    a = 5
-    b = 5
-    c = 10
-    d = 10
-
-    print((c == d) and (b > a))   # False
-    print((c == d) or (b > a))    # True
-    print(not (a == b))           # False
-
-Operator Precedence:
---------------------------------------------------------------------------------
-    Precedence      | Operator(s)
-    ----------------|------------------------------------------
-    Highest         | () parentheses
-                    | ** exponentiation
-                    | *, /, //, %
-                    | +, -
-                    | ==, !=, >, <, >=, <=
-                    | not
-                    | and
-    Lowest          | or
+    A       | B       | A and B    | A or B    | not A
+    --------|---------|------------|-----------|-------
+    True    | True    | True       | True      | False
+    True    | False   | False      | True      | False
+    False   | True    | False      | True      | True
+    False   | False   | False      | False     | True
 
 
 ===============================================================================
@@ -573,8 +525,6 @@ Common String Methods:
     replace()   | Replace substring     | "hello".replace("e","a") | "hallo"
     split()     | Split into list       | "a,b,c".split(",")   | ["a","b","c"]
     join()      | Join list with string | "-".join(["a","b"])  | "a-b"
-    find()      | Find substring index  | "hello".find("e")    | 1
-    count()     | Count occurrences     | "banana".count("a")  | 3
 
 String Formatting:
 --------------------------------------------------------------------------------
@@ -599,15 +549,6 @@ Escape Characters:
     \'          | Single quote
     \"          | Double quote
     \\          | Backslash
-
-String Immutability:
---------------------------------------------------------------------------------
-    # Strings cannot be changed after creation
-    text = "Hello"
-    # text[0] = "J"           # TypeError
-
-    # Creating new string instead
-    text = "J" + text[1:]     # "Jello"
 
 
 ===============================================================================
@@ -642,56 +583,161 @@ Converting User Input:
     age = int(input("Enter your age: "))
     price = float(input("Enter price: "))
 
-Handling Conversion Errors:
---------------------------------------------------------------------------------
-    def safe_int(value):
-        try:
-            return int(value)
-        except (ValueError, TypeError):
-            return None
 
-    print(safe_int("123"))    # 123
-    print(safe_int("ten"))    # None
+===============================================================================
+15. CONTROL & FLOW (IF, ELIF, ELSE, LOOPS, BREAK, CONTINUE)
+===============================================================================
 
-Valid vs. Invalid Conversions:
+Conditional statements and loops control program flow.
+
+IF, ELIF, ELSE Statements:
 --------------------------------------------------------------------------------
-    From        | To         | Valid Examples      | Invalid Examples
-    ------------|------------|---------------------|------------------
-    String      | Integer    | "123", "-456"       | "ten", "12.3"
-    String      | Float      | "3.14", "1e-3"      | "abc"
-    Float       | Integer    | 3.14 -> 3           | N/A (truncates)
+    Why Use Conditional Statements:
+    ----------------------------------------------------------------------------
+    Reason              | Explanation
+    --------------------|------------------------------------------------------
+    Decision Making     | Allows programs to make choices based on conditions
+    Dynamic Behavior    | Programs can react differently to different inputs
+    Error Handling      | Prevent invalid operations by checking conditions
+    User Interaction    | Respond appropriately to what the user enters
+
+    Syntax:
+    ----------------------------------------------------------------------------
+    if condition:
+        # Code runs if condition is True
+    elif condition:
+        # Code runs if previous conditions False and this is True
+    else:
+        # Code runs if all previous conditions False
+
+    Example:
+    ----------------------------------------------------------------------------
+    age = 20
+    if age >= 21:
+        print("You may enter the club.")
+    elif age >= 18:
+        print("You may enter with supervision.")
+    else:
+        print("You are not allowed to enter.")
+
+    Ternary Operator (Shorthand if-else):
+    ----------------------------------------------------------------------------
+    # Syntax: value_if_true if condition else value_if_false
+    status = "Adult" if age >= 18 else "Minor"
+
+FOR Loops:
+--------------------------------------------------------------------------------
+    Why Use For Loops:
+    ----------------------------------------------------------------------------
+    Reason              | Explanation
+    --------------------|------------------------------------------------------
+    Automation          | Perform same action multiple times without repetition
+    Efficiency          | Process hundreds of items with few lines of code
+    Predictability      | Loop runs a fixed number of times
+    Data Processing     | Essential for working with collections
+
+    Syntax:
+    ----------------------------------------------------------------------------
+    for variable in iterable:
+        # Code block to execute for each item
+
+    Examples:
+    ----------------------------------------------------------------------------
+    # Iterate over range
+    for i in range(5):
+        print(i)  # Prints 0, 1, 2, 3, 4
+
+    # Iterate over list
+    fruits = ["apple", "banana", "cherry"]
+    for fruit in fruits:
+        print(fruit)
+
+    # With enumerate (index and value)
+    for i, fruit in enumerate(fruits):
+        print(f"{i}: {fruit}")
+
+    # With zip (parallel iteration)
+    names = ["Alice", "Bob"]
+    scores = [85, 92]
+    for name, score in zip(names, scores):
+        print(f"{name}: {score}")
+
+WHILE Loops:
+--------------------------------------------------------------------------------
+    Why Use While Loops:
+    ----------------------------------------------------------------------------
+    Reason              | Explanation
+    --------------------|------------------------------------------------------
+    Unknown Iterations  | When you don't know how many times to loop
+    User Input          | Loop until user provides valid input
+    Game Loops          | Run game until player quits
+    Continuous Process  | Keep running until a condition changes
+
+    Syntax:
+    ----------------------------------------------------------------------------
+    while condition:
+        # Code block runs while condition is True
+
+    Examples:
+    ----------------------------------------------------------------------------
+    # Countdown
+    count = 5
+    while count > 0:
+        print(count)
+        count -= 1
+
+    # User input loop
+    while True:
+        user_input = input("Type 'exit' to quit: ")
+        if user_input == "exit":
+            break
+
+BREAK and CONTINUE:
+--------------------------------------------------------------------------------
+    Keyword     | Effect                        | When to Use
+    ------------|-------------------------------|-----------------------------------
+    break       | Exits the loop completely     | Found what you need, error condition
+    continue    | Skips to next iteration       | Invalid data, skip certain values
+
+    Examples:
+    ----------------------------------------------------------------------------
+    # Break - exit loop when found
+    for num in [1, 3, 5, 8, 10]:
+        if num % 2 == 0:
+            print(f"Found even: {num}")
+            break
+
+    # Continue - skip certain values
+    for i in range(10):
+        if i % 3 == 0:
+            continue
+        print(i)  # Prints numbers not divisible by 3
+
+ELSE with Loops:
+--------------------------------------------------------------------------------
+    The else block executes after a loop ONLY if the loop completed without break.
+
+    Example:
+    ----------------------------------------------------------------------------
+    for item in items:
+        if item == target:
+            print("Found!")
+            break
+    else:
+        print("Not found.")  # Runs only if break never occurred
+
+Loop Control Summary:
+--------------------------------------------------------------------------------
+    Concept             | Effect
+    --------------------|------------------------------------------------------
+    break               | Exits loop entirely
+    continue            | Skips current iteration, continues with next
+    else (with loop)    | Runs if loop completes without break
+    pass                | Does nothing (placeholder)
 
 
 ===============================================================================
-QUICK REFERENCE
-===============================================================================
-
-Common Data Types:
---------------------------------------------------------------------------------
-    Type    | Description                    | Example
-    --------|--------------------------------|--------------------
-    int     | Whole numbers                  | age = 25
-    float   | Decimal numbers                | price = 19.99
-    str     | Text                           | name = "Alice"
-    bool    | True/False                     | is_valid = True
-    list    | Ordered, mutable collection    | colors = ["red", "green"]
-    tuple   | Ordered, immutable collection  | point = (10, 20)
-    dict    | Key-value pairs                | {"name": "Alice"}
-    set     | Unordered, unique items        | {1, 2, 3}
-    NoneType| Absence of value               | result = None
-
-Common Operators:
---------------------------------------------------------------------------------
-    Category        | Operators
-    ----------------|------------------------------------------
-    Arithmetic      | +, -, *, /, //, %, **
-    Comparison      | ==, !=, >, <, >=, <=
-    Logical         | and, or, not
-    Assignment      | =, +=, -=, *=, /=
-
-
-===============================================================================
-15. FUNCTIONS
+16. FUNCTIONS
 ===============================================================================
 
 A function is a block of organized, reusable code that performs a specific task.
@@ -751,36 +797,9 @@ Docstrings (Function Documentation):
     print(calculate_area.__doc__)
     help(calculate_area)
 
-Variable Scope:
---------------------------------------------------------------------------------
-    Scope       | Description
-    ------------|------------------------------------------------------------
-    Local       | Variables defined inside a function; cannot be accessed outside
-    Global      | Variables defined outside any function; accessible everywhere
-    Enclosing   | Variables in outer functions for nested functions
-    Built-in    | Predefined in Python (print, len, etc.)
-
-    # Local variable example
-    def my_function():
-        x = 10          # Local variable
-        print(x)
-
-    my_function()       # Output: 10
-    # print(x)          # NameError: name 'x' is not defined
-
-    # Global variable example
-    count = 0           # Global variable
-
-    def increment():
-        global count
-        count += 1
-
-    increment()
-    print(count)        # Output: 1
-
 
 ===============================================================================
-16. PARAMETERS VS. ARGUMENTS
+17. PARAMETERS VS. ARGUMENTS
 ===============================================================================
 
 Parameters are variables in a function definition. Arguments are actual values
@@ -831,16 +850,9 @@ Default Parameters:
     greet()              # Output: Hello, Guest!
     greet("Alice")       # Output: Hello, Alice!
 
-    # Default parameters must come after non-default parameters
-    def correct(a, b=10):    # Correct
-        pass
-
-    # def wrong(a=10, b):    # SyntaxError
-    #     pass
-
 
 ===============================================================================
-17. RETURN STATEMENTS
+18. RETURN STATEMENTS
 ===============================================================================
 
 The return statement exits a function and sends a value back to the caller.
@@ -872,26 +884,6 @@ Multiple Return Statements:
         else:
             return "Both are equal"
 
-    print(compare(10, 5))   # Output: a is greater
-    print(compare(3, 7))    # Output: b is greater
-    print(compare(4, 4))    # Output: Both are equal
-
-Early Exit with Return:
---------------------------------------------------------------------------------
-    def process_age(age):
-        if age < 0:
-            return "Invalid age"    # Early exit
-        if age < 18:
-            return "Minor"
-        if age < 65:
-            return "Adult"
-        return "Senior"
-
-    print(process_age(-5))   # Output: Invalid age
-    print(process_age(15))   # Output: Minor
-    print(process_age(30))   # Output: Adult
-    print(process_age(70))   # Output: Senior
-
 Returning Multiple Values:
 --------------------------------------------------------------------------------
     def get_min_max(numbers):
@@ -901,18 +893,9 @@ Returning Multiple Values:
     print(f"Lowest: {lowest}, Highest: {highest}")
     # Output: Lowest: 5, Highest: 30
 
-Return vs. Print:
---------------------------------------------------------------------------------
-    Feature         | return                     | print()
-    ----------------|----------------------------|------------------
-    Purpose         | Send value back to caller  | Display to console
-    Can be stored   | Yes                        | No
-    Ends function   | Yes                        | No
-    Used in expressions | Yes                   | No
-
 
 ===============================================================================
-18. LAMBDA FUNCTIONS
+19. LAMBDA FUNCTIONS
 ===============================================================================
 
 Lambda functions are small, anonymous functions defined in one line.
@@ -929,9 +912,6 @@ Examples:
 
     # Lambda function (same)
     square_lambda = lambda x: x ** 2
-
-    print(square(5))          # Output: 25
-    print(square_lambda(5))   # Output: 25
 
     # Lambda with multiple parameters
     add = lambda a, b: a + b
@@ -956,7 +936,7 @@ Lambda with Built-in Functions:
 
 
 ===============================================================================
-19. RECURSION
+20. RECURSION
 ===============================================================================
 
 Recursion is a technique where a function calls itself to solve a problem.
@@ -1001,49 +981,9 @@ Recursion vs. Iteration:
     Speed           | Slower (function overhead) | Faster
     Risk            | Stack overflow             | No stack overflow
 
-Infinite Recursion (RecursionError):
---------------------------------------------------------------------------------
-    def infinite():
-        return infinite()    # No base case!
-
-    # infinite()  # RecursionError: maximum recursion depth exceeded
-
-    import sys
-    print(sys.getrecursionlimit())   # Default is usually 1000
-
-Recursion Examples:
---------------------------------------------------------------------------------
-    # Sum of numbers from 1 to n
-    def sum_numbers(n):
-        if n <= 0:
-            return 0
-        return n + sum_numbers(n - 1)
-
-    print(sum_numbers(5))   # Output: 15
-
-    # Power function
-    def power(base, exp):
-        if exp == 0:
-            return 1
-        return base * power(base, exp - 1)
-
-    print(power(2, 4))      # Output: 16
-
-    # Palindrome checker
-    def is_palindrome(text):
-        text = text.lower().replace(" ", "")
-        if len(text) <= 1:
-            return True
-        if text[0] != text[-1]:
-            return False
-        return is_palindrome(text[1:-1])
-
-    print(is_palindrome("racecar"))        # Output: True
-    print(is_palindrome("hello"))          # Output: False
-
 
 ===============================================================================
-20. *ARGS AND **KWARGS
+21. *ARGS AND **KWARGS
 ===============================================================================
 
 *args and **kwargs allow functions to accept a variable number of arguments.
@@ -1065,7 +1005,6 @@ Definitions:
 
     print(sum_all(1, 2, 3, 4))      # Output: 10
     print(sum_all(5, 10, 15))       # Output: 30
-    print(sum_all())                # Output: 0
 
 **kwargs (Keyword Arguments):
 --------------------------------------------------------------------------------
@@ -1092,31 +1031,9 @@ Combining *args and **kwargs:
     # Args: (2, 3)
     # Kwargs: {'name': 'Bob', 'age': 30}
 
-Parameter Order:
---------------------------------------------------------------------------------
-    # Correct order
-    def func(standard, default=10, *args, **kwargs):
-        pass
-
-    # Order: standard -> default -> *args -> **kwargs
-
-Unpacking Arguments:
---------------------------------------------------------------------------------
-    # Unpacking list with *
-    def add(a, b, c):
-        return a + b + c
-
-    numbers = [1, 2, 3]
-    result = add(*numbers)      # Unpacks to add(1, 2, 3)
-    print(result)               # Output: 6
-
-    # Unpacking dict with **
-    person = {"name": "Alice", "age": 25, "city": "Boston"}
-    print_info(**person)        # Unpacks to print_info(name="Alice", age=25, city="Boston")
-
 
 ===============================================================================
-21. SLASH (/) AND ASTERISK (*) IN FUNCTION SIGNATURES
+22. SLASH (/) AND ASTERISK (*) IN FUNCTION SIGNATURES
 ===============================================================================
 
 The / and * symbols control how arguments can be passed to functions.
@@ -1131,13 +1048,6 @@ Slash (/) - Positional-Only Parameters:
     func(1, 2)          # ✓ Valid
     # func(a=1, b=2)    # ✗ TypeError
 
-    def describe(name, /, age, city):
-        print(f"{name} is {age} and lives in {city}")
-
-    describe("Alice", 25, "New York")     # ✓ Valid
-    describe("Bob", city="London", age=30) # ✓ Valid (age, city can be keyword)
-    # describe(name="Charlie", 35, "Paris") # ✗ TypeError (name cannot be keyword)
-
 Asterisk (*) - Keyword-Only Parameters:
 --------------------------------------------------------------------------------
     Parameters after * must be passed as keyword arguments.
@@ -1147,13 +1057,6 @@ Asterisk (*) - Keyword-Only Parameters:
 
     func(1, b=2)        # ✓ Valid
     # func(1, 2)        # ✗ TypeError
-
-    def create_profile(name, *, age, city):
-        print(f"Name: {name}, Age: {age}, City: {city}")
-
-    create_profile("Alice", age=25, city="New York")  # ✓ Valid
-    create_profile("Bob", city="London", age=30)      # ✓ Valid
-    # create_profile("Charlie", 35, "Paris")          # ✗ TypeError
 
 Combining / and *:
 --------------------------------------------------------------------------------
@@ -1165,11 +1068,6 @@ Combining / and *:
     # Valid call
     func(1, 2, 3, kw1=4, kw2=5)
 
-    # Categories:
-    # pos1, pos2: positional-only (before /)
-    # standard: positional-or-keyword (between / and *)
-    # kw1, kw2: keyword-only (after *)
-
 Summary Table:
 --------------------------------------------------------------------------------
     Syntax                      | Effect
@@ -1180,7 +1078,792 @@ Summary Table:
 
 
 ===============================================================================
-22. CHAT BOT (PRACTICAL PROJECT)
+23. OBJECT-ORIENTED PROGRAMMING (OOP) IN PYTHON
+===============================================================================
+
+Object-Oriented Programming is a programming paradigm that organizes code
+using objects that contain data (attributes) and behavior (methods).
+
+Core Principles of OOP:
+--------------------------------------------------------------------------------
+    Principle       | Description
+    ----------------|----------------------------------------------------------
+    Encapsulation   | Bundling data and methods that operate on that data
+    Inheritance     | Creating new classes based on existing classes
+    Polymorphism    | Same interface, different implementations
+    Abstraction     | Hiding complex implementation details
+
+Why Use OOP:
+--------------------------------------------------------------------------------
+    Benefit             | Explanation
+    --------------------|------------------------------------------------------
+    Code Organization   | Group related data and functions together
+    Reusability         | Inheritance allows code reuse across classes
+    Maintainability     | Changes in one class don't affect others
+    Real-world Modeling | Natural way to represent real-world entities
+
+
+===============================================================================
+24. CLASSES AND OBJECTS
+===============================================================================
+
+A class is a blueprint for creating objects. An object is an instance of a class.
+
+Class Definition:
+--------------------------------------------------------------------------------
+    class ClassName:
+        """Class docstring."""
+        
+        # Class attributes (shared by all instances)
+        class_attribute = "shared value"
+        
+        # Instance attributes (unique to each instance)
+        def __init__(self, param1, param2):
+            self.instance_attr1 = param1
+            self.instance_attr2 = param2
+        
+        # Instance methods
+        def method_name(self):
+            return f"Working with {self.instance_attr1}"
+
+Creating and Using Objects:
+--------------------------------------------------------------------------------
+    # Create a class
+    class Car:
+        """A simple Car class."""
+        wheels = 4  # Class attribute
+        
+        def __init__(self, brand, color):
+            self.brand = brand    # Instance attribute
+            self.color = color    # Instance attribute
+        
+        def drive(self):
+            return f"The {self.color} {self.brand} is driving!"
+    
+    # Create objects (instances)
+    car1 = Car("Toyota", "red")
+    car2 = Car("Honda", "blue")
+    
+    # Access attributes
+    print(car1.brand)     # Output: Toyota
+    print(car1.wheels)    # Output: 4
+    
+    # Call methods
+    print(car1.drive())   # Output: The red Toyota is driving!
+
+
+===============================================================================
+25. __INIT__ METHOD (CONSTRUCTOR)
+===============================================================================
+
+The __init__ method is a special method that initializes a new object when it
+is created. It runs automatically when you instantiate a class.
+
+Purpose of __init__:
+--------------------------------------------------------------------------------
+    Purpose             | Description
+    --------------------|------------------------------------------------------
+    Initialization      | Sets up the initial state of the object
+    Customization       | Allows each object to have unique attribute values
+    Convenience         | Automatically called when creating objects
+    Consistency         | Ensures every object starts with a valid state
+
+Syntax:
+--------------------------------------------------------------------------------
+    class ClassName:
+        def __init__(self, parameter1, parameter2):
+            self.attribute1 = parameter1
+            self.attribute2 = parameter2
+
+Example:
+--------------------------------------------------------------------------------
+    class Person:
+        def __init__(self, name, age):
+            self.name = name
+            self.age = age
+            self.is_alive = True  # Default value
+    
+    # Creating objects automatically calls __init__
+    person1 = Person("Alice", 25)
+    person2 = Person("Bob", 30)
+    
+    print(person1.name)  # Output: Alice
+    print(person2.age)   # Output: 30
+
+
+===============================================================================
+26. SELF PARAMETER
+===============================================================================
+
+self is a special parameter that refers to the current instance of the class.
+It allows you to access instance attributes and methods from within the class.
+
+What is self:
+--------------------------------------------------------------------------------
+    Aspect              | Description
+    --------------------|------------------------------------------------------
+    Purpose             | Refers to the current instance of the class
+    First Parameter     | Must be the first parameter of instance methods
+    Name Convention     | Can be any name but 'self' is strongly recommended
+    Automatic           | Python passes self automatically when calling methods
+
+Example:
+--------------------------------------------------------------------------------
+    class Fruit:
+        def __init__(self, name: str, grams: float):
+            self.name = name      # 'self' binds name to this instance
+            self.grams = grams    # 'self' binds grams to this instance
+        
+        def describe(self):
+            # 'self' accesses instance attributes
+            return f"{self.name} weighs {self.grams} grams"
+    
+    # Each instance has its own 'self'
+    apple = Fruit("Apple", 25)
+    banana = Fruit("Banana", 10)
+    
+    print(apple.describe())   # Output: Apple weighs 25 grams
+    print(banana.describe())  # Output: Banana weighs 10 grams
+
+Why self is Important:
+--------------------------------------------------------------------------------
+    Reason              | Explanation
+    --------------------|------------------------------------------------------
+    Instance Specific   | Ensures attributes are tied to the individual object
+    Avoids Confusion    | Distinguishes instance attributes from local variables
+    Method Access       | Allows calling other instance methods
+
+
+===============================================================================
+27. CLASS ATTRIBUTES VS. INSTANCE ATTRIBUTES
+===============================================================================
+
+Understanding the difference between attributes shared by all instances and
+attributes unique to each instance.
+
+Definitions:
+--------------------------------------------------------------------------------
+    Attribute Type      | Definition                    | Shared Among
+    --------------------|-------------------------------|------------------
+    Class Attribute     | Shared across all instances   | All instances
+    Instance Attribute  | Specific to each object       | Each instance has its own
+
+Class Attributes:
+--------------------------------------------------------------------------------
+    class Car:
+        wheels = 4                    # Class attribute (shared)
+        vehicle_count = 0             # Class attribute (counter)
+        
+        def __init__(self, brand):
+            self.brand = brand         # Instance attribute (unique)
+            Car.vehicle_count += 1
+    
+    car1 = Car("Toyota")
+    car2 = Car("Honda")
+    
+    print(car1.wheels)        # Output: 4 (access via instance)
+    print(Car.wheels)         # Output: 4 (access via class)
+    print(Car.vehicle_count)  # Output: 2
+
+Instance Attributes:
+--------------------------------------------------------------------------------
+    class Book:
+        def __init__(self, title, author):
+            self.title = title     # Instance attribute
+            self.author = author   # Instance attribute
+    
+    book1 = Book("1984", "Orwell")
+    book2 = Book("Brave New World", "Huxley")
+    
+    print(book1.title)   # Output: 1984
+    print(book2.title)   # Output: Brave New World
+
+When to Use Each:
+--------------------------------------------------------------------------------
+    Use Case                     | Use
+    -----------------------------|-----------------------------------------------
+    Shared configuration         | Class attribute
+    Constants                    | Class attribute
+    Counter (tracking instances) | Class attribute
+    Unique data per object       | Instance attribute
+    Object-specific state        | Instance attribute
+
+
+===============================================================================
+28. METHODS VS. FUNCTIONS
+===============================================================================
+
+Understanding the key differences between methods and functions in Python.
+
+Definitions:
+--------------------------------------------------------------------------------
+    Term        | Definition                              | Association
+    ------------|-----------------------------------------|-------------
+    Function    | Standalone block of code                | Independent
+    Method      | Function associated with an object/class | Class/Instance
+
+Key Differences:
+--------------------------------------------------------------------------------
+    Aspect              | Function                     | Method
+    --------------------|-----------------------------|-----------------------------
+    Association         | Independent                  | Belongs to a class
+    First Parameter     | No special parameter         | self (instance) or cls (class)
+    Call Syntax         | function_name(args)          | object.method_name(args)
+    Access to Data      | Only what's passed in        | Can access instance/class data
+    Defined             | At module level              | Inside a class
+
+Example:
+--------------------------------------------------------------------------------
+    # Function (standalone)
+    def greet_function(name):
+        return f"Hello, {name}!"
+    
+    # Method (inside a class)
+    class Greeter:
+        def __init__(self, prefix):
+            self.prefix = prefix
+        
+        def greet_method(self, name):
+            return f"{self.prefix}, {name}!"
+    
+    # Calling a function
+    print(greet_function("Alice"))     # Output: Hello, Alice!
+    
+    # Calling a method
+    greeter = Greeter("Hi")
+    print(greeter.greet_method("Bob")) # Output: Hi, Bob!
+
+Analogy:
+--------------------------------------------------------------------------------
+    Function    = Calculator app (same regardless of who uses it)
+    Method      = TV remote (attached to a specific TV, knows its state)
+
+
+===============================================================================
+29. INHERITANCE
+===============================================================================
+
+Inheritance allows a class (child/subclass) to inherit attributes and methods
+from another class (parent/superclass).
+
+Why Use Inheritance:
+--------------------------------------------------------------------------------
+    Benefit             | Explanation
+    --------------------|------------------------------------------------------
+    Code Reusability    | Don't rewrite the same code
+    Extensibility       | Add new features without changing existing code
+    Logical Hierarchy   | Creates natural relationships (Dog is an Animal)
+    Polymorphism        | Treat different objects uniformly
+
+Syntax:
+--------------------------------------------------------------------------------
+    class ParentClass:
+        # Parent class code
+    
+    class ChildClass(ParentClass):
+        # Child class inherits from ParentClass
+
+Example:
+--------------------------------------------------------------------------------
+    # Base class (Parent)
+    class Animal:
+        def __init__(self, name):
+            self.name = name
+        
+        def speak(self):
+            return f"{self.name} makes a sound"
+        
+        def move(self):
+            return f"{self.name} moves"
+    
+    # Derived class (Child)
+    class Dog(Animal):
+        def speak(self):  # Method overriding
+            return f"{self.name} barks: Woof!"
+        
+        def fetch(self):  # New method
+            return f"{self.name} fetches the ball"
+    
+    class Cat(Animal):
+        def speak(self):  # Method overriding
+            return f"{self.name} meows: Meow!"
+    
+    # Usage
+    dog = Dog("Rex")
+    cat = Cat("Whiskers")
+    
+    print(dog.speak())    # Output: Rex barks: Woof!
+    print(dog.move())     # Output: Rex moves (inherited)
+    print(dog.fetch())    # Output: Rex fetches the ball
+    print(cat.speak())    # Output: Whiskers meows: Meow!
+
+Types of Inheritance:
+--------------------------------------------------------------------------------
+    Type                | Description
+    --------------------|------------------------------------------------------
+    Single Inheritance  | One child inherits from one parent
+    Multiple Inheritance| Child inherits from multiple parents
+    Multilevel          | Child inherits from parent that inherits from grandparent
+    Hierarchical        | Multiple children inherit from one parent
+
+
+===============================================================================
+30. SUPER() FUNCTION
+===============================================================================
+
+The super() function is used to call methods from a parent class in a subclass.
+
+Why Use super():
+--------------------------------------------------------------------------------
+    Benefit             | Explanation
+    --------------------|------------------------------------------------------
+    Cleaner Code        | Avoids hardcoding parent class names
+    Maintainable        | If parent class name changes, update only once
+    Multiple Inheritance| Handles complex inheritance chains correctly
+    Best Practice       | Standard way to call parent class methods
+
+Basic Usage:
+--------------------------------------------------------------------------------
+    class Parent:
+        def __init__(self, name):
+            self.name = name
+        
+        def greet(self):
+            return f"Hello from {self.name}"
+    
+    class Child(Parent):
+        def __init__(self, name, age):
+            super().__init__(name)  # Call parent's __init__
+            self.age = age
+        
+        def greet(self):
+            # Call parent's greet method and extend it
+            parent_greeting = super().greet()
+            return f"{parent_greeting}. I am {self.age} years old."
+
+Example:
+--------------------------------------------------------------------------------
+    class Vehicle:
+        def __init__(self, brand, wheels):
+            self.brand = brand
+            self.wheels = wheels
+        
+        def start(self):
+            return f"The {self.brand} is starting"
+    
+    class ElectricCar(Vehicle):
+        def __init__(self, brand, wheels, battery_size):
+            super().__init__(brand, wheels)  # Initialize parent
+            self.battery_size = battery_size
+        
+        def start(self):
+            # Extend parent's start method
+            return super().start() + " silently (electric mode)"
+    
+    tesla = ElectricCar("Tesla", 4, 100)
+    print(tesla.start())  # Output: The Tesla is starting silently (electric mode)
+
+Analogy:
+--------------------------------------------------------------------------------
+    super() is like asking a parent for help while still doing things your own way.
+    A child learning to cook asks their parent for the basic recipe (calls parent's
+    method), then adds their own twist (extends the functionality).
+
+
+===============================================================================
+31. @STATICMETHOD
+===============================================================================
+
+The @staticmethod decorator defines a method that does not require access to
+instance or class data. It behaves like a regular function but lives inside a
+class for organization.
+
+Why Use @staticmethod:
+--------------------------------------------------------------------------------
+    Benefit             | Explanation
+    --------------------|------------------------------------------------------
+    Organization        | Groups related utility functions inside a class
+    Namespace clarity   | Shows the function belongs conceptually to the class
+    No instance needed  | Can be used without creating objects
+    Code readability    | Makes intent clear: "this function doesn't depend on state"
+
+Syntax:
+--------------------------------------------------------------------------------
+    class ClassName:
+        @staticmethod
+        def utility_function(param1, param2):
+            # No self or cls parameter
+            return result
+
+Example:
+--------------------------------------------------------------------------------
+    class MathOperations:
+        @staticmethod
+        def add(x, y):
+            return x + y
+        
+        @staticmethod
+        def multiply(x, y):
+            return x * y
+        
+        @staticmethod
+        def is_even(number):
+            return number % 2 == 0
+    
+    # Call on class (no instance needed)
+    print(MathOperations.add(5, 3))        # Output: 8
+    print(MathOperations.multiply(4, 6))   # Output: 24
+    print(MathOperations.is_even(7))       # Output: False
+    
+    # Can also be called on instances (but not necessary)
+    math = MathOperations()
+    print(math.add(10, 20))                # Output: 30
+
+When to Use Static Method:
+--------------------------------------------------------------------------------
+    Use Case                    | Example
+    ----------------------------|-----------------------------------------------
+    Utility functions           | Helper functions related to the class
+    Validation functions        | Input validation for class-related data
+    Conversion functions        | Convert data to/from class-related formats
+    Pure functions              | Functions with no side effects
+
+Analogy:
+--------------------------------------------------------------------------------
+    A static method is like a calculator in a toolbox. The calculator doesn't
+    need to know which toolbox it's in or what other tools are there. It just
+    does its job. You can use it without opening the toolbox (creating an instance).
+
+
+===============================================================================
+32. @CLASSMETHOD
+===============================================================================
+
+The @classmethod decorator defines a method that receives the class as the
+first argument (cls) instead of the instance (self). It can access and modify
+class-level data.
+
+Why Use @classmethod:
+--------------------------------------------------------------------------------
+    Benefit             | Explanation
+    --------------------|------------------------------------------------------
+    Factory Methods     | Create instances in different ways (from string, file, etc.)
+    Class-level ops     | Modify or access class variables that affect all instances
+    Alternative constructors | Provide multiple ways to instantiate a class
+    Inheritance-friendly| Respects subclassing (uses the correct class when inherited)
+
+Syntax:
+--------------------------------------------------------------------------------
+    class ClassName:
+        class_variable = 0
+        
+        @classmethod
+        def class_method(cls, param):
+            # cls is the class (not an instance)
+            cls.class_variable += param
+            return cls.class_variable
+
+Example:
+--------------------------------------------------------------------------------
+    class Book:
+        total_books = 0      # Class variable
+        all_books = []       # Class variable
+        
+        def __init__(self, title, author):
+            self.title = title
+            self.author = author
+            Book.total_books += 1
+            Book.all_books.append(self)
+        
+        @classmethod
+        def get_total_books(cls):
+            """Class method to access class variable."""
+            return f"Total books: {cls.total_books}"
+        
+        @classmethod
+        def from_string(cls, book_string):
+            """Factory method: create Book from formatted string."""
+            title, author = book_string.split(" by ")
+            return cls(title, author)
+        
+        @classmethod
+        def get_book_titles(cls):
+            """Class method returning all book titles."""
+            return [book.title for book in cls.all_books]
+    
+    # Using factory method
+    book1 = Book.from_string("1984 by George Orwell")
+    book2 = Book.from_string("Brave New World by Aldous Huxley")
+    
+    print(Book.get_total_books())   # Output: Total books: 2
+    print(Book.get_book_titles())   # Output: ['1984', 'Brave New World']
+
+Class Method vs Static Method:
+--------------------------------------------------------------------------------
+    Aspect              | @classmethod                    | @staticmethod
+    --------------------|---------------------------------|-------------------------------
+    First parameter     | cls (the class)                 | None
+    Can access class    | Yes                             | No
+    Can modify class    | Yes                             | No
+    Inheritance         | Respects subclassing            | No special behavior
+    Use case            | Factory methods, class counters | Utility functions
+
+Analogy:
+--------------------------------------------------------------------------------
+    A class method is like a factory manager. The manager knows how many products
+    were made (class-level data) and can create new products using different
+    methods (factory methods). The manager doesn't belong to any single product
+    but oversees the entire factory operation.
+
+
+===============================================================================
+33. @ABSTRACTMETHOD
+===============================================================================
+
+The @abstractmethod decorator defines a method that must be implemented by any
+subclass. Abstract methods have no implementation in the base class.
+
+Why Use @abstractmethod:
+--------------------------------------------------------------------------------
+    Benefit             | Explanation
+    --------------------|------------------------------------------------------
+    Enforces Interface  | Guarantees that all subclasses have the same methods
+    Prevents Incomplete | Catches errors early if a subclass misses a method
+    Design Clarity      | Makes it clear which methods must be implemented
+    Polymorphism        | Allows treating different objects uniformly
+
+Syntax:
+--------------------------------------------------------------------------------
+    from abc import ABC, abstractmethod
+    
+    class AbstractClass(ABC):
+        @abstractmethod
+        def required_method(self):
+            """This method MUST be implemented by subclasses."""
+            pass
+
+Example:
+--------------------------------------------------------------------------------
+    from abc import ABC, abstractmethod
+    from math import pi
+    
+    class Shape(ABC):
+        """Abstract base class for all shapes."""
+        
+        @abstractmethod
+        def area(self):
+            """Calculate area - must be implemented."""
+            pass
+        
+        @abstractmethod
+        def perimeter(self):
+            """Calculate perimeter - must be implemented."""
+            pass
+    
+    class Rectangle(Shape):
+        def __init__(self, width, height):
+            self.width = width
+            self.height = height
+        
+        def area(self):
+            return self.width * self.height
+        
+        def perimeter(self):
+            return 2 * (self.width + self.height)
+    
+    class Circle(Shape):
+        def __init__(self, radius):
+            self.radius = radius
+        
+        def area(self):
+            return pi * self.radius ** 2
+        
+        def perimeter(self):
+            return 2 * pi * self.radius
+    
+    # This works
+    rect = Rectangle(10, 5)
+    print(rect.area())       # Output: 50
+    
+    # This would raise TypeError (incomplete implementation)
+    # class Triangle(Shape):
+    #     pass
+    # t = Triangle()  # TypeError: Can't instantiate abstract class
+
+Key Points:
+--------------------------------------------------------------------------------
+    Point               | Description
+    --------------------|------------------------------------------------------
+    Requires ABC        | Class must inherit from ABC (or have metaclass=ABCMeta)
+    Cannot Instantiate  | Cannot create objects from abstract base classes
+    Must Implement All  | Subclasses must implement all abstract methods
+    Can Have Concrete   | Abstract classes can also have regular methods
+
+
+===============================================================================
+34. NAME MANGLING
+===============================================================================
+
+Name mangling is a technique that makes class attributes harder to access from
+outside the class by prefixing the attribute name with two underscores (__).
+
+Why Use Name Mangling:
+--------------------------------------------------------------------------------
+    Benefit             | Explanation
+    --------------------|------------------------------------------------------
+    Encapsulation       | Prevents accidental access/modification from outside
+    Prevents Conflicts  | Avoids name clashes in subclasses
+    Privacy Convention  | Signals "private" attribute (though not truly private)
+
+How It Works:
+--------------------------------------------------------------------------------
+    When you define an attribute with __ (double underscore), Python internally
+    renames it to _ClassName__attributeName.
+
+Example:
+--------------------------------------------------------------------------------
+    class BankAccount:
+        def __init__(self, owner, balance):
+            self.owner = owner
+            self.__balance = balance  # Name mangled to _BankAccount__balance
+        
+        def deposit(self, amount):
+            if amount > 0:
+                self.__balance += amount
+        
+        def withdraw(self, amount):
+            if 0 < amount <= self.__balance:
+                self.__balance -= amount
+                return True
+            return False
+        
+        def get_balance(self):
+            return self.__balance
+    
+    account = BankAccount("Alice", 1000)
+    
+    # Direct access fails
+    # print(account.__balance)  # AttributeError
+    
+    # But can still access via mangled name (not recommended)
+    print(account._BankAccount__balance)  # Output: 1000
+    
+    # Proper way: use methods
+    account.deposit(500)
+    print(account.get_balance())  # Output: 1500
+
+Name Mangling in Inheritance:
+--------------------------------------------------------------------------------
+    class Parent:
+        def __init__(self):
+            self.__value = "parent"    # _Parent__value
+    
+    class Child(Parent):
+        def __init__(self):
+            super().__init__()
+            self.__value = "child"     # _Child__value (different!)
+    
+    obj = Child()
+    # Both attributes exist separately
+    print(obj._Parent__value)  # Output: parent
+    print(obj._Child__value)   # Output: child
+
+Important Notes:
+--------------------------------------------------------------------------------
+    Note                | Explanation
+    --------------------|------------------------------------------------------
+    Not True Privacy    | Still accessible via mangled name (by convention only)
+    Only Double Leading | Two underscores (__), not single (_) which is convention
+    No Trailing         | __var__ is reserved for special methods (don't use)
+    Useful for Avoiding | Prevents accidental override in subclasses
+
+
+===============================================================================
+35. DUNDER METHODS (__STR__, __REPR__, __EQ__)
+===============================================================================
+
+Dunder (double underscore) methods are special methods that define how objects
+behave with built-in operations.
+
+Common Dunder Methods:
+--------------------------------------------------------------------------------
+    Category        | Method    | Purpose
+    ----------------|-----------|--------------------------------------------------
+    Initialization  | __init__  | Constructor, initializes new objects
+    Representation  | __str__   | Human-readable string (for print())
+    Representation  | __repr__  | Developer-readable string (for debugging)
+    Comparison      | __eq__    | Equality operator (==)
+    Comparison      | __lt__    | Less than operator (<)
+    Arithmetic      | __add__   | Addition operator (+)
+    Container       | __len__   | Length function (len())
+    Container       | __getitem__| Indexing (obj[key])
+    Callable        | __call__  | Object called as function
+
+__str__ vs __repr__:
+--------------------------------------------------------------------------------
+    Aspect          | __str__                    | __repr__
+    ----------------|----------------------------|-------------------------------
+    Purpose         | User-friendly string       | Unambiguous, developer-friendly
+    Target Audience | End users                  | Developers, debugging
+    Called by       | print(), str(), f-strings  | repr(), interactive console
+    Goal            | Readable, informative      | Should recreate object if possible
+
+Example:
+--------------------------------------------------------------------------------
+    class Book:
+        def __init__(self, title, author, year):
+            self.title = title
+            self.author = author
+            self.year = year
+        
+        def __str__(self):
+            """User-friendly representation."""
+            return f"'{self.title}' by {self.author} ({self.year})"
+        
+        def __repr__(self):
+            """Developer-friendly representation (should recreate object)."""
+            return f"Book(title='{self.title}', author='{self.author}', year={self.year})"
+        
+        def __eq__(self, other):
+            """Define equality based on title and author."""
+            if isinstance(other, Book):
+                return self.title == other.title and self.author == other.author
+            return False
+        
+        def __len__(self):
+            """Return length of title."""
+            return len(self.title)
+    
+    book1 = Book("1984", "George Orwell", 1949)
+    book2 = Book("1984", "George Orwell", 1949)
+    book3 = Book("Brave New World", "Aldous Huxley", 1932)
+    
+    # __str__ usage
+    print(book1)                    # Output: '1984' by George Orwell (1949)
+    
+    # __repr__ usage
+    print(repr(book1))              # Output: Book(title='1984', author='George Orwell', year=1949)
+    
+    # __eq__ usage
+    print(book1 == book2)           # Output: True
+    print(book1 == book3)           # Output: False
+    
+    # __len__ usage
+    print(len(book1))               # Output: 4
+
+Guidelines:
+--------------------------------------------------------------------------------
+    Guideline                       | Explanation
+    --------------------------------|--------------------------------------------------
+    __str__ for users               | Make it readable and informative
+    __repr__ for developers         | Should ideally be valid Python to recreate object
+    __eq__ for meaningful equality  | Compare by value, not by memory address
+    Implement __repr__ always       | Good practice for debugging
+    __str__ falls back to __repr__  | If __str__ missing, Python uses __repr__
+
+
+===============================================================================
+36. CHAT BOT (PRACTICAL PROJECT)
 ===============================================================================
 
 A simple rule-based chat bot that responds to user input.
@@ -1188,26 +1871,31 @@ A simple rule-based chat bot that responds to user input.
 Basic Chat Bot:
 --------------------------------------------------------------------------------
     import datetime
+    import random
 
     def get_response(user_input):
         responses = {
-            "hello": "Hey there!",
-            "how are you": "I'm good, thanks!",
-            "what time is it": str(datetime.datetime.now().time()),
-            "goodbye": "Nice talking to you!"
+            "hello": ["Hey there!", "Hi!", "Hello!"],
+            "how are you": ["I'm good, thanks!", "Doing great!"],
+            "what time is it": [str(datetime.datetime.now().time())],
+            "goodbye": ["Goodbye!", "See you later!"],
+            "joke": [
+                "Why do programmers prefer dark mode? Because light attracts bugs!",
+                "What do you call a snake that codes? A python!"
+            ]
         }
 
         message = user_input.lower()
         for key in responses:
             if key in message:
-                return responses[key]
+                return random.choice(responses[key])
         return "I do not understand."
 
     def chat():
         print("Hello, I am a bot! Type 'exit' to quit.")
         while True:
             user_input = input("You: ")
-            if user_input.lower() in ["exit", "quit"]:
+            if user_input.lower() in ["exit", "quit", "goodbye"]:
                 print("Bot: Goodbye!")
                 break
             bot_response = get_response(user_input)
@@ -1218,11 +1906,10 @@ Basic Chat Bot:
 
 
 ===============================================================================
-23. EXCEPTION HANDLING (TRY, EXCEPT, ELSE, FINALLY)
+37. EXCEPTION HANDLING (TRY, EXCEPT, ELSE, FINALLY)
 ===============================================================================
 
-Exception handling allows your program to respond gracefully to errors that may
-arise during execution.
+Exception handling allows your program to respond gracefully to errors.
 
 Why Use Exception Handling:
 --------------------------------------------------------------------------------
@@ -1252,30 +1939,8 @@ Catching Specific Exceptions:
     except ZeroDivisionError:
         print("Error: Cannot divide by zero!")
 
-Catching Multiple Exceptions:
---------------------------------------------------------------------------------
-    try:
-        number = int(input("Enter a number: "))
-        result = 100 / number
-    except (ValueError, ZeroDivisionError) as e:
-        print(f"Error: {e}")
-
-Try-Except-Else:
---------------------------------------------------------------------------------
-    The else block runs only if no exception occurred.
-
-    try:
-        number = int(input("Enter a number: "))
-    except ValueError:
-        print("Invalid input!")
-    else:
-        # This runs only if conversion succeeded
-        print(f"You entered: {number}")
-
 Try-Except-Else-Finally:
 --------------------------------------------------------------------------------
-    The finally block ALWAYS runs, regardless of exceptions.
-
     try:
         file = open("data.txt", "r")
         content = file.read()
@@ -1284,8 +1949,7 @@ Try-Except-Else-Finally:
     else:
         print(f"File has {len(content)} characters")
     finally:
-        # This ALWAYS runs - cleanup
-        print("Closing file...")
+        # This ALWAYS runs
         if 'file' in locals():
             file.close()
 
@@ -1299,24 +1963,13 @@ Common Exception Types:
     FileNotFoundError   | File does not exist
     KeyError            | Dictionary key not found
     IndexError          | List index out of range
-    AttributeError      | Object has no such attribute
-    ImportError         | Module or function not found
 
 
 ===============================================================================
-24. THE RAISE KEYWORD
+38. THE RAISE KEYWORD
 ===============================================================================
 
 The raise keyword is used to intentionally trigger an exception.
-
-Why Use raise:
---------------------------------------------------------------------------------
-    Reason              | Explanation
-    --------------------|------------------------------------------------------
-    Input Validation    | Signal when input doesn't meet requirements
-    Precondition Check  | Ensure conditions are met before execution
-    Error Propagation   | Pass errors up the call stack
-    API Design          | Create clear error behavior for functions
 
 Basic Syntax:
 --------------------------------------------------------------------------------
@@ -1342,41 +1995,17 @@ Custom Exceptions:
         """Raised when withdrawal exceeds balance."""
         pass
 
-    class NegativeDepositError(Exception):
-        """Raised when deposit amount is negative."""
-        pass
-
     def withdraw(balance, amount):
-        if amount < 0:
-            raise NegativeDepositError("Cannot withdraw negative amount")
         if amount > balance:
             raise InsufficientFundsError(f"Insufficient funds: {balance}")
         return balance - amount
 
-Re-raising Exceptions:
---------------------------------------------------------------------------------
-    def process_file(filename):
-        try:
-            file = open(filename, 'r')
-            return file.read()
-        except FileNotFoundError as e:
-            print(f"Log: File {filename} not found")
-            raise  # Re-raise the same exception
-
 
 ===============================================================================
-25. TRUTHY AND FALSY VALUES
+39. TRUTHY AND FALSY VALUES
 ===============================================================================
 
-Every value in Python has an inherent truth value when evaluated in a boolean
-context.
-
-Definitions:
---------------------------------------------------------------------------------
-    Term        | Definition
-    ------------|----------------------------------------------------------
-    Truthy      | Value that evaluates to True in a boolean context
-    Falsy       | Value that evaluates to False in a boolean context
+Every value in Python has an inherent truth value.
 
 Truthy Values (Evaluate to True):
 --------------------------------------------------------------------------------
@@ -1385,10 +2014,7 @@ Truthy Values (Evaluate to True):
     Non-empty strings   | "hello", " ", "0"
     Non-zero numbers    | 1, -1, 3.14, -5.5
     Non-empty lists     | [1, 2], [0], ["a"]
-    Non-empty tuples    | (1,), ("a", "b")
-    Non-empty dicts     | {"key": "value"}, {1: "one"}
-    Non-empty sets      | {1, 2, 3}, {"a"}
-    Boolean True        | True
+    Non-empty dicts     | {"key": "value"}
 
 Falsy Values (Evaluate to False):
 --------------------------------------------------------------------------------
@@ -1399,18 +2025,7 @@ Falsy Values (Evaluate to False):
     Zero numbers        | 0, 0.0, 0j
     Empty strings       | ""
     Empty lists         | []
-    Empty tuples        | ()
     Empty dicts         | {}
-    Empty sets          | set()
-
-Why Use Truthiness:
---------------------------------------------------------------------------------
-    Benefit             | Explanation
-    --------------------|------------------------------------------------------
-    Cleaner Code        | if data: vs if len(data) > 0:
-    More Readable       | Natural language feel
-    Type Flexible       | Works with strings, lists, dicts, None, numbers
-    Pythonic            | Follows community best practices
 
 Examples:
 --------------------------------------------------------------------------------
@@ -1431,32 +2046,10 @@ Examples:
 
 
 ===============================================================================
-26. MODULES
+40. MODULES
 ===============================================================================
 
-A module is a single file containing Python code that can be imported and used
-in other scripts.
-
-Why Use Modules:
---------------------------------------------------------------------------------
-    Benefit             | Explanation
-    --------------------|------------------------------------------------------
-    Organization        | Groups related code into logical files
-    Reusability         | Write once, use across multiple scripts
-    Maintainability    | Update code in one place
-    Namespace Management| Prevents naming conflicts
-    Scalability         | Makes large projects manageable
-
-Creating a Module:
---------------------------------------------------------------------------------
-    # Save as greetings.py
-    def say_hello(name):
-        return f"Hello, {name}!"
-
-    def say_goodbye(name):
-        return f"Goodbye, {name}!"
-
-    DEFAULT_GREETING = "Hello"
+A module is a single file containing Python code that can be imported.
 
 Importing Modules:
 --------------------------------------------------------------------------------
@@ -1466,15 +2059,6 @@ Importing Modules:
     Import specific function    | from greetings import say_hello
     Import with alias           | import greetings as gr
     Import all (not recommended)| from greetings import *
-    Import multiple items       | from greetings import say_hello, say_goodbye
-
-Example:
---------------------------------------------------------------------------------
-    # main.py
-    import greetings
-
-    name = input("Enter your name: ")
-    print(greetings.say_hello(name))
 
 The if __name__ == "__main__" Guard:
 --------------------------------------------------------------------------------
@@ -1484,18 +2068,9 @@ The if __name__ == "__main__" Guard:
         print("This runs only when script is executed directly")
         main()
 
-Benefits of the Guard:
---------------------------------------------------------------------------------
-    Benefit             | Explanation
-    --------------------|------------------------------------------------------
-    Prevents Unintended Execution | Code doesn't run on import
-    Enables Testing     | Test code can be included in module
-    Dual Purpose        | Same file can be library AND script
-    Clean Imports       | No side effects when importing
-
 
 ===============================================================================
-27. PACKAGES
+41. PACKAGES
 ===============================================================================
 
 A package is a directory containing multiple modules and an __init__.py file.
@@ -1510,20 +2085,6 @@ Package Structure:
             __init__.py
             submodule.py
 
-The __init__.py File:
---------------------------------------------------------------------------------
-    # Can be empty or contain initialization code
-    # Marks directory as a Python package
-
-    # __init__.py example
-    __version__ = "1.0.0"
-    __author__ = "Python Developer"
-
-    from .module1 import important_function
-    from .module2 import another_function
-
-    __all__ = ['important_function', 'another_function']
-
 Importing from Packages:
 --------------------------------------------------------------------------------
     # Import entire module from package
@@ -1532,18 +2093,15 @@ Importing from Packages:
     # Import specific function
     from my_package.module1 import important_function
 
-    # Import subpackage
-    from my_package.subpackage import submodule
-
     # Import using package alias
     import my_package as mp
 
 
 ===============================================================================
-28. LIBRARIES VS. PACKAGES VS. MODULES
+42. LIBRARIES VS. PACKAGES VS. MODULES
 ===============================================================================
 
-Understanding the hierarchy of code organization in Python.
+Understanding the hierarchy of code organization.
 
 Definitions:
 --------------------------------------------------------------------------------
@@ -1553,7 +2111,7 @@ Definitions:
     Package     | Directory with __init__.py          | urllib/
     Library     | Collection of packages/modules      | requests, pandas
 
-Relationship Hierarchy:
+Hierarchy:
 --------------------------------------------------------------------------------
     LIBRARY (Collection)
         │
@@ -1561,88 +2119,49 @@ Relationship Hierarchy:
         │       ├── __init__.py
         │       └── module1.py
         │
-        ├── PACKAGE 2 (Directory)
-        │       ├── __init__.py
-        │       └── module2.py
-        │
         └── STANDALONE MODULE (single file)
 
-Key Takeaways:
---------------------------------------------------------------------------------
-    Takeaway                            | Explanation
-    ------------------------------------|----------------------------------------
-    Libraries are broader than packages | A library can contain multiple packages
-    A package organizes modules         | Packages contain __init__.py
-    Modules are single files            | Smallest unit of code organization
-    Terminology is often loose          | "Library" used generically in conversation
-
 
 ===============================================================================
-29. DOCSTRINGS
+43. DOCSTRINGS
 ===============================================================================
 
-Docstrings are special strings that serve as documentation for modules, classes,
-methods, and functions. They are located at the beginning of these definitions.
-
-Why Use Docstrings:
---------------------------------------------------------------------------------
-    Benefit             | Explanation
-    --------------------|------------------------------------------------------
-    Documentation       | Provides clear explanation of code functionality
-    Help System         | help() function displays docstrings
-    IDE Support         | IDEs show docstrings as tooltips
-    Code Maintainability| Makes code easier to understand
-    Automatic Docs      | Tools like Sphinx generate documentation
+Docstrings document modules, classes, methods, and functions.
 
 Syntax:
 --------------------------------------------------------------------------------
-    """This is a docstring."""
-
     def function(param):
         """Return the square of a number."""
         return param ** 2
 
 Accessing Docstrings:
 --------------------------------------------------------------------------------
-    print(function.__doc__)  # Return the square of a number.
-    help(function)           # Displays formatted documentation
+    print(function.__doc__)
+    help(function)
 
 
 ===============================================================================
-30. ASSERTIONS
+44. ASSERTIONS
 ===============================================================================
 
-Assertions are debugging tools that verify conditions are true during development.
-
-Why Use Assertions:
---------------------------------------------------------------------------------
-    Benefit             | Explanation
-    --------------------|------------------------------------------------------
-    Catch Bugs Early    | Detect invalid conditions as soon as they occur
-    Document Assumptions| Make implicit assumptions explicit
-    Debugging Aid       | Quickly identify where logic went wrong
-    Fail Fast           | Stop execution when an invalid state is detected
+Assertions verify conditions are true during development.
 
 Basic Syntax:
 --------------------------------------------------------------------------------
     assert condition, "Error message if condition is False"
 
-Examples:
+Example:
 --------------------------------------------------------------------------------
     def divide(a, b):
         assert b != 0, "Cannot divide by zero"
         return a / b
 
-    # Assertion can be disabled with -O flag
-    # Not for production error handling
-
 
 ===============================================================================
-31. UNPACKING
+45. UNPACKING
 ===============================================================================
 
-Unpacking allows assigning values from an iterable to multiple variables in one
-statement.
+Unpacking assigns values from an iterable to multiple variables.
 
 Basic Unpacking:
 --------------------------------------------------------------------------------
@@ -1658,18 +2177,12 @@ Swapping Variables:
 --------------------------------------------------------------------------------
     a, b = b, a                     # Swap without temporary variable
 
-Function Argument Unpacking:
---------------------------------------------------------------------------------
-    def add(a, b): return a + b
-    numbers = (5, 3)
-    result = add(*numbers)          # Unpacks tuple as arguments
-
 
 ===============================================================================
-32. EQUALITY (==) VS. IDENTITY (is)
+46. EQUALITY (==) VS. IDENTITY (is)
 ===============================================================================
 
-Understanding the difference between value equality and object identity.
+Understanding value equality vs object identity.
 
 Definitions:
 --------------------------------------------------------------------------------
@@ -1677,11 +2190,6 @@ Definitions:
     ------------|-------------|------------------------------------------
     ==          | Equality    | If values are equal
     is          | Identity    | If objects are the same in memory
-
-When to Use Each:
---------------------------------------------------------------------------------
-    Use == for value comparisons (strings, numbers, lists)
-    Use is for identity checks (None, singleton checks)
 
 Examples:
 --------------------------------------------------------------------------------
@@ -1695,11 +2203,10 @@ Examples:
 
 
 ===============================================================================
-33. DATACLASSES
+47. DATACLASSES
 ===============================================================================
 
-The @dataclass decorator automatically generates __init__, __repr__, and __eq__
-methods, reducing boilerplate code.
+The @dataclass decorator automatically generates __init__, __repr__, and __eq__.
 
 Basic Syntax:
 --------------------------------------------------------------------------------
@@ -1719,27 +2226,14 @@ Features:
     Auto __repr__       | Readable string representation
     Auto __eq__         | Value-based equality
     Default values      | Assign default values to fields
-    Mutable defaults    | Use field(default_factory=list)
     Frozen instances    | @dataclass(frozen=True) for immutability
-    __post_init__       | Hook for validation/computed fields
 
 
 ===============================================================================
-34. FIELDS IN DATACLASSES
+48. FIELDS IN DATACLASSES
 ===============================================================================
 
 The field() function provides fine-grained control over dataclass fields.
-
-field() Parameters:
---------------------------------------------------------------------------------
-    Parameter           | Description
-    --------------------|------------------------------------------------------
-    default             | Default value for the field
-    default_factory     | Callable that creates default value
-    init                | Include field in __init__ (default True)
-    repr                | Include field in __repr__ (default True)
-    compare             | Include field in comparisons (default True)
-    metadata            | Additional information
 
 Examples:
 --------------------------------------------------------------------------------
@@ -1753,24 +2247,10 @@ Examples:
 
 
 ===============================================================================
-35. __POST_INIT__ METHOD
+49. __POST_INIT__ METHOD
 ===============================================================================
 
 The __post_init__ method runs after __init__ for validation and computed fields.
-
-Why Use __post_init__:
---------------------------------------------------------------------------------
-    Use Case            | Description
-    --------------------|------------------------------------------------------
-    Validation          | Check that field values are valid
-    Computed Fields     | Calculate values based on other fields
-    Data Normalization  | Transform or format data after initialization
-
-Important Note:
---------------------------------------------------------------------------------
-    __post_init__ runs only ONCE at object creation.
-    Changing fields later does NOT trigger __post_init__ again.
-    Use properties for values that need to stay in sync.
 
 Example:
 --------------------------------------------------------------------------------
@@ -1783,21 +2263,17 @@ Example:
         def __post_init__(self):
             self.area = self.length * self.width
 
-
-===============================================================================
-36. @CACHED_PROPERTY
-===============================================================================
-
-The @cached_property decorator caches the result of an expensive property after
-the first access.
-
-Why Use @cached_property:
+Important Note:
 --------------------------------------------------------------------------------
-    Benefit             | Explanation
-    --------------------|------------------------------------------------------
-    Performance         | Avoids repeated expensive computations
-    Lazy Evaluation     | Computes only when first accessed
-    Thread-safe         | Safe for multi-threaded environments (Python 3.8+)
+    __post_init__ runs only ONCE at object creation.
+    Changing fields later does NOT trigger __post_init__ again.
+
+
+===============================================================================
+50. @CACHED_PROPERTY
+===============================================================================
+
+The @cached_property decorator caches the result of an expensive property.
 
 Example:
 --------------------------------------------------------------------------------
@@ -1814,19 +2290,10 @@ Example:
 
 
 ===============================================================================
-37. MONKEY PATCHING
+51. MONKEY PATCHING
 ===============================================================================
 
-Monkey patching is modifying or extending code at runtime without altering the
-original source.
-
-Why Use Monkey Patching:
---------------------------------------------------------------------------------
-    Use Case            | Description
-    --------------------|------------------------------------------------------
-    Testing             | Replace real API calls with mock data
-    Quick Fixes         | Fix bugs in third-party libraries
-    Hotfixes            | Patch production code without redeploying
+Monkey patching is modifying code at runtime without altering the original.
 
 Example:
 --------------------------------------------------------------------------------
@@ -1840,32 +2307,20 @@ Example:
     # Monkey patch
     WeatherAPI.get_weather = mock_get_weather
 
-Caution:
---------------------------------------------------------------------------------
-    Monkey patching can make code hard to debug. Use sparingly and prefer
-    unittest.mock for testing scenarios.
+Caution: Use sparingly. Prefer unittest.mock for testing.
 
 
 ===============================================================================
-38. TIMING CODE WITH TIMEIT
+52. TIMING CODE WITH TIMEIT
 ===============================================================================
 
-The timeit module is used for benchmarking small code snippets.
+The timeit module benchmarks small code snippets.
 
 Basic Usage:
 --------------------------------------------------------------------------------
     from timeit import timeit
 
     time = timeit("[x for x in range(1000)]", number=10000)
-
-Parameters:
---------------------------------------------------------------------------------
-    Parameter           | Description
-    --------------------|------------------------------------------------------
-    stmt                | Code to be timed
-    setup               | Code to run once before timing
-    number              | Number of executions
-    globals             | Dictionary of global namespace
 
 Example:
 --------------------------------------------------------------------------------
@@ -1874,21 +2329,20 @@ Example:
 
 
 ===============================================================================
-39. FILE HANDLING (WRITING)
+53. FILE HANDLING (WRITING)
 ===============================================================================
 
-Writing to files in Python using the open() function with different modes.
+Writing to files using different modes.
 
-File Modes for Writing:
+File Modes:
 --------------------------------------------------------------------------------
     Mode    | Description
     --------|--------------------------------------------------------------
     'w'     | Write - overwrites existing content
     'a'     | Append - adds to end of file
     'x'     | Exclusive creation - fails if file exists
-    'w+'    | Write and read - overwrites existing
 
-Basic Write Operations:
+Examples:
 --------------------------------------------------------------------------------
     # Write a single line
     with open('file.txt', 'w') as f:
@@ -1899,28 +2353,12 @@ Basic Write Operations:
     with open('file.txt', 'w') as f:
         f.writelines(lines)
 
-Important Note:
---------------------------------------------------------------------------------
-    Write mode ('w') erases all existing content. Use append mode ('a') to add
-    to existing files without deleting.
-
 
 ===============================================================================
-40. JSON IN PYTHON
+54. JSON IN PYTHON
 ===============================================================================
 
 JSON (JavaScript Object Notation) is a lightweight data interchange format.
-
-JSON vs Python:
---------------------------------------------------------------------------------
-    JSON                | Python
-    --------------------|----------------------------------------------
-    object              | dict
-    array               | list
-    string              | str
-    number              | int / float
-    true / false        | True / False
-    null                | None
 
 Key Functions:
 --------------------------------------------------------------------------------
@@ -1947,8 +2385,36 @@ Examples:
 
 
 ===============================================================================
-QUICK REFERENCE ADDITIONS
+QUICK REFERENCE
 ===============================================================================
+
+OOP Quick Reference:
+--------------------------------------------------------------------------------
+    Concept                 | Syntax
+    ------------------------|------------------------------------------
+    Class definition        | class ClassName:
+    Constructor             | def __init__(self, param):
+    Instance method         | def method(self):
+    Class method            | @classmethod def method(cls):
+    Static method           | @staticmethod def method():
+    Abstract method         | @abstractmethod def method():
+    Inheritance             | class Child(Parent):
+    Call parent             | super().__init__()
+    Name mangling           | __attribute (becomes _Class__attribute)
+
+Control & Flow Quick Reference:
+--------------------------------------------------------------------------------
+    Concept                 | Syntax
+    ------------------------|------------------------------------------
+    If statement            | if condition:
+    If-else                 | if condition: else:
+    If-elif-else            | if cond1: elif cond2: else:
+    Ternary operator        | value_if_true if condition else value_if_false
+    For loop                | for item in iterable:
+    While loop              | while condition:
+    Break                   | break
+    Continue                | continue
+    Range                   | range(start, stop, step)
 
 Exception Handling Quick Reference:
 --------------------------------------------------------------------------------
@@ -1956,76 +2422,9 @@ Exception Handling Quick Reference:
     ------------------------|------------------------------------------
     Basic try/except        | try: risky() except: handle()
     Specific exception      | except ValueError as e:
-    Multiple exceptions     | except (TypeError, ValueError):
     Try-except-else         | try: ... except: ... else: ...
     Try-except-finally      | try: ... except: ... finally: ...
     Raise exception         | raise ValueError("message")
-    Custom exception        | class MyError(Exception): pass
-
-Truthiness Quick Reference:
---------------------------------------------------------------------------------
-    Truthy values:          | if "text":, if 1:, if [1,2]:, if {"a":1}:
-    Falsy values:           | if not None:, if not 0:, if not "":, if not []:
-    Check truthiness        | bool(value)
-    Default value pattern   | value = user_input or "default"
-
-Module/Package Quick Reference:
---------------------------------------------------------------------------------
-    Concept                 | Syntax
-    ------------------------|------------------------------------------
-    Import module           | import module_name
-    Import function         | from module import function
-    Import with alias       | import module as alias
-    Module guard            | if __name__ == "__main__":
-    Create package          | directory + __init__.py
-    Import from package     | from package import module
-
-Docstring Quick Reference:
---------------------------------------------------------------------------------
-    Function docstring      | def func(): """Description."""
-    Access docstring        | func.__doc__ or help(func)
-
-Assertion Quick Reference:
---------------------------------------------------------------------------------
-    Basic assertion         | assert condition
-    With message            | assert condition, "Error message"
-
-Unpacking Quick Reference:
---------------------------------------------------------------------------------
-    Basic unpacking         | a, b = (1, 2)
-    Extended unpacking      | first, *rest = [1, 2, 3]
-    Ignore values           | a, _, b = (1, 2, 3)
-    Swap variables          | a, b = b, a
-
-Equality vs Identity Quick Reference:
---------------------------------------------------------------------------------
-    Value equality          | a == b
-    Object identity         | a is b
-    Check None              | x is None
-
-Dataclass Quick Reference:
---------------------------------------------------------------------------------
-    Basic dataclass         | @dataclass class C: a: int
-    Frozen dataclass        | @dataclass(frozen=True)
-    Custom field            | field(default_factory=list)
-    Post-init               | def __post_init__(self):
-
-Cached Property Quick Reference:
---------------------------------------------------------------------------------
-    Basic usage             | @cached_property def prop(self):
-
-File Writing Quick Reference:
---------------------------------------------------------------------------------
-    Write to file           | with open('f.txt', 'w') as f: f.write()
-    Append to file          | with open('f.txt', 'a') as f: f.write()
-    Write lines             | f.writelines(lines)
-
-JSON Quick Reference:
---------------------------------------------------------------------------------
-    Dict to JSON string     | json.dumps(data)
-    Dict to JSON file       | json.dump(data, file)
-    JSON string to dict     | json.loads(json_string)
-    JSON file to dict       | json.load(file)
 
 ===============================================================================
                         END OF DOCUMENTATION
