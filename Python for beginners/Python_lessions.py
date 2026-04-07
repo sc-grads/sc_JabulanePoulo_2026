@@ -402,9 +402,9 @@ print(f"lower(): '{text.lower()}'")
 print(f"replace(): '{text.replace('Python', 'Java')}'")
 
 # String formatting (f-strings)
-name = "Alice"
-age = 25
-greeting = f"Hello, {name}! You are {age} years old."
+name1 = "Alice"
+age1 = 25
+greeting = f"Hello, {name1}! You are {age1} years old."
 print(greeting)
 
 # String formatting (format method)
@@ -1933,6 +1933,31 @@ def chat():
         bot_response = get_response(user_input)
         print(f"Bot: {bot_response}")
 
+import string
+alphabet = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
+
+
+def is_letters_only(text: str) -> None:
+    for char in text:
+        if char not in alphabet:
+            raise ValueError('Text can only contain letters from the alphabet!')
+
+    print(f"{text} is letters-only, good job!")
+
+
+def main():
+    while True:
+        try:
+            user_input: str = input('Check text: ')
+            is_letters_only(user_input)
+        except ValueError:
+            print('Please only enter English letters...')
+        except Exception as e:
+            print(f'Encountered an unknown exception: {type(e)} {e}')
+
+
+if __name__ == "__main__":
+   main()
 
 # Uncomment to run the chat bot:
 # if __name__ == "__main__":
