@@ -4,11 +4,7 @@
                     PYTHON FUNDAMENTALS DOCUMENTATION
 ===============================================================================
 
-This file contains comprehensive documentation of Python fundamentals.
-Use this as a reference guide and for version control on GitHub.
 
-Author: Python Learner
-Date: 2024
 ===============================================================================
 """
 
@@ -41,8 +37,29 @@ Date: 2024
 # 24. For Loops
 # 25. Break and Continue
 # 26. Else with Loops
-# 28. EXCEPTION HANDLING (TRY, EXCEPT, ELSE, FINALLY)
+# 27. Functions
+# 28. Parameters vs Arguments
+# 29. Return Statements
+# 30. Lambda Functions
+# 31. Recursion
+# 32. *Args and **Kwargs
+# 33. Slash (/) and Asterisk (*)
+# 34. Pass Keyword
+# 35. Chat Bot Project
+# 36. Exception Handling (Try, Except, Else, Finally)
+# 37. The Raise Keyword
+# 38. Truthy and Falsy Values
+# 39. Modules
+# 40. Packages
+# 41. Libraries vs Packages vs Modules
 # =============================================================================
+
+import time
+import random
+import sys
+import datetime
+from decimal import Decimal
+from functools import wraps, lru_cache, cached_property
 
 
 # =============================================================================
@@ -142,7 +159,7 @@ A data type specifies which type of value a variable can hold.
 
 BUILT-IN DATA TYPES:
 Category     | Data Types
--------------|----------------------------------------
+-------------|------------------------------------------
 Text         | str
 Numeric      | int, float, complex
 Boolean      | bool
@@ -274,7 +291,6 @@ print(f"0.1 + 0.2 = {0.1 + 0.2}")  # 0.30000000000000004
 print(f"Rounded: {round(0.1 + 0.2, 1)}")  # 0.3
 
 # For exact decimal calculations
-from decimal import Decimal
 exact_result = Decimal('0.1') + Decimal('0.2')
 print(f"Decimal exact: {exact_result}")  # 0.3
 
@@ -443,9 +459,6 @@ num_int = int(num_str)
 num_float = float(num_str)
 print(f"int('123'): {num_int}")
 print(f"float('123'): {num_float}")
-
-# User input conversion (input always returns string)
-# age = int(input("Enter your age: "))
 
 
 # =============================================================================
@@ -737,9 +750,6 @@ def mad_libs():
     print("=" * 50)
     print(story)
 
-# Uncomment to run:
-# mad_libs()
-
 
 # =============================================================================
 # 22. IF, ELIF, ELSE STATEMENTS
@@ -880,23 +890,6 @@ for i in range(10):
         continue
     print(f"  {i}")
 
-# Practical example: input validation
-def get_valid_number():
-    while True:
-        user_input = input("Enter a number (or 'quit' to exit): ")
-        if user_input.lower() == "quit":
-            print("Goodbye!")
-            return None
-        if not user_input.isdigit():
-            print("Invalid input. Please enter a number.")
-            continue
-        return int(user_input)
-
-# Uncomment to test:
-# number = get_valid_number()
-# if number:
-#     print(f"You entered: {number}")
-
 
 # =============================================================================
 # 26. ELSE WITH LOOPS
@@ -941,110 +934,375 @@ is_prime(20)  # 20 is divisible by 2
 
 
 # =============================================================================
-# SUMMARY TABLE
+# 27. FUNCTIONS
 # =============================================================================
 """
-DATA TYPE QUICK REFERENCE:
-Type     | Description              | Example
----------|--------------------------|-----------------
-int      | Whole numbers            | age = 25
-float    | Decimal numbers          | price = 19.99
-str      | Text                     | name = "Alice"
-bool     | True/False               | is_valid = True
-list     | Ordered, mutable         | colors = ["red", "green"]
-tuple    | Ordered, immutable       | point = (10, 20)
-dict     | Key-value pairs          | {"name": "Alice"}
-set      | Unordered, unique        | {1, 2, 3}
-NoneType | Absence of value         | result = None
+A function is a block of organized, reusable code that performs a specific task.
 
-OPERATOR QUICK REFERENCE:
-Category     | Operators
--------------|------------------------------------------
-Arithmetic   | +, -, *, /, //, %, **
-Comparison   | ==, !=, >, <, >=, <=
-Logical      | and, or, not
-Assignment   | =, +=, -=, *=, /=
+WHY USE FUNCTIONS:
+- Reusability: Write once, use multiple times
+- Maintainability: Update in one place
+- Organization: Break code into logical sections
+- Debugging: Isolate and test individual pieces
+- Abstraction: Hide complex logic behind simple calls
 """
 
+# Basic function examples
+def say_hello():
+    """Function with no parameters and no return value."""
+    print("Hello, World!")
+
+def greet(name):
+    """Function with a parameter but no return value."""
+    print(f"Hello, {name}!")
+
+def add(a, b):
+    """Function with parameters and a return value."""
+    return a + b
+
+# Calling functions
+say_hello()
+greet("Alice")
+result = add(5, 3)
+print(f"5 + 3 = {result}")
+
 
 # =============================================================================
-# MAIN EXECUTION (Examples)
+# 28. PARAMETERS VS. ARGUMENTS
 # =============================================================================
+"""
+Parameters are variables in a function definition.
+Arguments are actual values passed to the function when called.
+"""
 
-def main():
-    """Run demonstration examples."""
-    print("\n" + "=" * 60)
-    print("PYTHON FUNDAMENTALS DEMONSTRATION")
-    print("=" * 60)
-    
-    # Variables demonstration
-    print("\n--- VARIABLES ---")
-    my_name = "Python Learner"
-    my_age = 25
-    print(f"Name: {my_name}, Age: {my_age}")
-    
-    # List demonstration
-    print("\n--- LISTS ---")
-    colors = ["red", "green", "blue"]
-    colors.append("yellow")
-    print(f"Colors: {colors}")
-    
-    # Dictionary demonstration
-    print("\n--- DICTIONARIES ---")
-    person = {"name": "Alice", "age": 30}
-    print(f"Person: {person}")
-    
-    # Conditional demonstration
-    print("\n--- CONDITIONALS ---")
-    score = 85
-    if score >= 90:
-        grade = "A"
-    elif score >= 80:
-        grade = "B"
-    elif score >= 70:
-        grade = "C"
+def introduce(name, age, city):
+    """Function with multiple parameters."""
+    print(f"{name} is {age} years old and lives in {city}")
+
+# Positional arguments (order matters)
+introduce("Alice", 25, "New York")
+
+# Keyword arguments (order doesn't matter)
+introduce(city="London", name="Bob", age=30)
+
+# Default parameters
+def greet_person(name="Guest"):
+    print(f"Hello, {name}!")
+
+greet_person()  # Output: Hello, Guest!
+greet_person("Alice")  # Output: Hello, Alice!
+
+
+# =============================================================================
+# 29. RETURN STATEMENTS
+# =============================================================================
+"""
+The return statement exits a function and sends a value back to the caller.
+"""
+
+def add_numbers(a, b):
+    """Returns the sum of two numbers."""
+    return a + b
+
+def compare(a, b):
+    if a > b:
+        return "a is greater"
+    elif b > a:
+        return "b is greater"
     else:
-        grade = "F"
-    print(f"Score: {score}, Grade: {grade}")
-    
-    # Loop demonstration
-    print("\n--- LOOPS ---")
-    print("Counting to 5:")
-    for i in range(1, 6):
-        print(f"  {i}")
-    
-    print("\n" + "=" * 60)
-    print("Documentation complete! Use this file for reference.")
-    print("=" * 60)
+        return "Both are equal"
 
+def get_min_max(numbers):
+    return min(numbers), max(numbers)
 
-if __name__ == "__main__":
-    main()
-
-#!/usr/bin/env python3
-"""
-===============================================================================
-                    PYTHON LEARNING FILE
-===============================================================================
-
-This file contains all the Python code examples including:
-- Simple Adder
-- Lists and Dictionaries
-- Mad Libs
-- While Loops
-- For Loops with else
-- Rock, Paper, Scissors Game
-
-Author: Python Learner
-===============================================================================
-"""
-
-import time
-import random
+print(f"add_numbers(5, 3) = {add_numbers(5, 3)}")
+print(f"compare(10, 5): {compare(10, 5)}")
+lowest, highest = get_min_max([10, 20, 5, 30, 15])
+print(f"Lowest: {lowest}, Highest: {highest}")
 
 
 # =============================================================================
-# SIMPLE ADDER
+# 30. LAMBDA FUNCTIONS
+# =============================================================================
+"""
+Lambda functions are small, anonymous functions defined in one line.
+
+SYNTAX: lambda parameters: expression
+"""
+
+# Regular function vs Lambda
+square = lambda x: x ** 2
+print(f"Lambda square: {square(5)}")
+
+# Lambda with multiple parameters
+add_lambda = lambda a, b: a + b
+print(f"Lambda add: {add_lambda(3, 5)}")
+
+# Using lambda with map()
+numbers = [1, 2, 3, 4, 5]
+squared = list(map(lambda x: x ** 2, numbers))
+print(f"Mapped squares: {squared}")
+
+# Using lambda with filter()
+evens = list(filter(lambda x: x % 2 == 0, numbers))
+print(f"Filtered evens: {evens}")
+
+# Using lambda with sorted()
+pairs = [(1, 2), (3, 1), (5, 0)]
+sorted_pairs = sorted(pairs, key=lambda x: x[1])
+print(f"Sorted by second element: {sorted_pairs}")
+
+
+# =============================================================================
+# 31. RECURSION
+# =============================================================================
+"""
+Recursion is a technique where a function calls itself to solve a problem.
+"""
+
+def factorial(n):
+    """Calculate factorial using recursion."""
+    if n == 0:  # Base case
+        return 1
+    return n * factorial(n - 1)  # Recursive case
+
+def fibonacci(n):
+    """Return the nth Fibonacci number."""
+    if n <= 0:
+        return 0
+    elif n == 1:
+        return 1
+    return fibonacci(n - 1) + fibonacci(n - 2)
+
+def is_palindrome(text):
+    """Check if a string is a palindrome."""
+    text = text.lower().replace(" ", "")
+    if len(text) <= 1:
+        return True
+    if text[0] != text[-1]:
+        return False
+    return is_palindrome(text[1:-1])
+
+print(f"factorial(5) = {factorial(5)}")
+print(f"fibonacci(7) = {fibonacci(7)}")
+print(f"is_palindrome('racecar'): {is_palindrome('racecar')}")
+
+
+# =============================================================================
+# 32. *ARGS AND **KWARGS
+# =============================================================================
+"""
+*args and **kwargs allow functions to accept a variable number of arguments.
+"""
+
+def sum_all(*args):
+    """Sum any number of positional arguments."""
+    total = 0
+    for num in args:
+        total += num
+    return total
+
+def print_info(**kwargs):
+    """Print any number of keyword arguments."""
+    for key, value in kwargs.items():
+        print(f"  {key}: {value}")
+
+def mixed_arguments(param1, *args, **kwargs):
+    """Function combining regular params, *args, and **kwargs."""
+    print(f"param1: {param1}")
+    print(f"*args: {args}")
+    print(f"**kwargs: {kwargs}")
+
+print(f"sum_all(1, 2, 3, 4) = {sum_all(1, 2, 3, 4)}")
+print("print_info(name='Alice', age=25):")
+print_info(name="Alice", age=25)
+
+
+# =============================================================================
+# 33. SLASH (/) AND ASTERISK (*) IN FUNCTION SIGNATURES
+# =============================================================================
+"""
+The / and * symbols control how arguments can be passed to functions.
+"""
+
+# Positional-only parameters (before /)
+def positional_only_func(a, b, /):
+    return a + b
+
+# Keyword-only parameters (after *)
+def keyword_only_func(a, *, b):
+    return a + b
+
+# Combining both
+def combined_func(pos1, pos2, /, standard, *, kw1, kw2):
+    print(f"Positional-only: {pos1}, {pos2}")
+    print(f"Standard (positional or keyword): {standard}")
+    print(f"Keyword-only: {kw1}, {kw2}")
+
+print(f"positional_only_func(1, 2) = {positional_only_func(1, 2)}")
+print(f"keyword_only_func(1, b=2) = {keyword_only_func(1, b=2)}")
+
+
+# =============================================================================
+# 34. PASS KEYWORD
+# =============================================================================
+"""
+The pass keyword is a placeholder where Python expects an indented block of code.
+"""
+
+# Empty function placeholder
+def future_function():
+    pass  # TODO: Implement this function later
+
+# Empty class placeholder
+class FutureClass:
+    pass  # TODO: Add methods and attributes
+
+# Conditional placeholder
+condition = True
+if condition:
+    pass  # TODO: Add logic here
+else:
+    print("Condition is false")
+
+
+# =============================================================================
+# 35. CHAT BOT PROJECT
+# =============================================================================
+"""
+A simple rule-based chat bot that responds to user input.
+"""
+
+def get_response(user_input):
+    """Get a response from the bot based on user input."""
+    responses = {
+        "hello": ["Hey there!", "Hi!", "Hello!", "Greetings!"],
+        "how are you": ["I'm good, thanks!", "Doing great!", "All good here!"],
+        "what time is it": [str(datetime.datetime.now().time())],
+        "goodbye": ["Goodbye!", "See you later!", "Take care!"],
+        "your name": ["I'm Bot, your virtual assistant!"],
+        "joke": [
+            "Why do programmers prefer dark mode? Because light attracts bugs!",
+            "What do you call a snake that codes? A python!"
+        ],
+        "thanks": ["You're welcome!", "Happy to help!"]
+    }
+
+    message = user_input.lower()
+    for key in responses:
+        if key in message:
+            return random.choice(responses[key])
+    
+    return "I do not understand."
+
+
+# =============================================================================
+# 36. EXCEPTION HANDLING (TRY, EXCEPT, ELSE, FINALLY)
+# =============================================================================
+"""
+Exception handling allows your program to respond gracefully to errors.
+"""
+
+def safe_divide(a, b):
+    """Divide two numbers with error handling."""
+    try:
+        result = a / b
+    except ZeroDivisionError:
+        print("Error: Cannot divide by zero!")
+        return None
+    except TypeError:
+        print("Error: Please provide numbers!")
+        return None
+    else:
+        print(f"Result: {result}")
+        return result
+    finally:
+        print("Division attempt completed.")
+
+# Demonstrate exception handling
+safe_divide(10, 2)
+safe_divide(10, 0)
+
+
+# =============================================================================
+# 37. THE RAISE KEYWORD
+# =============================================================================
+"""
+The raise keyword is used to intentionally trigger an exception.
+"""
+
+def set_age(age):
+    if age < 0:
+        raise ValueError("Age cannot be negative")
+    if age > 150:
+        raise ValueError("Age cannot exceed 150")
+    return age
+
+try:
+    set_age(-5)
+except ValueError as e:
+    print(f"Error: {e}")
+
+
+# =============================================================================
+# 38. TRUTHY AND FALSY VALUES
+# =============================================================================
+"""
+Every value in Python has an inherent truth value.
+"""
+
+# Check if list has items
+shopping_cart = []
+if shopping_cart:
+    print("Cart has items")
+else:
+    print("Cart is empty")
+
+# Provide default value
+name = input("Enter name (or press enter for Guest): ") or "Guest"
+print(f"Hello, {name}!")
+
+# Filter falsy values
+data = [1, 0, "hello", "", None, 42]
+clean = [x for x in data if x]
+print(f"Filtered truthy values: {clean}")
+
+
+# =============================================================================
+# 39. MODULES
+# =============================================================================
+"""
+A module is a single file containing Python code that can be imported.
+"""
+# Note: This file itself is a module!
+# To use this as a module, import it from another Python file.
+
+
+# =============================================================================
+# 40. PACKAGES
+# =============================================================================
+"""
+A package is a directory containing multiple modules and an __init__.py file.
+"""
+# To create a package:
+# my_package/
+#     __init__.py
+#     module1.py
+#     module2.py
+
+
+# =============================================================================
+# 41. LIBRARIES VS. PACKAGES VS. MODULES
+# =============================================================================
+"""
+Module: Single .py file
+Package: Directory with __init__.py
+Library: Collection of packages/modules
+"""
+
+
+# =============================================================================
+# SIMPLE ADDER FUNCTION
 # =============================================================================
 
 def simple_adder():
@@ -1066,170 +1324,6 @@ def simple_adder():
 
 
 # =============================================================================
-# LISTS EXAMPLE
-# =============================================================================
-
-def list_example():
-    """Demonstrates list operations."""
-    print("\n" + "=" * 50)
-    print("LISTS EXAMPLE")
-    print("=" * 50)
-    
-    my_list = ["Alice", 30, True, [1, 2, 3]]
-    
-    my_first = my_list[0]
-    print(f"First element: {my_first}")
-    
-    my_second = my_list[1]
-    print(f"Second element: {my_second}")
-    
-    print("=" * 50)
-
-
-# =============================================================================
-# DICTIONARY EXAMPLE
-# =============================================================================
-
-def dictionary_example():
-    """Demonstrates dictionary operations."""
-    print("\n" + "=" * 50)
-    print("DICTIONARY EXAMPLE")
-    print("=" * 50)
-    
-    users = {"bob": 1, "luigi": 2}
-    user_id = users["bob"]
-    print(f"Bob's ID: {user_id}")
-    
-    # Adds a new key-value pair
-    users["mario"] = 3
-    print(f"After adding Mario: {users}")
-    
-    # Modifies the existing key-value pair
-    users["luigi"] = 4
-    print(f"After modifying Luigi: {users}")
-    
-    # Removes the key "bob" and its associated value
-    del users["bob"]
-    print(f"After deleting Bob: {users}")
-    
-    # Nested dictionary
-    weather_data = {
-        "time": "12:00",
-        "weather": {
-            "morning": "rain",
-            "evening": "more rain"
-        }
-    }
-    print(f"Weather data: {weather_data}")
-    print(f"Morning weather: {weather_data['weather']['morning']}")
-    print("=" * 50)
-
-
-# =============================================================================
-# MAD LIBS EXAMPLE
-# =============================================================================
-
-def mad_libs():
-    """A fun Mad Libs game where users create a silly story."""
-    print("\n" + "=" * 50)
-    print("MAD LIBS GAME")
-    print("=" * 50)
-    
-    name: str = input('Enter a name: ')
-    noun_a: str = input('Enter a noun: ')
-    verb_a: str = input('Enter a verb: ')
-    number_a: str = input('Enter a number: ')
-    number_b: str = input('Enter another number: ')
-    
-    story: str = f"""
-    ----------------------------------------------------------------------
-    This is a story about {name}, a strong and beautiful {noun_a} 
-    who loved to {verb_a}.
-    
-    One day, {name} found {number_a} magical {noun_a}s and
-    {verb_a}ed all the way to the castle.
-    After {number_b} hours, {name} became a legend!
-    ----------------------------------------------------------------------
-    """
-    
-    print(story)
-    print("=" * 50)
-
-
-# =============================================================================
-# WHILE LOOP EXAMPLE (INTERNET CONNECTION)
-# =============================================================================
-
-def internet_connection_demo():
-    """Demonstrates a while loop with a connection simulation."""
-    print("\n" + "=" * 50)
-    print("WHILE LOOP DEMO - INTERNET CONNECTION")
-    print("=" * 50)
-    
-    connected: bool = True
-    
-    while connected:
-        print("Using internet...")
-        time.sleep(1)  # Using 1 second instead of 10 for demo
-        connected = False
-    
-    print("Connection ended")
-    print("=" * 50)
-
-
-# =============================================================================
-# WHILE LOOP WITH USER INPUT
-# =============================================================================
-
-def chat_bot_demo():
-    """Demonstrates a simple chat bot using a while loop."""
-    print("\n" + "=" * 50)
-    print("CHAT BOT DEMO (Type 'quit' to exit)")
-    print("=" * 50)
-    
-    while True:
-        user_input: str = input("You: ")
-        
-        if user_input.lower() == "quit":
-            print("Bot: Goodbye!")
-            break
-        
-        if user_input == "Hello":
-            print('Bot: Hello World!')
-        else:
-            print("Bot: yes, that is interesting.")
-    
-    print("=" * 50)
-
-
-# =============================================================================
-# FOR LOOP WITH ELSE EXAMPLES
-# =============================================================================
-
-def for_loop_with_else_demo():
-    """Demonstrates for loops with else clauses."""
-    print("\n" + "=" * 50)
-    print("FOR LOOP WITH ELSE DEMO")
-    print("=" * 50)
-    
-    print("\n--- Without break - else executes ---")
-    for i in range(5):
-        print(i, end=" ")
-    else:
-        print("\nLoop completed normally")
-    
-    print("\n--- With break - else does NOT execute ---")
-    for i in range(5):
-        if i == 3:
-            break
-        print(i, end=" ")
-    else:
-        print("\nThis will not print")
-    
-    print("\n" + "=" * 50)
-
-
-# =============================================================================
 # ROCK, PAPER, SCISSORS GAME
 # =============================================================================
 
@@ -1239,7 +1333,6 @@ def rock_paper_scissors():
     print("ROCK, PAPER, SCISSORS GAME")
     print("=" * 50)
     
-    # Define the game moves with emojis
     moves = {
         "rock": "🪨",
         "paper": "📄",
@@ -1253,7 +1346,6 @@ def rock_paper_scissors():
     print("Let's start!")
     print("-" * 30)
     
-    # Score tracking
     player_wins = 0
     ai_wins = 0
     ties = 0
@@ -1261,7 +1353,6 @@ def rock_paper_scissors():
     while True:
         user_input = input("\nEnter rock, paper, or scissors: ").lower()
         
-        # Check if the user wants to exit
         if user_input == "exit":
             print("\n" + "-" * 30)
             print("FINAL SCORE:")
@@ -1271,19 +1362,15 @@ def rock_paper_scissors():
             print("Thanks for playing! Goodbye.")
             break
         
-        # Validate user input
         if user_input not in valid_moves:
             print("Invalid input, please try again.")
             continue
         
-        # Generate AI move
         ai_move = random.choice(valid_moves)
         
-        # Show moves
         print(f"\nYou chose: {user_input} {moves[user_input]}")
         print(f"AI chose:  {ai_move} {moves[ai_move]}")
         
-        # Determine the outcome
         if user_input == ai_move:
             print("It's a tie!")
             ties += 1
@@ -1296,34 +1383,58 @@ def rock_paper_scissors():
             print("You lose!")
             ai_wins += 1
         
-        # Show current score
         print(f"\nScore - You: {player_wins} | AI: {ai_wins} | Ties: {ties}")
         print("-" * 30)
 
 
 # =============================================================================
-# MAIN FUNCTION - RUN ALL EXAMPLES
+# INTERNET CONNECTION DEMO
+# =============================================================================
+
+def internet_connection_demo():
+    """Demonstrates a while loop with a connection simulation."""
+    print("\n" + "=" * 50)
+    print("WHILE LOOP DEMO - INTERNET CONNECTION")
+    print("=" * 50)
+    
+    connected: bool = True
+    
+    while connected:
+        print("Using internet...")
+        time.sleep(1)
+        connected = False
+    
+    print("Connection ended")
+    print("=" * 50)
+
+
+# =============================================================================
+# MAIN FUNCTION - RUN ALL DEMONSTRATIONS
 # =============================================================================
 
 def main():
-    """Main function to run all examples."""
+    """Main function to run all demonstrations."""
     print("\n" + "=" * 60)
-    print("PYTHON LEARNING EXAMPLES")
+    print("PYTHON FUNDAMENTALS DEMONSTRATION")
     print("=" * 60)
     
-    # Run all examples
+    # Run demonstrations
     simple_adder()
-    list_example()
-    dictionary_example()
-    mad_libs()
     internet_connection_demo()
-    for_loop_with_else_demo()
-    
-    # Chat bot demo (commented by default - uncomment to run)
-    # chat_bot_demo()
-    
-    # Run the Rock, Paper, Scissors game
     rock_paper_scissors()
+    
+    # Optional: Run Mad Libs (uncomment to use)
+    # mad_libs()
+    
+    # Run chat bot (uncomment to use)
+    # print("\nStarting Chat Bot...")
+    # print("Type 'goodbye' to exit")
+    # while True:
+    #     user_input = input("You: ")
+    #     if user_input.lower() in ["goodbye", "exit", "quit"]:
+    #         print("Bot: Goodbye!")
+    #         break
+    #     print(f"Bot: {get_response(user_input)}")
     
     print("\n" + "=" * 60)
     print("THANK YOU FOR LEARNING PYTHON!")
@@ -1331,6 +1442,7 @@ def main():
 
 
 # =============================================================================
+<<<<<<< HEAD
 # 27. FUNCTIONS
 # =============================================================================
 """
@@ -2435,5 +2547,12 @@ Import from package     | from package import module
 
 # =============================================================================
 # END OF DOCUMENTATION
+=======
+# MAIN EXECUTION GUARD
+>>>>>>> 91b9d9f9414e2350b444970478a023128e0c9e87
 # =============================================================================
+# This code only runs when the script is executed directly
+# It does NOT run when this file is imported as a module
 
+if __name__ == "__main__":
+    main()
