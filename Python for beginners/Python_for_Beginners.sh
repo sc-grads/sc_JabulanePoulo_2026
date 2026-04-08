@@ -57,7 +57,7 @@ TABLE OF CONTENTS
 50. @cached_property
 51. Monkey Patching
 52. Timing Code with timeit
-53. File Handling (Writing)
+53. File Handling 
 54. JSON in Python
 
 
@@ -2352,7 +2352,207 @@ Examples:
     lines = ["Line 1\n", "Line 2\n", "Line 3\n"]
     with open('file.txt', 'w') as f:
         f.writelines(lines)
+Reading and appending are essential file operations in Python.
 
+FILE MODES COMPLETE REFERENCE:
+--------------------------------------------------------------------------------
+    Mode    | Description                          | File Pointer Position
+    --------|--------------------------------------|-----------------------------
+    'r'     | Read (default) - error if not exist | Beginning of file
+    'w'     | Write - overwrites/creates file      | Beginning of file
+    'a'     | Append - creates file if not exist   | End of file
+    'r+'    | Read and write - error if not exist  | Beginning of file
+    'w+'    | Read and write - overwrites/creates  | Beginning of file
+    'a+'    | Read and append - creates if missing | End of file (for writing)
+    'x'     | Exclusive creation - fails if exists | Beginning of file
+
+
+55a. READING FROM FILES
+===============================================================================
+
+Reading Methods:
+--------------------------------------------------------------------------------
+    Method          | Description                              | Return Type
+    ----------------|------------------------------------------|-------------
+    file.read()     | Reads entire file                        | String
+    file.read(n)    | Reads n characters                       | String
+    file.readline() | Reads one line (including newline)       | String
+    file.readlines()| Reads all lines into a list              | List of strings
+
+Basic File Reading:
+--------------------------------------------------------------------------------
+    # Safest way - using with statement (auto-closes file)
+    with open('info.txt', 'r') as file:
+        content = file.read()
+        print(content)
+
+Reading Line by Line:
+--------------------------------------------------------------------------------
+    # Read all lines into a list
+    with open('info.txt', 'r') as file:
+        lines = file.readlines()
+        for line in lines:
+            print(line.strip())  # strip() removes newline characters
+
+    # Memory-efficient line-by-line reading
+    with open('large_file.txt', 'r') as file:
+        for line in file:  # Reads one line at a time
+            process_line(line)
+
+Reading Specific Number of Characters:
+--------------------------------------------------------------------------------
+    with open('info.txt', 'r') as file:
+        first_10_chars = file.read(10)
+        print(first_10_chars)
+
+        remaining = file.read()  # Reads the rest
+        print(remaining)
+
+Using readline() Method:
+--------------------------------------------------------------------------------
+    with open('info.txt', 'r') as file:
+        first_line = file.readline()
+        second_line = file.readline()
+        print(f"First: {first_line.strip()}")
+        print(f"Second: {second_line.strip()}")
+
+Reading Binary Files:
+--------------------------------------------------------------------------------
+    # Read image or binary file
+    with open('image.jpg', 'rb') as file:  # 'rb' = read binary
+        binary_data = file.read()
+        print(f"Read {len(binary_data)} bytes")
+
+Error Handling When Reading:
+--------------------------------------------------------------------------------
+    file_path = 'info.txt'
+
+    try:
+        with open(file_path, 'r') as file:
+            content = file.read()
+            print(content)
+    except FileNotFoundError:
+        print(f"Error: '{file_path}' not found")
+    except PermissionError:
+        print(f"Error: Permission denied for '{file_path}'")
+    except UnicodeDecodeError:
+        print(f"Error: File encoding issue - try specifying encoding")
+    except Exception as e:
+        print(f"Unexpected error: {e}")
+
+Specifying File Encoding:
+--------------------------------------------------------------------------------
+    # For files with special characters
+    with open('info.txt', 'r', encoding='utf-8') as file:
+        content = file.read()
+
+    # Common encodings: 'utf-8', 'latin-1', 'cp1252', 'ascii'
+
+Checking if File Exists Before Reading:
+--------------------------------------------------------------------------------
+    import os
+
+    if os.path.exists('info.txt'):
+        with open('info.txt', 'r') as file:
+            content = file.read()
+    else:
+        print("File does not exist")
+
+Using pathlib (Modern Approach):
+--------------------------------------------------------------------------------
+    from pathlib import Path
+
+    file_path = Path('info.txt')
+    
+    if file_path.exists():
+        content = file_path.read_text()  # Read as text
+        print(content)
+        
+        # For binary files
+        # binary_data = file_path.read_bytes()
+
+
+55b. APPENDING TO FILES
+===============================================================================
+
+Append Mode ('a') - Key Points:
+--------------------------------------------------------------------------------
+    Point                       | Description
+    ----------------------------|--------------------------------------------------
+    Preserves existing content  | Does NOT delete existing data
+    Creates missing files       | Automatically creates file if it doesn't exist
+    Writes at the end           | New content added after existing content
+    Cannot read by default      | Use 'a+' mode to read and append
+
+Basic Appending:
+--------------------------------------------------------------------------------
+    # Append a single line
+    with open('info.txt', 'a') as file:
+        file.write("This is another line.\n")  # \n adds newline
+
+Appending Multiple Lines:
+--------------------------------------------------------------------------------
+    # Append multiple lines
+    lines_to_add = [
+        "Line 1\n",
+        "Line 2\n",
+        "Line 3\n"
+    ]
+    
+    with open('info.txt', 'a') as file:
+        file.writelines(lines_to_add)
+
+    # Using write() in a loop
+    with open('info.txt', 'a') as file:
+        for i in range(5):
+            file.write(f"Log entry #{i+1}\n")
+
+Appending with Formatting:
+--------------------------------------------------------------------------------
+    import datetime
+
+    def log_message(message):
+        timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        with open('log.txt', 'a') as log_file:
+            log_file.write(f"[{timestamp}] {message}\n")
+
+    log_message("Application started")
+    log_message("User logged in")
+    log_message("Application closed")
+
+Read and Append Mode ('a+'):
+--------------------------------------------------------------------------------
+    # 'a+' allows reading AND appending
+    with open('info.txt', 'a+') as file:
+        # Write new content
+        file.write("New line at the end\n")
+        
+        # Move pointer to beginning to read
+        file.seek(0)
+        
+        # Read all content
+        content = file.read()
+        print(content)
+
+Appending Without Duplicates:
+--------------------------------------------------------------------------------
+    def append_if_not_exists(filename, new_line):
+        """Append a line only if it doesn't already exist."""
+        try:
+            with open(filename, 'r') as file:
+                existing = file.read()
+        except FileNotFoundError:
+            existing = ""
+        
+        if new_line not in existing:
+            with open(filename, 'a') as file:
+                file.write(new_line + "\n")
+            print(f"Added: {new_line}")
+        else:
+            print(f"Already exists: {new_line}")
+
+    append_if_not_exists('todo.txt', 'Buy groceries')
+    append_if_not_exists('todo.txt', 'Buy groceries')  # Won't add duplicate
 
 ===============================================================================
 54. JSON IN PYTHON
