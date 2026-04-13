@@ -1,34 +1,19 @@
 name: Test Project
-on: push
+on: [push]
 jobs:
-    test:
-        runs-on: ubuntu-latest
-        steps:
-            - name: get code
-              uses: actions/checkout@v3
-            - name: install NodeJS
-              uses: actions/setup-node@v3
-              with:
-                node-version: '18'
-            - name: install dependencies
-              run: npm install
-            - name: run tests
-              run: npm test
-              
-name: Test Project
-on: push
-jobs:
-    test:
-        runs-on: ubuntu-latest
-        steps:
-            - name: get code
-              uses: actions/checkout@v3
-            - name: install NodeJS
-              uses: actions/setup-node@v3
-              with:
-                node-version: '18'
-            - name: install dependencies
-              run: npm install
-            - name: run tests
-              run: npm test
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: get code
+        uses: actions/checkout@v4
+      - name: install NodeJS
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: install dependencies
+        run: npm install
+        working-directory: ./02+Starting+Project
+      - name: run tests
+        run: npm test
+        working-directory: ./02+Starting+Project
               
