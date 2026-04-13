@@ -12,8 +12,7 @@ jobs:
           node-version: '20'
       - name: install dependencies
         run: npm install
-        working-directory: ./02+Starting+Project
+        working-directory: ./02+Starting+Project/02 Starting Project
       - name: run tests
         run: npm test
-        working-directory: ./02+Starting+Project
-              
+        working-directory: ./02+Starting+Project/02 Starting Project
