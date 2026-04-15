@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+
 """
 ================================================================================
 SALES DATA PROCESSING PIPELINE
@@ -134,7 +134,7 @@ def setup_logging():
         level=logging.INFO,  # Only show INFO level and above (not DEBUG)
         format='%(asctime)s - %(levelname)s - %(message)s',  # Log format
         handlers=[
-            # File handler: Writes logs to timestamped file with UTF-8 encoding
+            # File handler: Writes logs to timestamped file
             logging.FileHandler(log_file, encoding='utf-8'),
             # Stream handler: Also prints logs to console (stdout) for real-time viewing
             logging.StreamHandler(sys.stdout)
@@ -230,13 +230,13 @@ class SalesDataProcessor:
         """
         Load raw CSV data from the input file into a pandas DataFrame.
         
-        This method reads the CSV file specified during initialization and
+        This method reads the CSV file specified during initialisation and
         stores it in self.raw_data. It handles common loading errors and
         logs the number of rows loaded.
         
         Error Handling:
-            - File reading errors (corrupt file, wrong format)
-            - Empty file (no data rows)
+            - File reading errors 
+            - Empty file 
         
         Returns:
             bool: True if loading was successful, False otherwise

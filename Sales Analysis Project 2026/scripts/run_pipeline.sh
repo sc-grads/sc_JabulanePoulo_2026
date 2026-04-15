@@ -1,4 +1,4 @@
-#!/bin/bash
+
 # =============================================================================
 # SALES DATA PIPELINE ORCHESTRATOR
 # =============================================================================
@@ -170,10 +170,10 @@ ls -la output/
 echo ""
 echo "File Summary:"
 echo "  - clean_sales.csv: Complete cleaned transaction data"
-echo "  - sales_by_region.csv: Revenue by region (highest first)"
-echo "  - sales_by_product.csv: Revenue by product (highest first)"
-echo "  - sales_by_category.csv: Revenue by category (Electronics/Furniture)"
-echo "  - monthly_revenue.csv: Revenue by month (chronological)"
+echo "  - sales_by_region.csv: Revenue by region "
+echo "  - sales_by_product.csv: Revenue by product"
+echo "  - sales_by_category.csv: Revenue by category"
+echo "  - monthly_revenue.csv: Revenue by month"
 echo "  - salesperson_performance.csv: All salespeople with revenue and rank"
 echo "  - top_salespeople.csv: Top 5 performing salespeople"
 
