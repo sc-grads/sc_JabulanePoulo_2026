@@ -30,9 +30,8 @@ from pathlib import Path
 # Cross-platform compatible (Windows, Linux, Mac)
 
 
-# =============================================================================
-# LOGGING CONFIGURATION
-# =============================================================================
+"""This module defines the SalesDataProcessor class which implements a complete
+ETL (Extract, Transform, Load) pipeline for processing sales data."""
 
 def setup_logging():
     """
@@ -158,10 +157,9 @@ class SalesDataProcessor:
     
     """
     
-    # -------------------------------------------------------------------------
-    # CONSTRUCTOR
-    # -------------------------------------------------------------------------
-    
+    """this is the constructor of the class it is used to initialise the class with the input and output paths and also to
+      check if the input file exists and to create the output directory if it does not exist
+    """
     def __init__(self, input_path, output_dir):
         """
         Initialise the SalesDataProcessor with file paths.
@@ -187,9 +185,7 @@ class SalesDataProcessor:
         # Create the output directory (and any missing parent directories)
         self.output_dir.mkdir(parents=True, exist_ok=True)
     
-    # -------------------------------------------------------------------------
-    # STEP 1: DATA EXTRACTION (LOADING)
-    # -------------------------------------------------------------------------
+    #this function is to load the data from the csv file and store it in a dataframe
     
     def load_data(self):
         """
@@ -222,9 +218,7 @@ class SalesDataProcessor:
             logger.error(f"Load error: {e}")
             return False
     
-    # -------------------------------------------------------------------------
-    # STEP 2: DATA CLEANING
-    # -------------------------------------------------------------------------
+    #this function is to clean the data
     
     def clean_data(self):
         """
@@ -237,16 +231,12 @@ class SalesDataProcessor:
             # Create a copy of the raw data to avoid modifying the original
             df = self.raw_data.copy()
             
-            # -----------------------------------------------------------------
-            # FIX 1: Remove Duplicate Records
-            # -----------------------------------------------------------------
+            #this is to remove duplicates
             # drop_duplicates() removes rows that are identical in all columns
             df = df.drop_duplicates()
             logger.info(f"Removed duplicates, remaining rows: {len(df)}")
             
-            # -----------------------------------------------------------------
-            # FIX 2: Handle Missing Quantity Values
-            # -----------------------------------------------------------------
+            #handle missing quantity values
             # Check if the 'quantity' column exists
             if 'quantity' in df.columns:
                 # Count missing quantities before filling
@@ -258,9 +248,7 @@ class SalesDataProcessor:
                 # astype(int) ensures the column is integer type
                 df['quantity'] = df['quantity'].fillna(1).astype(int)
             
-            # -----------------------------------------------------------------
-            # FIX 3: Handle Missing Price Values
-            # -----------------------------------------------------------------
+           #handle missing price values
             if 'price' in df.columns:
                 # Count missing prices before filling
                 missing_price = df['price'].isna().sum()
@@ -271,9 +259,7 @@ class SalesDataProcessor:
                     # Replace missing prices with the calculated average
                     df['price'] = df['price'].fillna(mean_price)
             
-            # -----------------------------------------------------------------
-            # FIX 4: Handle Missing Salesperson Names
-            # -----------------------------------------------------------------
+            #handle missing salesperson names
             if 'salesperson' in df.columns:
                 # Count missing salesperson names before filling
                 missing_sales = df['salesperson'].isna().sum()
@@ -282,9 +268,7 @@ class SalesDataProcessor:
                 # Replace empty salesperson fields with 'Unknown'
                 df['salesperson'] = df['salesperson'].fillna('Unknown')
             
-            # -----------------------------------------------------------------
-            # FIX 5: Handle Invalid Dates
-            # -----------------------------------------------------------------
+            #handle date formatting
             if 'date' in df.columns:
                 # Count rows before date cleaning
                 rows_before = len(df)
@@ -310,9 +294,7 @@ class SalesDataProcessor:
             logger.error(f"Clean error: {e}")
             return False
     
-    # -------------------------------------------------------------------------
-    # STEP 3: DATA TRANSFORMATION
-    # -------------------------------------------------------------------------
+    
     
     def transform_data(self):
         """
@@ -329,7 +311,6 @@ class SalesDataProcessor:
             # -----------------------------------------------------------------
             # TRANSFORMATION 1: Calculate Revenue
             # -----------------------------------------------------------------
-            # Revenue is the primary Key Performance Indicator (KPI) for sales
             # Formula: Revenue = Quantity Sold × Price Per Unit
             df['revenue'] = df['quantity'] * df['price']
             logger.info(f"Calculated revenue for {len(df)} transactions")
@@ -357,9 +338,6 @@ class SalesDataProcessor:
             logger.error(f"Transform error: {e}")
             return False
     
-    # -------------------------------------------------------------------------
-    # STEP 4: DATA AGGREGATION
-    # -------------------------------------------------------------------------
     
     def aggregate_data(self):
         """
@@ -378,10 +356,7 @@ class SalesDataProcessor:
             # Get the transformed data
             df = self.cleaned_data
             
-            # -----------------------------------------------------------------
-            # AGGREGATION 1: Sales by Region
-            # -----------------------------------------------------------------
-
+            #this is sales by region
             sales_by_region = (
                 df.groupby('region', as_index=False)['revenue']
                 .sum()
@@ -391,9 +366,7 @@ class SalesDataProcessor:
             sales_by_region.columns = ['region', 'revenue']
             logger.info(f"Aggregated revenue by region: {len(sales_by_region)} regions")
             
-            # -----------------------------------------------------------------
-            # AGGREGATION 2: Sales by Product
-            # -----------------------------------------------------------------
+            #this is sales by product
             sales_by_product = (
                 df.groupby('product', as_index=False)['revenue']
                 .sum()
@@ -401,10 +374,7 @@ class SalesDataProcessor:
             )
             sales_by_product.columns = ['product', 'revenue']
             logger.info(f"Aggregated revenue by product: {len(sales_by_product)} products")
-            
-            # -----------------------------------------------------------------
-            # AGGREGATION 3: Sales by Category
-            # -----------------------------------------------------------------
+            #this is sales by category
             sales_by_category = (
                 df.groupby('category', as_index=False)['revenue']
                 .sum()
@@ -413,9 +383,7 @@ class SalesDataProcessor:
             sales_by_category.columns = ['category', 'revenue']
             logger.info(f"Aggregated revenue by category: {len(sales_by_category)} categories")
             
-            # -----------------------------------------------------------------
-            # AGGREGATION 4: Monthly Revenue Trends
-            # -----------------------------------------------------------------
+           #this is sales by month
             monthly_revenue = (
                 df.groupby('month', as_index=False)['revenue']
                 .sum()
@@ -423,10 +391,7 @@ class SalesDataProcessor:
             )
             monthly_revenue.columns = ['month', 'revenue']
             logger.info("Aggregated revenue by month")
-            
-            # -----------------------------------------------------------------
-            # AGGREGATION 5: Salesperson Performance with Rankings
-            # -----------------------------------------------------------------
+             #this is sales by salesperson
             salesperson_perf = (
                 df.groupby('salesperson', as_index=False)['revenue']
                 .sum()
@@ -440,18 +405,12 @@ class SalesDataProcessor:
             ).astype(int)
             logger.info(f"Aggregated revenue by salesperson: {len(salesperson_perf)} salespeople")
             
-            # -----------------------------------------------------------------
-            # AGGREGATION 6: Top 5 Salespeople
-            # -----------------------------------------------------------------
             # Extract only the top 5 performers for quick reference
             # .head(5) gets first 5 rows (already sorted descending by revenue)
             # .copy() creates an independent copy to avoid warning messages
             top_salespeople = salesperson_perf.head(5).copy()
             logger.info(f"Selected top {len(top_salespeople)} salespeople")
             
-            # -----------------------------------------------------------------
-            # Package All Aggregations in a Dictionary
-            # -----------------------------------------------------------------
             # Using a dictionary allows easy iteration for exporting
             # Keys become filenames, values become the data to export
             aggregations = {
@@ -469,9 +428,6 @@ class SalesDataProcessor:
             logger.error(f"Aggregation error: {e}")
             return {}  # Return empty dictionary on failure
     
-    # -------------------------------------------------------------------------
-    # STEP 5: DATA EXPORT
-    # -------------------------------------------------------------------------
     
     def export_data(self, aggregations):
         """
@@ -486,9 +442,7 @@ class SalesDataProcessor:
         logger.info("Exporting data...")
         
         try:
-            # -----------------------------------------------------------------
-            # Export 1: Complete Cleaned Dataset
-            # -----------------------------------------------------------------
+            
             # This file contains every transaction after cleaning and transformation
             # Useful for ad-hoc analysis and as source for Excel Pivot Tables
             # index=False prevents pandas from adding an extra row number column
@@ -496,9 +450,7 @@ class SalesDataProcessor:
             self.cleaned_data.to_csv(clean_file, index=False)
             logger.info(f"Exported clean data: {clean_file}")
             
-            # -----------------------------------------------------------------
-            # Export 2:- Aggregated Summaries
-            # -----------------------------------------------------------------
+            
             # Iterate through the dictionary of aggregated DataFrames
             # For each item, save to CSV with the key as filename
             for name, df in aggregations.items():
@@ -513,9 +465,6 @@ class SalesDataProcessor:
             logger.error(f"Export error: {e}")
             return False
     
-    # -------------------------------------------------------------------------
-    # PIPELINE ORCHESTRATOR
-    # -------------------------------------------------------------------------
     
     def run_pipeline(self):
         """
@@ -560,16 +509,11 @@ class SalesDataProcessor:
         return True
 
 
-# =============================================================================
-# MAIN ENTRY POINT
-# =============================================================================
-
 def main():
     """
     Main function that serves as the entry point for the script.
     
     """
-    
     # Determine the project root directory
     project_root = Path(__file__).parent.parent
     
@@ -577,10 +521,7 @@ def main():
     input_file = project_root / 'data' / 'Sales_data.csv'
     output_dir = project_root / 'output'
     
-    # -------------------------------------------------------------------------
-    # Fallback Logic: Try Alternative Filename
-    # -------------------------------------------------------------------------
-    # The sample data provided is named 'Messy_Sales_Data.csv'
+
     # This fallback ensures the script works without manual renaming
     if not input_file.exists():
         alt_file = project_root / 'data' / 'Messy_Sales_Data.csv'
@@ -602,13 +543,9 @@ def main():
         raise RuntimeError("Pipeline failed")
 
 
-# =============================================================================
-# SCRIPT EXECUTION GUARD
-# =============================================================================
-
 if __name__ == "__main__":
     """
-    This block only executes when the script is run directly (not imported).
+    This block only executes when the script is run directly.
     
     When this script is imported as a module by another script, this block
     does NOT run. This allows other scripts to use the SalesDataProcessor
@@ -623,7 +560,7 @@ if __name__ == "__main__":
         sys.exit(0)
         
     except Exception as e:
-        # Print the error to console (logging may not be available)
+        # Print the error to console
         print(f"ERROR: {e}")
         # Exit with code 1 indicating failure
         sys.exit(1)
