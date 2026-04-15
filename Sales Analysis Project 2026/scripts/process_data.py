@@ -1,68 +1,8 @@
-
 """
 ================================================================================
 SALES DATA PROCESSING PIPELINE
 ================================================================================
-
-
-DESCRIPTION:
-============
-This script implements an ETL (Extract, Transform, Load) pipeline for processing
-raw sales transaction data. It transforms messy, inconsistent data into clean,
-analysis-ready datasets that answer key business questions.
-
-BUSINESS QUESTIONS ANSWERED:
-============================
-1. Which regions generate the highest revenue?
-2. What are the top-performing products?
-3. Which product categories drive the most sales?
-4. How do sales trend over time (monthly analysis)?
-5. Who are the best-performing salespeople?
-
-INPUT:
-======
-Raw CSV file containing sales transactions with columns:
-- transaction_id: Unique identifier for each sale
-- date: Transaction date (YYYY-MM-DD format)
-- product: Product name
-- category: Product category (Electronics, Furniture)
-- quantity: Number of units sold (may have missing values)
-- price: Price per unit (may have missing values)
-- region: Sales region (North, South, East, West)
-- salesperson: Name of salesperson (may have missing values)
-
-OUTPUTS:
-========
-1. clean_sales.csv - Complete cleaned transaction data with calculated fields
-2. sales_by_region.csv - Total revenue aggregated by region
-3. sales_by_product.csv - Total revenue aggregated by product
-4. sales_by_category.csv - Total revenue aggregated by category
-5. monthly_revenue.csv - Total revenue aggregated by month
-6. salesperson_performance.csv - All salespeople ranked by revenue
-7. top_salespeople.csv - Top 5 performing salespeople
-
-DATA QUALITY FIXES APPLIED:
-===========================
-- Duplicate records: Removed entirely
-- Missing quantities: Default to 1 unit
-- Missing prices: Filled with average price of all products
-- Missing salesperson: Labeled as 'Unknown'
-- Invalid dates: Rows with unparseable dates are removed
-
-DEPENDENCIES:
-=============
-- pandas: Data manipulation and analysis
-- logging: Execution logging and audit trail
-- pathlib: Cross-platform file path handling
-
-USAGE:
-======
-Run from command line:
-    python scripts/process_data.py
-
-Or as part of the automation pipeline:
-    ./scripts/run_pipeline.sh
-
+Author: Jabulane Poulo
 ================================================================================
 """
 
@@ -98,56 +38,115 @@ def setup_logging():
     """
     Configure the logging system for the entire application.
     
-    This function creates a 'logs' directory in the project root (if it doesn't
-    exist) and sets up both file and console logging. Each execution gets a
-    unique log file named with a timestamp to prevent overwriting.
+    This function creates a 'logs' directory inside the 'output' folder 
+    (if it doesn't exist) and sets up both CSV file and console logging. 
+    Each execution gets a unique CSV log file named with a timestamp to 
+    prevent overwriting.
     
-    Log Format:
-        %(asctime)s - Timestamp when log entry was created
-        %(levelname)s - Severity level (INFO, ERROR, WARNING)
-        %(message)s - The actual log message
-    
-    Returns:
-        logging.Logger: Configured logger instance for use throughout the script
-    
-    Example log line:
-        2026-04-14 10:17:21,668 - INFO - Loading data...
+   
     """
     
-    # Determine the log directory path
+    # Determine the output directory path
     # __file__ is the current script's path (scripts/process_data.py)
     # .parent goes up one level to the project root
-    # / 'logs' appends the 'logs' directory name
-    log_dir = Path(__file__).parent.parent / 'logs'
+    # / 'output' appends the 'output' directory name
+    output_dir = Path(__file__).parent.parent / 'output'
     
-    # Create the logs directory if it doesn't already exist
+    # Create the output directory if it doesn't already exist
     # exist_ok=True prevents an error if the directory already exists
+    output_dir.mkdir(exist_ok=True)
+    
+    # Create logs directory inside the output folder
+    # This keeps log files organized separately from CSV data files
+    log_dir = output_dir / 'logs'
     log_dir.mkdir(exist_ok=True)
     
-    # Generate a unique log filename using current timestamp
+    # Generate a unique CSV log filename using current timestamp
     # strftime formats the datetime: YYYYMMDD_HHMMSS
-    # Example: sales_processing_20260414_101720.log
-    log_file = log_dir / f'sales_processing_{datetime.now().strftime("%Y%m%d_%H%M%S")}.log'
+  
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    log_file = log_dir / f'logs_{timestamp}.csv'
+    
+    # Create a custom CSV logging handler
+    class CSVLogHandler(logging.Handler):
+        """
+        Custom logging handler that writes log entries in CSV format.
+        
+        This handler creates a CSV file with headers and appends each log
+        entry as a new row with timestamp, level, and message columns.
+        """
+        
+        def __init__(self, filename):
+            """
+            Initialize the CSV log handler.
+            
+            Args:
+                filename (Path): Path to the CSV log file
+            """
+            super().__init__()
+            self.filename = filename
+            
+            # Write CSV header if file is new or empty
+            # Headers make the CSV file readable in Excel and other tools
+            if not self.filename.exists() or self.filename.stat().st_size == 0:
+                with open(self.filename, 'w', encoding='utf-8') as f:
+                    f.write('timestamp,level,message\n')
+        
+        def emit(self, record):
+            """
+            Write a log record to the CSV file.
+            
+            This method is called automatically by the logging system
+            whenever a log message is created.
+            
+            Args:
+                record (LogRecord): The log record to write
+            """
+            try:
+                # Convert timestamp from record.created (Unix timestamp)
+                # to a human-readable datetime string
+                timestamp = datetime.fromtimestamp(record.created).strftime('%Y-%m-%d %H:%M:%S')
+                
+                # Get the log level name (INFO, ERROR, WARNING)
+                level = record.levelname
+                
+                # Get the log message and clean it for CSV format
+                # Replace commas with semicolons to prevent CSV breaking
+                # Replace double quotes with single quotes
+                message = record.getMessage().replace(',', ';').replace('"', "'")
+                
+                # Append the log entry as a new row in the CSV file
+                # Using 'a' mode to append, 'w' would overwrite
+                with open(self.filename, 'a', encoding='utf-8') as f:
+                    f.write(f'"{timestamp}","{level}","{message}"\n')
+                    
+            except Exception:
+                # Don't let logging errors crash the application
+                # Use print as fallback since logging might be failing
+                print(f"Failed to write to CSV log: {record.getMessage()}")
     
     # Configure the root logger
     logging.basicConfig(
         level=logging.INFO,  # Only show INFO level and above (not DEBUG)
-        format='%(asctime)s - %(levelname)s - %(message)s',  # Log format
         handlers=[
-            # File handler: Writes logs to timestamped file
-            logging.FileHandler(log_file, encoding='utf-8'),
+            # CSV Handler: Writes logs to timestamped CSV file in logs folder
+            CSVLogHandler(log_file),
             # Stream handler: Also prints logs to console (stdout) for real-time viewing
             logging.StreamHandler(sys.stdout)
         ]
     )
     
+    # Log the location of the CSV log file for reference
+    logger = logging.getLogger(__name__)
+    logger.info(f"CSV log file created: {log_file}")
+    
     # Return a logger instance named after the current module
     # This allows multiple modules to have their own loggers if needed
-    return logging.getLogger(__name__)
+    return logger
 
 
-# Initialize the logger for use throughout this script
-# This logger instance is now available globally
+# Initialise the logger for use throughout this script
+# This logger instance is available globally
 logger = setup_logging()
 
 
@@ -157,27 +156,9 @@ logger = setup_logging()
 
 class SalesDataProcessor:
     """
-    Main class that orchestrates the entire data processing pipeline.
+    Main class that manages the entire data processing pipeline.
     
-    This class follows the ETL (Extract, Transform, Load) pattern with
-    a pipeline architecture where each step feeds into the next.
     
-    Pipeline Flow:
-        load_data() -> clean_data() -> transform_data() -> aggregate_data() -> export_data()
-        
-    Each method returns a boolean indicating success/failure. If any step fails,
-    the pipeline stops immediately (fail-fast principle) to prevent processing
-    invalid data.
-    
-    Attributes:
-        input_path (Path): Path to the raw input CSV file
-        output_dir (Path): Directory where processed files will be saved
-        raw_data (DataFrame): Original unmodified data after loading
-        cleaned_data (DataFrame): Data after cleaning and transformation
-    
-    Usage Example:
-        processor = SalesDataProcessor('data/sales.csv', 'output/')
-        processor.run_pipeline()
     """
     
     # -------------------------------------------------------------------------
@@ -186,10 +167,10 @@ class SalesDataProcessor:
     
     def __init__(self, input_path, output_dir):
         """
-        Initialize the SalesDataProcessor with file paths.
+        Initialise the SalesDataProcessor with file paths.
         
         This constructor validates that the input file exists and creates the
-        output directory if needed. It also initializes empty containers for
+        output directory . It also initialises empty containers for
         the data that will be loaded and processed.
         
         Args:
@@ -199,8 +180,6 @@ class SalesDataProcessor:
         Raises:
             FileNotFoundError: If the input file does not exist at the specified path
         
-        Example:
-            processor = SalesDataProcessor('data/Sales_data.csv', 'output/')
         """
         
         # Convert string paths to Path objects for cross-platform compatibility
@@ -208,18 +187,15 @@ class SalesDataProcessor:
         self.input_path = Path(input_path)
         self.output_dir = Path(output_dir)
         
-        # Initialize data containers as None (will be populated later)
+        # Initialise data containers as None (will be populated later)
         self.raw_data = None      # Stores original loaded data
         self.cleaned_data = None  # Stores processed data after cleaning/transformation
         
         # Validate that the input file exists before proceeding
-        # This fails fast rather than failing later during processing
         if not self.input_path.exists():
             raise FileNotFoundError(f"File not found: {self.input_path}")
         
         # Create the output directory (and any missing parent directories)
-        # parents=True creates intermediate directories if they don't exist
-        # exist_ok=True prevents error if directory already exists
         self.output_dir.mkdir(parents=True, exist_ok=True)
     
     # -------------------------------------------------------------------------
@@ -234,24 +210,12 @@ class SalesDataProcessor:
         stores it in self.raw_data. It handles common loading errors and
         logs the number of rows loaded.
         
-        Error Handling:
-            - File reading errors 
-            - Empty file 
-        
-        Returns:
-            bool: True if loading was successful, False otherwise
-        
-        Example Log Output:
-            INFO - Loading data...
-            INFO - Loaded 52 rows
         """
         
         logger.info("Loading the data...")
         
         try:
             # Read the CSV file into a pandas DataFrame
-            # pandas automatically detects headers from the first row
-            # Handles various data types and missing value indicators
             self.raw_data = pd.read_csv(self.input_path)
             
             # Check if the DataFrame is empty (no data rows)
@@ -276,85 +240,77 @@ class SalesDataProcessor:
     
     def clean_data(self):
         """
-        Clean the raw data by fixing common data quality issues.
+        Clean the raw data by fixing  data quality issues.
         
-        This method addresses several data quality problems
-        sales data:
-            1. Duplicate records - Identical transactions recorded twice
-            2. Missing quantities - Unknown number of units sold
-            3. Missing prices - Unknown product prices
-            4. Missing salesperson names - unknown salesperson
-            5. Invalid dates - Dates that cannot be parsed
         
-        Cleaning Strategy:
-            - Duplicates: Complete row removal (keeping first occurrence)
-            - Missing quantity: Default to 1 (assume at least one item sold)
-            - Missing price: Impute with column mean (preserves overall average)
-            - Missing salesperson: Label as 'Unknown' for tracking
-            - Invalid dates: Remove the entire row (cannot perform time analysis)
-        
-        Returns:
-            bool: True if cleaning was successful, False otherwise
-        
-        Example Log Output:
-            INFO - Cleaning data...
-            INFO - Cleaned rows: 50
         """
         
         logger.info("Cleaning data...")
         
         try:
             # Create a copy of the raw data to avoid modifying the original
-            # This preserves the raw data for reference if needed
             df = self.raw_data.copy()
             
             # -----------------------------------------------------------------
             # FIX 1: Remove Duplicate Records
             # -----------------------------------------------------------------
             # drop_duplicates() removes rows that are identical in all columns
-            # By default, keeps the first occurrence and removes subsequent ones
-            # This addresses cases where the same transaction was recorded twice
             df = df.drop_duplicates()
+            logger.info(f"Removed duplicates, remaining rows: {len(df)}")
+            
             # -----------------------------------------------------------------
             # FIX 2: Handle Missing Quantity Values
             # -----------------------------------------------------------------
             # Check if the 'quantity' column exists
             if 'quantity' in df.columns:
+                # Count missing quantities before filling
+                missing_qty = df['quantity'].isna().sum()
+                if missing_qty > 0:
+                    logger.info(f"Filling {missing_qty} missing quantity values with 1")
+                
                 # fillna(1) replaces all null/NaN values with 1
                 # astype(int) ensures the column is integer type
-                
-                df['quantity'] =df['quantity'].fillna(1).astype(int)
+                df['quantity'] = df['quantity'].fillna(1).astype(int)
             
             # -----------------------------------------------------------------
             # FIX 3: Handle Missing Price Values
             # -----------------------------------------------------------------
             if 'price' in df.columns:
-                # Calculate the average price across alll product
-                # This is a simple imputation method that does not mess up the data
-                mean_price = df['price'].mean()
-                # Replace missing prices with the calculated avaerage
-                df['price'] = df['price'].fillna(mean_price)
+                # Count missing prices before filling
+                missing_price = df['price'].isna().sum()
+                if missing_price > 0:
+                    # Calculate the average price across all products
+                    mean_price = df['price'].mean()
+                    logger.info(f"Filling {missing_price} missing price values with average price: {mean_price:.2f}")
+                    # Replace missing prices with the calculated average
+                    df['price'] = df['price'].fillna(mean_price)
+            
             # -----------------------------------------------------------------
             # FIX 4: Handle Missing Salesperson Names
             # -----------------------------------------------------------------
             if 'salesperson' in df.columns:
+                # Count missing salesperson names before filling
+                missing_sales = df['salesperson'].isna().sum()
+                if missing_sales > 0:
+                    logger.info(f"Labeling {missing_sales} missing salesperson names as 'Unknown'")
                 # Replace empty salesperson fields with 'Unknown'
-                # This allows tracking of which transactions have incomplete data
                 df['salesperson'] = df['salesperson'].fillna('Unknown')
             
             # -----------------------------------------------------------------
             # FIX 5: Handle Invalid Dates
             # -----------------------------------------------------------------
             if 'date' in df.columns:
+                # Count rows before date cleaning
+                rows_before = len(df)
                 # Convert date strings to pandas datetime objects
                 # errors='coerce' converts unparseable dates to NaT (Not a Time)
-                # Example: '2024-01-05' becomes datetime(2024, 1, 5)
-                # Example: '22024-02-24' (typo) becomes NaT
                 df['date'] = pd.to_datetime(df['date'], errors='coerce')
                 
                 # Remove any rows where date conversion failed (became NaT)
-                # Without valid dates, time-based analysis would be impossible
                 df = df.dropna(subset=['date'])
+                rows_removed = rows_before - len(df)
+                if rows_removed > 0:
+                    logger.info(f"Removed {rows_removed} rows with invalid dates")
             
             # Store the cleaned DataFrame for use in subsequent steps
             self.cleaned_data = df
@@ -376,23 +332,6 @@ class SalesDataProcessor:
         """
         Transform the cleaned data by creating new calculated fields.
         
-        This method adds derived columns that enable deeper business analysis:
-            1. revenue: Total monetary value of each transaction (quantity × price)
-            2. year: Calendar year extracted from transaction date
-            3. month: Calendar month (1-12) extracted from transaction date
-        
-        These calculated fields are essential for:
-            - Revenue analysis (primary business metric)
-            - Time-based trend analysis
-            - Seasonal pattern detection
-            - Year-over-year comparisons
-        
-        Returns:
-            bool: True if transformation was successful, False otherwise
-        
-        Example Log Output:
-            INFO - Transforming data...
-            INFO - Transformation complete
         """
         
         logger.info("Transforming data...")
@@ -406,20 +345,21 @@ class SalesDataProcessor:
             # -----------------------------------------------------------------
             # Revenue is the primary Key Performance Indicator (KPI) for sales
             # Formula: Revenue = Quantity Sold × Price Per Unit
-            # This creates a new column that didn't exist in the raw data
             df['revenue'] = df['quantity'] * df['price']
+            logger.info(f"Calculated revenue for {len(df)} transactions")
             
             # -----------------------------------------------------------------
             # TRANSFORMATION 2: Extract Date Components
             # -----------------------------------------------------------------
             # Check if date column exists (should exist after cleaning)
             if 'date' in df.columns:
-                # Extract the year (e.g., 2024) using pandas datetime accessor
+                # Extract the year using pandas datetime accessor
                 # .dt accessor provides datetime-specific properties
                 df['year'] = df['date'].dt.year
                 
                 # Extract the month number (1 = January, 12 = December)
                 df['month'] = df['date'].dt.month
+                logger.info("Extracted year and month from dates")
             
             # Store the transformed data back to the instance variable
             self.cleaned_data = df
@@ -443,35 +383,7 @@ class SalesDataProcessor:
         across different dimensions. Each aggregation answers a specific
         business question.
         
-        Aggregations Performed:
-            1. sales_by_region: Total revenue per geographic region
-               Question: "Which regions perform best?"
-               
-            2. sales_by_product: Total revenue per product
-               Question: "Which products generate the most revenue?"
-               
-            3. sales_by_category: Total revenue per product category
-               Question: "Do electronics or furniture drive more sales?"
-               
-            4. monthly_revenue: Total revenue per calendar month
-               Question: "How do sales trends change over time?"
-               
-            5. salesperson_performance: Total revenue per salesperson with ranking
-               Question: "Who are the top performers?"
-               
-            6. top_salespeople: Top 5 salespeople (subset of above)
-               Question: "Who deserves recognition?"
         
-        Returns:
-            dict: Dictionary mapping aggregation names to pandas DataFrames.
-                  Returns empty dictionary if aggregation fails.
-        
-        Example Output Structure:
-            {
-                'sales_by_region': DataFrame with columns ['region', 'revenue'],
-                'sales_by_product': DataFrame with columns ['product', 'revenue'],
-                ...
-            }
         """
         
         logger.info("Aggregating data...")
@@ -483,12 +395,7 @@ class SalesDataProcessor:
             # -----------------------------------------------------------------
             # AGGREGATION 1: Sales by Region
             # -----------------------------------------------------------------
-            # This answers: "Which regions are performing best?"
-            # groupby('region'): Groups all rows with the same region together
-            # as_index=False: Keeps 'region' as a column instead of row index
-            # ['revenue']: Select only the revenue column for aggregation
-            #.sum(): Adds up revenue for each group
-            # .sort_values(): Orders from highest to lowest revenue
+
             sales_by_region = (
                 df.groupby('region', as_index=False)['revenue']
                 .sum()
@@ -496,49 +403,44 @@ class SalesDataProcessor:
             )
             # Rename columns for clarity (groupby default uses 'revenue' as column name)
             sales_by_region.columns = ['region', 'revenue']
+            logger.info(f"Aggregated revenue by region: {len(sales_by_region)} regions")
             
             # -----------------------------------------------------------------
             # AGGREGATION 2: Sales by Product
             # -----------------------------------------------------------------
-            # This answers: "Which products generate the highest revenue?"
-            # Same pattern as region, but grouped by product instead
             sales_by_product = (
                 df.groupby('product', as_index=False)['revenue']
                 .sum()
                 .sort_values('revenue', ascending=False)
             )
             sales_by_product.columns = ['product', 'revenue']
+            logger.info(f"Aggregated revenue by product: {len(sales_by_product)} products")
             
             # -----------------------------------------------------------------
             # AGGREGATION 3: Sales by Category
             # -----------------------------------------------------------------
-            # This answers: "Which product categories drive more sales?"
-            # Helps with high-level strategic decisions (electronics vs furniture)
             sales_by_category = (
                 df.groupby('category', as_index=False)['revenue']
                 .sum()
                 .sort_values('revenue', ascending=False)
             )
             sales_by_category.columns = ['category', 'revenue']
+            logger.info(f"Aggregated revenue by category: {len(sales_by_category)} categories")
             
             # -----------------------------------------------------------------
             # AGGREGATION 4: Monthly Revenue Trends
             # -----------------------------------------------------------------
-            # This answers: "How do sales change month to month?"
-            # Group by month number (1-12) to see seasonal patterns
-            # sort_values('month') ensures chronological order (Jan, Feb, Mar...)
             monthly_revenue = (
                 df.groupby('month', as_index=False)['revenue']
                 .sum()
                 .sort_values('month')
             )
             monthly_revenue.columns = ['month', 'revenue']
+            logger.info("Aggregated revenue by month")
             
             # -----------------------------------------------------------------
             # AGGREGATION 5: Salesperson Performance with Rankings
             # -----------------------------------------------------------------
-            # This answers: "Who are the best and worst performing salespeople?"
-            # First, group and sum revenue by salesperson
             salesperson_perf = (
                 df.groupby('salesperson', as_index=False)['revenue']
                 .sum()
@@ -546,14 +448,11 @@ class SalesDataProcessor:
             )
             salesperson_perf.columns = ['salesperson', 'revenue']
             
-            # Add a rank column to easily identify top performers
-            # rank() assigns numbers based on revenue order
-            # ascending=False: Higher revenue = lower rank number (1 is best)
-            # method='dense': Ties get same rank with no gaps (1,2,2,3 not 1,2,2,4)
             # astype(int): Convert rank from float to integer for cleaner display
             salesperson_perf['rank'] = salesperson_perf['revenue'].rank(
                 ascending=False, method='dense'
             ).astype(int)
+            logger.info(f"Aggregated revenue by salesperson: {len(salesperson_perf)} salespeople")
             
             # -----------------------------------------------------------------
             # AGGREGATION 6: Top 5 Salespeople
@@ -562,6 +461,7 @@ class SalesDataProcessor:
             # .head(5) gets first 5 rows (already sorted descending by revenue)
             # .copy() creates an independent copy to avoid warning messages
             top_salespeople = salesperson_perf.head(5).copy()
+            logger.info(f"Selected top {len(top_salespeople)} salespeople")
             
             # -----------------------------------------------------------------
             # Package All Aggregations in a Dictionary
@@ -594,24 +494,7 @@ class SalesDataProcessor:
         This method saves both the complete cleaned dataset and all aggregated
         summaries to separate CSV files in the output directory.
         
-        Files Created:
-            - clean_sales.csv: Full transaction-level cleaned data
-            - sales_by_region.csv: Revenue by region summary
-            - sales_by_product.csv: Revenue by product summary
-            - sales_by_category.csv: Revenue by category summary
-            - monthly_revenue.csv: Monthly revenue summary
-            - salesperson_performance.csv: All salespeople with ranks
-            - top_salespeople.csv: Top 5 performers only
         
-        Args:
-            aggregations (dict): Dictionary of DataFrames from aggregate_data()
-        
-        Returns:
-            bool: True if export was successful, False otherwise
-        
-        Example Log Output:
-            INFO - Exporting data...
-            INFO - Export complete
         """
         
         logger.info("Exporting data...")
@@ -623,16 +506,19 @@ class SalesDataProcessor:
             # This file contains every transaction after cleaning and transformation
             # Useful for ad-hoc analysis and as source for Excel Pivot Tables
             # index=False prevents pandas from adding an extra row number column
-            self.cleaned_data.to_csv(self.output_dir / 'clean_sales.csv', index=False)
+            clean_file = self.output_dir / 'clean_sales.csv'
+            self.cleaned_data.to_csv(clean_file, index=False)
+            logger.info(f"Exported clean data: {clean_file}")
             
             # -----------------------------------------------------------------
             # Export 2: All Aggregated Summaries
             # -----------------------------------------------------------------
             # Iterate through the dictionary of aggregated DataFrames
             # For each item, save to CSV with the key as filename
-            # Example: 'sales_by_region' becomes 'sales_by_region.csv'
             for name, df in aggregations.items():
-                df.to_csv(self.output_dir / f"{name}.csv", index=False)
+                output_file = self.output_dir / f"{name}.csv"
+                df.to_csv(output_file, index=False)
+                logger.info(f"Exported {name}: {output_file}")
             
             logger.info("Export complete")
             return True
@@ -653,28 +539,6 @@ class SalesDataProcessor:
         It follows the "fail-fast" principle: if any step fails, execution
         stops immediately and the method returns False.
         
-        Pipeline Steps:
-            1. load_data()   - Read raw CSV file
-            2. clean_data()  - Fix data quality issues
-            3. transform_data() - Create calculated fields
-            4. aggregate_data() - Generate summary statistics
-            5. export_data() - Save results to CSV files
-        
-        Returns:
-            bool: True if the entire pipeline executed successfully, False otherwise
-        
-        Example Log Output:
-            INFO - Starting pipeline...
-            INFO - Loading data...
-            INFO - Loaded 52 rows
-            INFO - Cleaning data...
-            INFO - Cleaned rows: 50
-            INFO - Transforming data...
-            INFO - Transformation complete
-            INFO - Aggregating data...
-            INFO - Exporting data...
-            INFO - Export complete
-            INFO - Pipeline finished successfully
         """
         
         logger.info("Starting pipeline...")
@@ -718,26 +582,9 @@ def main():
     """
     Main function that serves as the entry point for the script.
     
-    This function:
-        1. Determines the project root directory
-        2. Locates the input data file (with fallback to alternative filename)
-        3. Creates a SalesDataProcessor instance
-        4. Executes the pipeline
-        5. Handles any uncaught exceptions
-    
-    File Location Logic:
-        - First tries: data/Sales_data.csv (standard name)
-        - Then tries: data/Messy_Sales_Data.csv (sample data name)
-        - If neither exists: Raises FileNotFoundError
-    
-    Returns:
-        None (exits with status code 0 on success, 1 on failure)
     """
     
     # Determine the project root directory
-    # __file__ is the path to this script (scripts/process_data.py)
-    # .parent goes up one level to the 'scripts' directory
-    # .parent again goes up to the project root directory
     project_root = Path(__file__).parent.parent
     
     # Define standard input and output paths
@@ -781,11 +628,6 @@ if __name__ == "__main__":
     does NOT run. This allows other scripts to use the SalesDataProcessor
     class without automatically executing the pipeline.
     
-    Exit Codes:
-        0 - Success (normal termination)
-        1 - Error (something went wrong)
-    
-    These exit codes can be checked by shell scripts that call this Python script.
     """
     
     try:
