@@ -8,17 +8,9 @@ echo "Started at: $(date)"  # $(date) executes the date command and inserts outp
 echo "Author: Jabulane Prince Poulo"
 echo "=========================================="
 
-# -----------------------------------------------------------------------------
-# CONFIGURATION: Set Project Directory
-# -----------------------------------------------------------------------------
 # This is the root directory containing the data/, scripts/, output/ folders
 PROJECT_DIR="/mnt/c/sc_JabulanePoulo_2026/Sales Analysis Project 2026"
 
-# -----------------------------------------------------------------------------
-# STEP 1: Navigate to Project Directory
-# -----------------------------------------------------------------------------
-# cd: Change directory command
-# The || { ... } construct means: if cd fails,
 # execute the commands inside the braces and exit the script
 cd "$PROJECT_DIR" || {
     echo "ERROR: Cannot enter project directory: $PROJECT_DIR"
@@ -27,13 +19,8 @@ cd "$PROJECT_DIR" || {
 
 echo "Project directory: $PROJECT_DIR"
 
-# -----------------------------------------------------------------------------
-# STEP 2: Validate and Prepare Input Data File
-# -----------------------------------------------------------------------------
 # The script checks for two possible filenames:
-#   1. Sales_data.csv
-#   2. Messy_Sales_Data.csv
-# The -f flag tests if a file exists and is a regular file
+# The -f flag tests if a file exists
 if [ -f "data/Sales_data.csv" ]; then
     echo "Data file found: Sales_data.csv"
     
@@ -44,31 +31,21 @@ elif [ -f "data/Messy_Sales_Data.csv" ]; then
     
 else
     echo "ERROR: No data file found in data/ directory"
-    # List directory contents to help user debug
+    # List directory contents
     ls -la data/
     exit 1
 fi
 
-# -----------------------------------------------------------------------------
-# STEP 3: Create Required Directories
-# -----------------------------------------------------------------------------
+mkdir -p output   # Stores processed CSV files the logs will go in output/logs/
 
-mkdir -p output   # Stores processed CSV files (logs will go in output/logs/)
 
-# -----------------------------------------------------------------------------
-# STEP 4: Execute the Python Processing Script
-# -----------------------------------------------------------------------------
 echo ""
 echo "Running Python script..."
 echo ""
 
 # Execute the Python script
-# The script path is relative to the project root (we're already there)
+# The script path is relative to the project root
 python scripts/process_data.py
-
-# -----------------------------------------------------------------------------
-# STEP 5: Check Execution Result
-# -----------------------------------------------------------------------------
 # This check allows the shell script to report whether the pipeline succeeded
 if [ $? -ne 0 ]; then  # -ne means "not equal"
     echo ""
@@ -78,19 +55,16 @@ if [ $? -ne 0 ]; then  # -ne means "not equal"
     exit 1
 fi
 
-# -----------------------------------------------------------------------------
-# STEP 6: Display Generated Files
-# -----------------------------------------------------------------------------
 echo ""
 echo "=========================================="
-echo "PIPELINE COMPLETED SUCCESSFULLY (kwenzekile)"
+echo "PIPELINE COMPLETED SUCCESSFULLY (kwenzekile banafana)"
 echo "=========================================="
 
 echo ""
 echo "Generated files in output/ directory:"
 echo ""
 
-# List all files in the output directory with detailed information
+# List all files in the output directory
 ls -la output/
 
 # Also show the logs subdirectory if it exists
@@ -114,5 +88,5 @@ echo "  - logs/*.csv: CSV format log files with execution audit trail"
 
 echo ""
 echo "=========================================="
-echo "Pipeline execution complete! (kwenzekile)"
+echo "Pipeline execution complete! (kwenzekile banafana)"
 echo "=========================================="
