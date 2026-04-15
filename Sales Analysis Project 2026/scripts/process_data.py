@@ -2,7 +2,7 @@
 ================================================================================
 SALES DATA PROCESSING PIPELINE
 ================================================================================
-Author: Jabulane Poulo
+Author: Jabulane Prince Poulo
 ================================================================================
 """
 
@@ -78,7 +78,7 @@ def setup_logging():
         
         def __init__(self, filename):
             """
-            Initialize the CSV log handler.
+            Initialise the CSV log handler.
             
             Args:
                 filename (Path): Path to the CSV log file
@@ -95,12 +95,9 @@ def setup_logging():
         def emit(self, record):
             """
             Write a log record to the CSV file.
-            
             This method is called automatically by the logging system
             whenever a log message is created.
             
-            Args:
-                record (LogRecord): The log record to write
             """
             try:
                 # Convert timestamp from record.created (Unix timestamp)
@@ -127,7 +124,7 @@ def setup_logging():
     
     # Configure the root logger
     logging.basicConfig(
-        level=logging.INFO,  # Only show INFO level and above (not DEBUG)
+        level=logging.INFO,  # Only show INFO level and above ignores DEBUG
         handlers=[
             # CSV Handler: Writes logs to timestamped CSV file in logs folder
             CSVLogHandler(log_file),
@@ -168,17 +165,9 @@ class SalesDataProcessor:
     def __init__(self, input_path, output_dir):
         """
         Initialise the SalesDataProcessor with file paths.
-        
         This constructor validates that the input file exists and creates the
         output directory . It also initialises empty containers for
         the data that will be loaded and processed.
-        
-        Args:
-            input_path (str or Path): Path to the raw CSV file to process
-            output_dir (str or Path): Directory where output CSV files will be saved
-        
-        Raises:
-            FileNotFoundError: If the input file does not exist at the specified path
         
         """
         
@@ -205,7 +194,6 @@ class SalesDataProcessor:
     def load_data(self):
         """
         Load raw CSV data from the input file into a pandas DataFrame.
-        
         This method reads the CSV file specified during initialisation and
         stores it in self.raw_data. It handles common loading errors and
         logs the number of rows loaded.
@@ -241,8 +229,6 @@ class SalesDataProcessor:
     def clean_data(self):
         """
         Clean the raw data by fixing  data quality issues.
-        
-        
         """
         
         logger.info("Cleaning data...")
@@ -303,10 +289,10 @@ class SalesDataProcessor:
                 # Count rows before date cleaning
                 rows_before = len(df)
                 # Convert date strings to pandas datetime objects
-                # errors='coerce' converts unparseable dates to NaT (Not a Time)
+                # errors='coerce' converts unparseable dates to NaT not a Time
                 df['date'] = pd.to_datetime(df['date'], errors='coerce')
                 
-                # Remove any rows where date conversion failed (became NaT)
+                # Remove any rows where date conversion failed became NaT
                 df = df.dropna(subset=['date'])
                 rows_removed = rows_before - len(df)
                 if rows_removed > 0:
@@ -351,7 +337,7 @@ class SalesDataProcessor:
             # -----------------------------------------------------------------
             # TRANSFORMATION 2: Extract Date Components
             # -----------------------------------------------------------------
-            # Check if date column exists (should exist after cleaning)
+            # Check if date column exists
             if 'date' in df.columns:
                 # Extract the year using pandas datetime accessor
                 # .dt accessor provides datetime-specific properties
@@ -511,7 +497,7 @@ class SalesDataProcessor:
             logger.info(f"Exported clean data: {clean_file}")
             
             # -----------------------------------------------------------------
-            # Export 2: All Aggregated Summaries
+            # Export 2:- Aggregated Summaries
             # -----------------------------------------------------------------
             # Iterate through the dictionary of aggregated DataFrames
             # For each item, save to CSV with the key as filename

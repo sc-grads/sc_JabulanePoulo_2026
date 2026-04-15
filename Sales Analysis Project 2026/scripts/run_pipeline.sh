@@ -1,10 +1,11 @@
 # =============================================================================
 # SALES DATA PIPELINE Mastermind Script
 # =============================================================================
-# AUTHOR: Jabulane Poulo
+# AUTHOR: Jabulane Prince Poulo
 echo "=========================================="
 echo "Sales Data Processing Pipeline"
 echo "Started at: $(date)"  # $(date) executes the date command and inserts output
+echo "Author: Jabulane Prince Poulo"
 echo "=========================================="
 
 # -----------------------------------------------------------------------------
@@ -42,7 +43,7 @@ elif [ -f "data/Messy_Sales_Data.csv" ]; then
     mv "data/Messy_Sales_Data.csv" "data/Sales_data.csv"
     
 else
-    echo "ERROR: No data file found in data/ directory!"
+    echo "ERROR: No data file found in data/ directory"
     # List directory contents to help user debug
     ls -la data/
     exit 1
@@ -72,7 +73,7 @@ python scripts/process_data.py
 if [ $? -ne 0 ]; then  # -ne means "not equal"
     echo ""
     echo "=========================================="
-    echo "PIPELINE FAILED"
+    echo "PIPELINE FAILED "
     echo "=========================================="
     exit 1
 fi
@@ -82,7 +83,7 @@ fi
 # -----------------------------------------------------------------------------
 echo ""
 echo "=========================================="
-echo "PIPELINE COMPLETED SUCCESSFULLY (kwenziwe)"
+echo "PIPELINE COMPLETED SUCCESSFULLY (kwenzekile)"
 echo "=========================================="
 
 echo ""
@@ -102,7 +103,7 @@ fi
 # Display a summary of what each file contains
 echo ""
 echo "File Summary:"
-echo "  - clean_sales.csv: Complete cleaned transaction data"
+echo "  - clean_sales.csv: Complete cleaned sales data"
 echo "  - sales_by_region.csv: Revenue by region "
 echo "  - sales_by_product.csv: Revenue by product"
 echo "  - sales_by_category.csv: Revenue by category"
@@ -113,5 +114,5 @@ echo "  - logs/*.csv: CSV format log files with execution audit trail"
 
 echo ""
 echo "=========================================="
-echo "Pipeline execution complete! (kwenziwe)"
+echo "Pipeline execution complete! (kwenzekile)"
 echo "=========================================="
