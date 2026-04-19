@@ -18,7 +18,7 @@ import traceback
 def setup_logging():
     """
     Configure the logging system for the entire application.
-    ALL logs are saved to a SINGLE CSV file with proper error logging.
+    Console shows ONLY new log entries (not entire CSV file).
     """
     
     # Determine the output directory path
@@ -74,20 +74,13 @@ def setup_logging():
                 if record.exc_info:
                     # Format the exception traceback
                     error_details = traceback.format_exc().replace(',', ';').replace('"', "'").replace('\n', ' ')
-                    error_details = error_details[:500]  # Limit length to prevent huge files
+                    error_details = error_details[:500]
                 
                 # Append to CSV file
                 with open(self.filename, 'a', encoding='utf-8') as f:
                     f.write(f'"{timestamp}","{level}","{message}","{script_run_id}","{error_details}"\n')
                     
-                # Also print to console for immediate visibility
-                if level in ['ERROR', 'CRITICAL']:
-                    print(f"\n{timestamp} - {level}: {message}")
-                    if error_details:
-                        print(f"   Details: {error_details[:200]}")
-                        
             except Exception as e:
-                # Fallback to print - don't let logging fail silently
                 print(f"FAILED TO WRITE LOG: {record.getMessage()}")
                 print(f"Logging error: {e}")
     
@@ -120,20 +113,17 @@ def setup_logging():
     # Create and add Console Handler
     console_handler = logging.StreamHandler(sys.stdout)
     console_handler.setLevel(logging.INFO)
-    console_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+    console_formatter = logging.Formatter('%(levelname)s: %(message)s')
     console_handler.setFormatter(console_formatter)
     logging.root.addHandler(console_handler)
     
-    # Get logger for this module
     logger = logging.getLogger(__name__)
-    logger.info(f"CSV log file: {log_file}")
     logger.info(f"Script Run ID: {run_id}")
-    logger.info(f"Logging level: DEBUG (capturing all messages)")
+    logger.info(f"Log file: {log_file}")
     
     return logger
 
 
-# Initialise the logger
 logger = setup_logging()
 
 
@@ -157,32 +147,29 @@ class SalesDataProcessor:
             raise FileNotFoundError(error_msg)
         
         self.output_dir.mkdir(parents=True, exist_ok=True)
-        logger.info(f"Processor initialised with input: {self.input_path}")
+        logger.info(f"Processor initialised")
     
     def load_data(self):
         """Load raw CSV data from the input file into a pandas DataFrame."""
-        logger.info("Loading the data...")
+        logger.info("Loading data...")
         
         try:
             self.raw_data = pd.read_csv(self.input_path)
             
             if self.raw_data.empty:
-                raise ValueError("CSV file is empty - no data to process")
+                raise ValueError("CSV file is empty")
             
-            logger.info(f"Successfully loaded {len(self.raw_data)} rows from {self.input_path.name}")
+            logger.info(f"Loaded {len(self.raw_data)} rows")
             return True
             
         except FileNotFoundError as e:
-            logger.error(f"File not found error: {e}")
-            logger.error(traceback.format_exc())
+            logger.error(f"File not found: {e}")
             return False
         except pd.errors.EmptyDataError as e:
             logger.error(f"CSV file is empty: {e}")
             return False
         except Exception as e:
-            logger.error(f"Unexpected error loading data: {e}")
-            logger.error(f"Error type: {type(e).__name__}")
-            logger.error(traceback.format_exc())
+            logger.error(f"Load failed: {e}")
             return False
     
     def clean_data(self):
@@ -190,70 +177,55 @@ class SalesDataProcessor:
         logger.info("Cleaning data...")
         
         try:
-            # Check if raw_data exists
             if self.raw_data is None:
-                raise ValueError("No data loaded. Please run load_data() first.")
+                raise ValueError("No data loaded")
             
             df = self.raw_data.copy()
-            logger.info(f"Starting with {len(df)} rows")
             
             # Remove duplicates
             duplicates_before = len(df)
             df = df.drop_duplicates()
             duplicates_removed = duplicates_before - len(df)
             if duplicates_removed > 0:
-                logger.info(f"Removed {duplicates_removed} duplicate rows")
-            else:
-                logger.info("No duplicate rows found")
+                logger.info(f"Removed {duplicates_removed} duplicates")
             
             # Handle missing quantity values
             if 'quantity' in df.columns:
                 missing_qty = df['quantity'].isna().sum()
                 if missing_qty > 0:
-                    logger.warning(f"Found {missing_qty} missing quantity values")
+                    logger.warning(f"Found {missing_qty} missing quantities")
                     
-                    try:
-                        # Fill with median by product
-                        for product in df['product'].unique():
-                            product_median = df[df['product'] == product]['quantity'].median()
-                            missing_in_product = df[(df['product'] == product) & (df['quantity'].isna())].shape[0]
-                            
-                            if missing_in_product > 0:
-                                df.loc[(df['product'] == product) & (df['quantity'].isna()), 'quantity'] = product_median
-                                logger.info(f"  - Filled {missing_in_product} missing quantity for '{product}' with median: {product_median}")
+                    for product in df['product'].unique():
+                        product_median = df[df['product'] == product]['quantity'].median()
+                        missing_in_product = df[(df['product'] == product) & (df['quantity'].isna())].shape[0]
                         
-                        # Fallback
-                        remaining_missing = df['quantity'].isna().sum()
-                        if remaining_missing > 0:
-                            overall_median = df['quantity'].median()
-                            df['quantity'] = df['quantity'].fillna(overall_median)
-                            logger.info(f"  - Fallback: Filled {remaining_missing} with overall median: {overall_median}")
-                        
-                        df['quantity'] = df['quantity'].astype(int)
-                        logger.info(f"Quantity cleaning complete")
-                    except Exception as e:
-                        logger.error(f"Error while cleaning quantity column: {e}")
-                        logger.error(traceback.format_exc())
-                        raise
-            else:
-                logger.warning("'quantity' column not found in data")
+                        if missing_in_product > 0:
+                            df.loc[(df['product'] == product) & (df['quantity'].isna()), 'quantity'] = product_median
+                    
+                    remaining_missing = df['quantity'].isna().sum()
+                    if remaining_missing > 0:
+                        overall_median = df['quantity'].median()
+                        df['quantity'] = df['quantity'].fillna(overall_median)
+                    
+                    df['quantity'] = df['quantity'].astype(int)
+                    logger.info(f"Quantity cleaning complete")
             
             # Handle missing price values
             if 'price' in df.columns:
                 missing_price = df['price'].isna().sum()
                 if missing_price > 0:
-                    logger.warning(f"Found {missing_price} missing price values")
+                    logger.warning(f"Found {missing_price} missing prices")
                     mean_price = df['price'].mean()
                     df['price'] = df['price'].fillna(mean_price)
-                    logger.info(f"Filled missing prices with average: {mean_price:.2f}")
+                    logger.info(f"Filled with average: R{mean_price:.2f}")
             
             # Handle missing salesperson names
             if 'salesperson' in df.columns:
                 missing_sales = df['salesperson'].isna().sum()
                 if missing_sales > 0:
-                    logger.warning(f"Found {missing_sales} missing salesperson names")
+                    logger.warning(f"Found {missing_sales} missing salespeople")
                     df['salesperson'] = df['salesperson'].fillna('Unknown')
-                    logger.info(f"Labeled missing salespeople as 'Unknown'")
+                    logger.info(f"Labeled as 'Unknown'")
             
             # Handle date formatting
             if 'date' in df.columns:
@@ -262,17 +234,14 @@ class SalesDataProcessor:
                 df = df.dropna(subset=['date'])
                 rows_removed = rows_before - len(df)
                 if rows_removed > 0:
-                    logger.warning(f"Removed {rows_removed} rows with invalid dates")
-                else:
-                    logger.info("All dates are valid")
+                    logger.warning(f"Removed {rows_removed} invalid dates")
             
             self.cleaned_data = df
-            logger.info(f"Cleaning complete! Final row count: {len(df)}")
+            logger.info(f"Cleaning complete: {len(df)} rows")
             return True
             
         except Exception as e:
-            logger.error(f"CRITICAL: Clean data failed: {e}")
-            logger.error(traceback.format_exc())
+            logger.error(f"Clean failed: {e}")
             return False
     
     def transform_data(self):
@@ -281,21 +250,19 @@ class SalesDataProcessor:
         
         try:
             if self.cleaned_data is None:
-                raise ValueError("No cleaned data. Please run clean_data() first.")
+                raise ValueError("No cleaned data")
             
             df = self.cleaned_data
             
             # Calculate revenue
             df['revenue'] = df['quantity'] * df['price']
             total_revenue = df['revenue'].sum()
-            logger.info(f"Calculated revenue for {len(df)} transactions")
-            logger.info(f"Total revenue across all transactions: ${total_revenue:,.2f}")
+            logger.info(f"Calculated revenue: R{total_revenue:,.2f}")
             
-            # Extract date components
+            # Extract month as number only (NO year, NO month_number column)
             if 'date' in df.columns:
-                df['year'] = df['date'].dt.year
-                df['month'] = df['date'].dt.month
-                logger.info(f"Extracted year and month from dates")
+                df['month'] = df['date'].dt.month  # This gives 1, 2, 3, 4
+                logger.info(f"Extracted month numbers from dates")
                 logger.info(f"Date range: {df['date'].min()} to {df['date'].max()}")
             
             self.cleaned_data = df
@@ -303,8 +270,7 @@ class SalesDataProcessor:
             return True
             
         except Exception as e:
-            logger.error(f"Transform data failed: {e}")
-            logger.error(traceback.format_exc())
+            logger.error(f"Transform failed: {e}")
             return False
     
     def aggregate_data(self):
@@ -313,40 +279,38 @@ class SalesDataProcessor:
         
         try:
             if self.cleaned_data is None:
-                raise ValueError("No transformed data. Please run transform_data() first.")
+                raise ValueError("No transformed data")
             
             df = self.cleaned_data
             
             # Sales by region
             sales_by_region = df.groupby('region', as_index=False)['revenue'].sum().sort_values('revenue', ascending=False)
             sales_by_region.columns = ['region', 'revenue']
-            logger.info(f"Aggregated revenue by region: {len(sales_by_region)} regions")
-            logger.info(f"Top region: {sales_by_region.iloc[0]['region']} (${sales_by_region.iloc[0]['revenue']:,.2f})")
+            logger.info(f"Found {len(sales_by_region)} regions")
             
             # Sales by product
             sales_by_product = df.groupby('product', as_index=False)['revenue'].sum().sort_values('revenue', ascending=False)
             sales_by_product.columns = ['product', 'revenue']
-            logger.info(f"Aggregated revenue by product: {len(sales_by_product)} products")
+            logger.info(f"Found {len(sales_by_product)} products")
             
             # Sales by category
             sales_by_category = df.groupby('category', as_index=False)['revenue'].sum().sort_values('revenue', ascending=False)
             sales_by_category.columns = ['category', 'revenue']
-            logger.info(f"Aggregated revenue by category: {len(sales_by_category)} categories")
+            logger.info(f"Found {len(sales_by_category)} categories")
             
-            # Monthly revenue
+            # Monthly revenue - using month number
             monthly_revenue = df.groupby('month', as_index=False)['revenue'].sum().sort_values('month')
             monthly_revenue.columns = ['month', 'revenue']
-            logger.info("Aggregated revenue by month")
+            logger.info("Monthly revenue aggregated")
             
             # Salesperson performance
             salesperson_perf = df.groupby('salesperson', as_index=False)['revenue'].sum().sort_values('revenue', ascending=False)
             salesperson_perf.columns = ['salesperson', 'revenue']
             salesperson_perf['rank'] = salesperson_perf['revenue'].rank(ascending=False, method='dense').astype(int)
-            logger.info(f"Aggregated revenue by salesperson: {len(salesperson_perf)} salespeople")
+            logger.info(f"Found {len(salesperson_perf)} salespeople")
             
             # Top 5
             top_salespeople = salesperson_perf.head(5).copy()
-            logger.info(f"Top salesperson: {top_salespeople.iloc[0]['salesperson']} (${top_salespeople.iloc[0]['revenue']:,.2f})")
             
             aggregations = {
                 'sales_by_region': sales_by_region,
@@ -361,7 +325,6 @@ class SalesDataProcessor:
             
         except Exception as e:
             logger.error(f"Aggregation failed: {e}")
-            logger.error(traceback.format_exc())
             return {}
     
     def export_data(self, aggregations):
@@ -370,64 +333,62 @@ class SalesDataProcessor:
         
         try:
             if self.cleaned_data is None:
-                raise ValueError("No data to export. Please run pipeline steps first.")
+                raise ValueError("No data to export")
             
             # Export clean data
             clean_file = self.output_dir / 'clean_sales.csv'
             self.cleaned_data.to_csv(clean_file, index=False)
-            logger.info(f"Exported clean data ({len(self.cleaned_data)} rows) to {clean_file}")
+            logger.info(f"Exported clean data")
             
             # Export aggregations
             for name, df in aggregations.items():
                 output_file = self.output_dir / f"{name}.csv"
                 df.to_csv(output_file, index=False)
-                logger.info(f"Exported {name} ({len(df)} rows) to {output_file}")
+                logger.info(f"Exported {name}")
             
             logger.info("Export complete")
             return True
             
         except Exception as e:
             logger.error(f"Export failed: {e}")
-            logger.error(traceback.format_exc())
             return False
     
     def run_pipeline(self):
         """Execute the pipeline from top to bottom."""
         
-        logger.info("=" * 70)
-        logger.info("STARTING NEW PIPELINE EXECUTION")
-        logger.info("=" * 70)
+        logger.info("=" * 50)
+        logger.info("STARTING PIPELINE")
+        logger.info("=" * 50)
         
         try:
             if not self.load_data():
-                logger.error("Pipeline FAILED at load_data stage")
+                logger.error("Pipeline FAILED at load_data")
                 return False
             
             if not self.clean_data():
-                logger.error("Pipeline FAILED at clean_data stage")
+                logger.error("Pipeline FAILED at clean_data")
                 return False
             
             if not self.transform_data():
-                logger.error("Pipeline FAILED at transform_data stage")
+                logger.error("Pipeline FAILED at transform_data")
                 return False
             
             aggregations = self.aggregate_data()
             if not aggregations:
-                logger.error("Pipeline FAILED at aggregate_data stage")
+                logger.error("Pipeline FAILED at aggregate_data")
                 return False
             
             if not self.export_data(aggregations):
-                logger.error("Pipeline FAILED at export_data stage")
+                logger.error("Pipeline FAILED at export_data")
                 return False
             
-            logger.info("=" * 70)
+            logger.info("=" * 50)
             logger.info("PIPELINE COMPLETED SUCCESSFULLY")
-            logger.info("=" * 70)
+            logger.info("=" * 50)
             return True
             
         except Exception as e:
-            logger.critical(f"UNHANDLED PIPELINE ERROR: {e}")
-            logger.critical(traceback.format_exc())
+            logger.critical(f"PIPELINE ERROR: {e}")
             return False
 
 
@@ -436,41 +397,28 @@ def main():
     Main function that serves as the entry point for the script.
     """
     try:
-        # Determine the project root directory
         project_root = Path(__file__).parent.parent
-        
-        # Define standard input and output paths
         input_file = project_root / 'data' / 'Sales_data.csv'
         output_dir = project_root / 'output'
         
-        logger.info(f"Project root: {project_root}")
-        logger.info(f"Looking for data file: {input_file}")
-        
-        # Fallback to alternative filename
         if not input_file.exists():
             alt_file = project_root / 'data' / 'Messy_Sales_Data.csv'
             if alt_file.exists():
                 input_file = alt_file
-                logger.warning(f"Using alternative file: {input_file}")
+                logger.warning(f"Using alternative file")
             else:
-                error_msg = "No data file found in data/ directory. Looking for: Sales_data.csv or Messy_Sales_Data.csv"
+                error_msg = "No data file found in data/ directory"
                 logger.error(error_msg)
                 raise FileNotFoundError(error_msg)
         
-        # Create the processor instance
         processor = SalesDataProcessor(input_file, output_dir)
-        
-        # Execute the pipeline
         success = processor.run_pipeline()
         
         if not success:
-            raise RuntimeError("Pipeline execution failed - check logs for details")
-        
-        logger.info("Script completed successfully")
+            raise RuntimeError("Pipeline execution failed")
         
     except Exception as e:
-        logger.critical(f"MAIN FUNCTION ERROR: {e}")
-        logger.critical(traceback.format_exc())
+        logger.critical(f"MAIN ERROR: {e}")
         sys.exit(1)
 
 
@@ -479,7 +427,7 @@ if __name__ == "__main__":
         main()
         sys.exit(0)
     except KeyboardInterrupt:
-        print("\nScript interrupted by user")
+        print("\nInterrupted by user")
         sys.exit(130)
     except Exception as e:
         print(f"\nFATAL ERROR: {e}")
