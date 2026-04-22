@@ -15,6 +15,11 @@ jobs:
     steps:
       - name: Get code
         uses: actions/checkout@v3  # Check out the repository code
+      - name: Cache dependencies
+        uses: actions/cache@v3  # Cache node_modules to speed up subsequent runs
+        with:
+          path: ~/.npm  # Cache the npm cache directory
+          key: deps-node-modules-${{ hashFiles('**/package-lock.json') }}  # Create a unique cache key based on the OS and package-lock.json
       - name: Install dependencies
         run: npm ci  # Clean install of dependencies (uses package-lock.json)
       - name: Lint code
@@ -26,6 +31,8 @@ jobs:
   build:
     needs: test  # This job waits for the 'test' job to complete successfully
     runs-on: ubuntu-latest
+    outputs:
+      script-file: ${{ steps.publish-js-filename.outputs.script-file }}  # Output the JS filename for use in the deploy job
     steps:
       - name: Get code
         uses: actions/checkout@v3  # Check out the repository code
@@ -33,7 +40,10 @@ jobs:
         run: npm ci  # Clean install of dependencies
       - name: Build website
         run: npm run build  # Build the production-ready website
-      - name: Upload build artifacts
+      - name: Publish JS Filename
+        id: publish-js-filename  # Set an ID for this step to reference its outputs
+        run: find dist/assets/*.js -type f -execdir echo 'script-file={}' >> $GITHUB_OUTPUT';'
+      - name: Upload artifacts
         uses: actions/upload-artifact@v3  # Upload the build output as an artifact for later use
         with:
           name: dist-files
@@ -52,6 +62,8 @@ jobs:
           name: dist-files
       - name: Output contents
         run: ls   # List the contents of the dist diregctory to verify the build output
+      - name: Output filename
+        run: echo "${{ needs.build.outputs.script-file }}"  # Output the JS filename for debugging purposes
       - name: Deploy
         run: echo "Deploying..."  # Placeholder for actual deployment commands (e.g., upload to hosting provider)
 
