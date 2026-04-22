@@ -37,9 +37,7 @@ jobs:
         uses: actions/upload-artifact@v3  # Upload the build output as an artifact for later use
         with:
           name: dist-files
-          path: |
-            dist/  # Path to the build output directory (adjust as needed)
-            package.json  # Include package.json if needed for deployment
+          path: dist/  # Path to the build output directory
 
   # Third job: Deploy the website (depends on build job succeeding)
   deploy:
