@@ -46,6 +46,12 @@ jobs:
     needs: build  # This job waits for the 'build' job to complete successfully
     runs-on: ubuntu-latest
     steps:
+      - name: Get build artifacts
+        uses: actions/download-artifact@v3  # Download the build artifacts from the previous job
+        with:
+          name: dist-files
+      - name: Output contents
+        run: ls   # List the contents of the dist diregctory to verify the build output
       - name: Deploy
         run: echo "Deploying..."  # Placeholder for actual deployment commands (e.g., upload to hosting provider)
 
