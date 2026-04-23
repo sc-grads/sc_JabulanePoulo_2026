@@ -1,0 +1,30 @@
+name: Matrix Demo
+on: push
+jobs:
+    build:
+        strategy: # Define a matrix of different Node.js versions and operating systems to test against
+            matrix: # Define a matrix of different Node.js versions and operating systems to test against
+                node-version: [16, 18, 20] # Test against multiple Node.js versions
+                os: [ubuntu-latest, windows-latest, macos-latest]
+                include: # Include specific combinations of Node.js versions and operating systems
+                    - node-version: 16
+                      os: ubuntu-latest
+                    - node-version: 18
+                      os: windows-latest
+                    - node-version: 20
+                      os: macos-latest
+                exlude: # Exclude specific combinations of Node.js versions and operating systems
+                    - node-version: 12
+                      os: windows-latest
+        runs-on: ${{ matrix.os }} # Use the operating system from the matrix
+        steps:
+            - name: Get code
+              uses: actions/checkout@v3
+            - name: Install NodeJS
+              uses: actions/setup-node@v3
+              with:
+                node-version: ${{ matrix.node-version }} # Use the Node.js version from the matrix
+            - name: Install dependencies
+              run: npm ci
+            - name: Build project
+              run: npm run build

@@ -18,13 +18,15 @@ jobs:
       - name: Cache dependencies
         uses: actions/cache@v3  # Cache node_modules to speed up subsequent runs
         with:
-          path: ~/.npm  # Cache the npm cache directory
+          path: node_modules # Cache the npm cache directory
           key: deps-node-modules-${{ hashFiles('**/package-lock.json') }}  # Create a unique cache key based on the OS and package-lock.json
       - name: Install dependencies
-        run: npm ci  # Clean install of dependencies (uses package-lock.json)
+        if: step.cache.outputs.cache-hit != 'true'  # Only run npm ci if the cache was not hit
+        run: npm ci  # Clean install of dependencies
       - name: Lint code
         run: npm run lint  # Run linter to check code style/quality
       - name: Test code
+        continue-on-error: true  # Allow the workflow to continue even if tests fail (to upload test results)
         id: run-tests  # Set an ID for this step to reference its outputs if needed
         run: npm run test  # Run test suite
       - name: Upload test results
@@ -74,3 +76,12 @@ jobs:
       - name: Deploy
         run: echo "Deploying..."  # Placeholder for actual deployment commands (e.g., upload to hosting provider)
 
+  report: # This job runs regardless of the success or failure of previous jobs to generate a report
+    needs: [build, deploy]  # This job depends on all previous jobs
+    if: failure()
+    runs-on: ubuntu-latest
+    steps: # Steps to generate a report based on the outcomes of previous jobs
+      - name: Output information
+        run: |
+           echo "Something went wrong"  # Placeholder for actual report generation commands (e.g., aggregate test results, build logs, etc.)
+           echo "${{github}}" # Output GitHub context for debugging purposes
