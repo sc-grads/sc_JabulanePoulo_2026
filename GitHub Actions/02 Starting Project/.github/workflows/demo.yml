@@ -25,7 +25,14 @@ jobs:
       - name: Lint code
         run: npm run lint  # Run linter to check code style/quality
       - name: Test code
+        id: run-tests  # Set an ID for this step to reference its outputs if needed
         run: npm run test  # Run test suite
+      - name: Upload test results
+        if: failure() && steps.run-tests.outcome == 'failure'  # Only upload test results if tests fail
+        uses: actions/upload-artifact@v3  # Upload test results as an artifact for later reference
+        with:
+          name: test-results
+          path: test.json  # Path to the test results file (adjust as needed)
 
   # Second job: Build the website (depends on test job succeeding)
   build:
