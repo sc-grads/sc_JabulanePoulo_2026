@@ -1,0 +1,87 @@
+# Name of the workflow
+name: Deploy website
+
+# Trigger the workflow on push events to the main branch
+on:
+  push:
+    branches:
+      - main
+
+# Define the jobs that will run as part of the workflow
+jobs:
+  # First job: Run tests and linting
+  test:
+    runs-on: ubuntu-latest  # Use the latest Ubuntu runner
+    steps:
+      - name: Get code
+        uses: actions/checkout@v3  # Check out the repository code
+      - name: Cache dependencies
+        uses: actions/cache@v3  # Cache node_modules to speed up subsequent runs
+        with:
+          path: node_modules # Cache the npm cache directory
+          key: deps-node-modules-${{ hashFiles('**/package-lock.json') }}  # Create a unique cache key based on the OS and package-lock.json
+      - name: Install dependencies
+        
+        run: npm ci  # Clean install of dependencies
+      - name: Lint code
+        run: npm run lint  # Run linter to check code style/quality
+      - name: Test code
+        continue-on-error: true  # Allow the workflow to continue even if tests fail (to upload test results)
+        id: run-tests  # Set an ID for this step to reference its outputs if needed
+        run: npm run test  # Run test suite
+      - name: Upload test results
+        if: failure() && steps.run-tests.outcome == 'failure'  # Only upload test results if tests fail
+        uses: actions/upload-artifact@v3  # Upload test results as an artifact for later reference
+        with:
+          name: test-results
+          path: test.json  # Path to the test results file (adjust as needed)
+
+  # Second job: Build the website (depends on test job succeeding)
+  build:
+    needs: test  # This job waits for the 'test' job to complete successfully
+    runs-on: ubuntu-latest
+    outputs:
+      script-file: ${{ steps.publish-js-filename.outputs.script-file }}  # Output the JS filename for use in the deploy job
+    steps:
+      - name: Get code
+        uses: actions/checkout@v3  # Check out the repository code
+      - name: Install dependencies
+        run: npm ci  # Clean install of dependencies
+      - name: Build website
+        run: npm run build  # Build the production-ready website
+      - name: Publish JS Filename
+        id: publish-js-filename  # Set an ID for this step to reference its outputs
+        run: find dist/assets/*.js -type f -execdir echo 'script-file={}' >> $GITHUB_OUTPUT';'
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3  # Upload the build output as an artifact for later use
+        with:
+          name: dist-files
+          path: |
+            dist/  # Path to the build output directory (adjust as needed)
+            package.json  # Include package.json if needed for deployment
+
+  # Third job: Deploy the website (depends on build job succeeding)
+  deploy:
+    needs: build  # This job waits for the 'build' job to complete successfully
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get build artifacts
+        uses: actions/download-artifact@v3  # Download the build artifacts from the previous job
+        with:
+          name: dist-files
+      - name: Output contents
+        run: ls   # List the contents of the dist diregctory to verify the build output
+      - name: Output filename
+        run: echo "${{ needs.build.outputs.script-file }}"  # Output the JS filename for debugging purposes
+      - name: Deploy
+        run: echo "Deploying..."  # Placeholder for actual deployment commands (e.g., upload to hosting provider)
+
+  report: # This job runs regardless of the success or failure of previous jobs to generate a report
+    needs: [build, deploy]  # This job depends on all previous jobs
+    if: failure()
+    runs-on: ubuntu-latest
+    steps: # Steps to generate a report based on the outcomes of previous jobs
+      - name: Output information
+        run: |
+           echo "Something went wrong"  # Placeholder for actual report generation commands (e.g., aggregate test results, build logs, etc.)
+           echo "${{github}}" # Output GitHub context for debugging purposes
