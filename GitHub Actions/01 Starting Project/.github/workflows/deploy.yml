@@ -21,7 +21,7 @@ jobs:
       MONGODB_CLUSTER_ADDRESS: cluster0.baiayyr.mongodb.net  # MongoDB cluster address
       MONGODB_USERNAME: jabulanepoulo_db_user                # Database username
       MONGODB_PASSWORD: cHiPyBsfju3WCnhK                     # Database password (Note: In production, use secrets!)
-    
+      PORT: 8080 # Port number for the application server to listen on
     runs-on: ubuntu-latest  # Use the latest Ubuntu runner for this job
     
     steps:
@@ -42,7 +42,7 @@ jobs:
       
       # Step 4: Start the application server
       - name: Run server
-        run: npm start & npx wait-on http://127.0.0.1:XYZ  # Starts server in background and waits for it to be ready
+        run: npm start & npx wait-on http://127.0.0.1:${{ env.PORT }}  # Starts server in background and waits for it to be ready
         # Note: 'XYZ' should be replaced with the actual port number your app runs on
       
       # Step 5: Run the test suite against the running server
@@ -51,7 +51,8 @@ jobs:
       
       # Step 6: Output confirmation message
       - name: Output information
-        run: echo "..."              # Placeholder for test completion message
+        run: |
+          echo "MONGODB_USERNAME: ${{ env.MONGODB_USERNAME }}"              # Placeholder for test completion message
   
   # Second job: Deploy the application (only runs if tests pass)
   deploy:
@@ -62,7 +63,7 @@ jobs:
       # Output deployment information
       - name: Output information
         run: |        
-          echo "..."                # Placeholder for deployment steps (e.g., deploy to cloud platform)
+          echo "MONGODB_USERNAME: ${{ env.MONGODB_USERNAME }}"                # Placeholder for deployment steps (e.g., deploy to cloud platform)
         # Common deployment steps would go here, such as:
         # - Deploy to AWS, Azure, GCP, Heroku, etc.
         # - Upload artifacts to a server
