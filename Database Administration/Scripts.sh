@@ -28,3 +28,28 @@ FROM [Sales].[SalesOrderHeader];
 -- Permanently deletes the SalesOrderHeader table
 -- including all its data and structure
 DROP TABLE [Sales].[SalesOrderHeader];
+
+
+
+-- Create parent table first
+CREATE TABLE Sales.storenew(
+    store_id INT PRIMARY KEY,   -- Primary key added
+    sales INT
+);
+
+-- Create child table
+CREATE TABLE Sales.visits(
+    visit_id INT PRIMARY KEY IDENTITY(1,1),
+
+    first_name VARCHAR(50) NOT NULL,
+    last_name VARCHAR(50) NOT NULL,
+
+    visited_at DATETIME,
+
+    phone VARCHAR(20),
+
+    store_id INT NOT NULL,
+
+    FOREIGN KEY (store_id)
+        REFERENCES Sales.storenew(store_id)
+);
