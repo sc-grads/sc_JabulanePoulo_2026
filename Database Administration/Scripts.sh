@@ -53,3 +53,345 @@ CREATE TABLE Sales.visits(
     FOREIGN KEY (store_id)
         REFERENCES Sales.storenew(store_id)
 );
+
+-- Selects specific columns from the Person table
+-- and creates a temporary table called #TempPersonTable
+-- containing only people with the title 'Mr.'
+SELECT BusinessEntityID, FirstName, LastName
+INTO #TempPersonTable
+FROM [Person].[Person]
+WHERE Title = 'Mr.';
+
+
+what is views
+
+-- Retrieves the BusinessEntityID, FirstName,
+-- LastName, and Title columns from the Person table
+-- for all people whose title is 'Mr.'
+SELECT BusinessEntityID, FirstName, LastName, Title
+FROM [Person].[Person]
+WHERE Title = 'Mr.';
+
+-- Selects all matching records from the joined tables
+-- TOP (100) PERCENT means return all rows
+SELECT TOP (100) PERCENT
+
+    -- Retrieves the person's first name
+    Person.Person.FirstName,
+
+    -- Retrieves the person's last name
+    Person.Person.LastName,
+
+    -- Retrieves the person's phone number
+    Person.PersonPhone.PhoneNumber,
+
+    -- Retrieves the type of phone number
+    -- (for example: Cell, Home, Work)
+    Person.PhoneNumberType.Name
+
+-- Main table containing person information
+FROM Person.Person
+
+-- Joins the PersonPhone table to match each person
+-- with their phone numbers using BusinessEntityID
+INNER JOIN Person.PersonPhone
+    ON Person.Person.BusinessEntityID =
+       Person.PersonPhone.BusinessEntityID
+
+-- Joins the PhoneNumberType table to identify
+-- the type of each phone number
+INNER JOIN Person.PhoneNumberType
+    ON Person.PersonPhone.PhoneNumberTypeID =
+       Person.PhoneNumberType.PhoneNumberTypeID
+
+-- Sorts the final results alphabetically
+-- by first name
+ORDER BY Person.Person.FirstName;
+
+Select statements in details
+
+-- Retrieves all columns and all rows
+-- from the Address table
+SELECT *
+FROM Person.Address;
+
+
+-- Retrieves only the City, AddressID,
+-- and ModifiedDate columns
+-- from the Address table
+SELECT City, AddressID, ModifiedDate
+FROM [Person].[Address];
+
+
+-- Retrieves only the first 10 rows
+-- from the Address table
+SELECT TOP 10 *
+FROM [Person].[Address];
+
+
+-- Switches the database context to AdventureWorks2019
+USE [AdventureWorks2019];
+GO
+
+
+-- Retrieves all columns and rows from the Address table
+SELECT * 
+FROM Person.Address;
+
+
+-- Retrieves only AddressID, City, and ModifiedDate columns
+SELECT AddressID, City, ModifiedDate
+FROM Person.Address;
+
+
+-- Retrieves City, AddressID, and ModifiedDate columns
+-- in a different column order
+SELECT City, AddressID, ModifiedDate
+FROM Person.Address;
+
+
+-- Retrieves only the first 10 rows from the Address table
+SELECT TOP 10 *
+FROM Person.Address;
+
+--------------------------------------------------
+
+-- Retrieves addresses with PostalCode = 98011
+SELECT *
+FROM Person.Address
+WHERE PostalCode = '98011';
+
+
+-- Retrieves addresses where PostalCode is not 98011
+SELECT *
+FROM Person.Address
+WHERE PostalCode != '98011';
+
+
+-- Another way to check for not equal
+SELECT *
+FROM Person.Address
+WHERE PostalCode <> '98011';
+
+
+-- Counts addresses where PostalCode is not 98011
+SELECT COUNT(*)
+FROM Person.Address
+WHERE PostalCode <> '98011';
+
+
+-- Retrieves records modified on or after 8 Nov 2013
+SELECT *
+FROM Person.Address
+WHERE ModifiedDate >= '2013-11-08 00:00:00';
+
+
+-- Retrieves records modified on or before 8 Nov 2013
+SELECT *
+FROM Person.Address
+WHERE ModifiedDate <= '2013-11-08 00:00:00';
+
+
+-- Retrieves people whose first name starts with "Mat"
+SELECT *
+FROM Person.Person
+WHERE FirstName LIKE 'Mat%';
+
+
+-- Retrieves people whose first name ends with "ew"
+SELECT *
+FROM Person.Person
+WHERE FirstName LIKE '%ew';
+
+
+-- Retrieves people whose first name ends with "EW"
+-- SQL Server is usually case-insensitive
+SELECT *
+FROM Person.Person
+WHERE FirstName LIKE '%EW';
+
+
+-- Retrieves all employee pay history records
+SELECT *
+FROM HumanResources.EmployeePayHistory;
+
+
+-- Retrieves the highest pay rate
+SELECT MAX(Rate)
+FROM HumanResources.EmployeePayHistory;
+
+
+-- Retrieves the highest pay rate with an alias
+SELECT MAX(Rate) AS MaxPayrate
+FROM HumanResources.EmployeePayHistory;
+
+
+-- Retrieves the minimum pay rate
+SELECT MIN(Rate) AS [Min Pay rate]
+FROM HumanResources.EmployeePayHistory;
+
+
+-- Retrieves product cost history for a specific start date
+SELECT *
+FROM Production.ProductCostHistory
+WHERE StartDate = '2013-05-30 00:00:00';
+
+
+-- Retrieves products with a specific start date
+-- and StandardCost greater than or equal to 200
+SELECT *
+FROM Production.ProductCostHistory
+WHERE StartDate = '2013-05-30 00:00:00'
+AND StandardCost >= 200;
+
+
+-- Retrieves records that either:
+-- match the date and cost condition
+-- OR have ProductID greater than 800
+SELECT *
+FROM Production.ProductCostHistory
+WHERE (StartDate = '2013-05-30 00:00:00'
+       AND StandardCost >= 200)
+   OR ProductID > 800;
+
+
+-- Retrieves records matching all conditions
+SELECT *
+FROM Production.ProductCostHistory
+WHERE (StartDate = '2013-05-30 00:00:00'
+       AND StandardCost >= 200)
+AND ProductID > 800;
+
+
+-- Retrieves records where ProductID is one of the listed values
+SELECT *
+FROM Production.ProductCostHistory
+WHERE ProductID IN (802, 803, 820, 900);
+
+
+-- Retrieves records where EndDate has no value
+SELECT *
+FROM Production.ProductCostHistory
+WHERE EndDate IS NULL;
+
+
+-- Retrieves records where EndDate contains a value
+SELECT *
+FROM Production.ProductCostHistory
+WHERE EndDate IS NOT NULL;
+
+--------------------------------------------------
+
+-- Retrieves employee pay history ordered by Rate ascending
+SELECT *
+FROM HumanResources.EmployeePayHistory
+ORDER BY Rate;
+
+
+-- Explicit ascending order
+SELECT *
+FROM HumanResources.EmployeePayHistory
+ORDER BY Rate ASC;
+
+
+-- Orders employee pay history by Rate descending
+SELECT *
+FROM HumanResources.EmployeePayHistory
+ORDER BY Rate DESC;
+
+
+-- Retrieves records modified after 30 June 2010
+-- sorted from newest to oldest
+SELECT *
+FROM HumanResources.EmployeePayHistory
+WHERE ModifiedDate >= '2010-06-30 00:00:00'
+ORDER BY ModifiedDate DESC;
+
+
+-- Retrieves records where ModifiedDate year is 2014 or later
+SELECT *
+FROM HumanResources.EmployeePayHistory
+WHERE YEAR(ModifiedDate) >= '2014'
+ORDER BY ModifiedDate DESC;
+
+
+-- Retrieves records where the month is June
+SELECT *
+FROM HumanResources.EmployeePayHistory
+WHERE MONTH(ModifiedDate) = '06'
+ORDER BY ModifiedDate DESC;
+
+--------------------------------------------------
+
+-- Retrieves addresses with PostalCode 98011
+SELECT *
+FROM Person.Address
+WHERE PostalCode = '98011';
+
+
+-- Counts addresses with PostalCode 98011
+SELECT COUNT(*)
+FROM Person.Address
+WHERE PostalCode = '98011';
+
+
+-- Counts addresses grouped by PostalCode
+SELECT COUNT(*), PostalCode
+FROM Person.Address
+GROUP BY PostalCode;
+
+
+-- Counts addresses grouped by PostalCode
+-- and renames the count column
+SELECT COUNT(*) AS NoOfAddresses, PostalCode
+FROM Person.Address
+GROUP BY PostalCode;
+
+
+-- Counts addresses grouped by PostalCode
+-- and sorts by PostalCode
+SELECT COUNT(*) AS NoOfAddresses, PostalCode
+FROM Person.Address
+GROUP BY PostalCode
+ORDER BY PostalCode;
+
+
+-- Counts addresses grouped by City
+SELECT COUNT(*), City
+FROM Person.Address
+GROUP BY City;
+
+
+-- Counts addresses grouped by both City and PostalCode
+SELECT COUNT(*), City, PostalCode
+FROM Person.Address
+GROUP BY City, PostalCode;
+
+--------------------------------------------------
+
+-- Retrieves all products
+SELECT *
+FROM Production.Product;
+
+
+-- Counts yellow products grouped by Color
+SELECT COUNT(*) AS CountOfProduct, Color
+FROM Production.Product
+WHERE Color = 'Yellow'
+GROUP BY Color;
+
+
+-- Groups products by Color
+-- then filters groups to only Yellow
+SELECT COUNT(*) AS CountOfProduct, Color
+FROM Production.Product
+GROUP BY Color
+HAVING Color = 'Yellow';
+
+
+-- Counts products grouped by Color and Size
+-- only showing groups where Size >= 44
+SELECT COUNT(*) AS CountOfProduct, Color, Size
+FROM Production.Product
+GROUP BY Color, Size
+HAVING Size >= '44';
