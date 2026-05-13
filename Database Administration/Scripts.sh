@@ -395,3 +395,143 @@ SELECT COUNT(*) AS CountOfProduct, Color, Size
 FROM Production.Product
 GROUP BY Color, Size
 HAVING Size >= '44';
+
+drop table salesstaff
+
+-----------------------------------------
+
+create table salesstaff
+(
+staffid int not null primary key,
+firstname nvarchar(50) not null,
+lastname nvarchar(50) not null,
+countryregion nvarchar(50) not null
+)
+
+----------------------------------------------
+
+insert into salesstaff
+select [BusinessEntityID],[FirstName],[LastName],[CountryRegionName] from [Sales].[vSalesPerson]
+
+-------------------------------------
+
+delete salesstaff
+
+----------------------
+
+
+delete from salesstaff
+
+--------------------------
+
+delete from salesstaff where countryregion =  'united states'
+
+-----------------------------
+begin tran
+delete from salesstaff where countryregion =  'united states'
+
+rollback tran
+
+------------------------------
+
+begin tran
+delete from salesstaff where countryregion =  'united states'
+
+commit
+
+------------------------
+
+delete from salesstaff where staffid in (select [BusinessEntityID] from [Sales].[vSalesPerson] where SalesLastYear = 0)
+
+-------------------------------------
+
+delete salesstaff 
+from  [Sales].[vSalesPerson] sp
+inner join salesstaff ss
+on sp.[BusinessEntityID] = ss.staffid
+where sp.saleslastyear = 0
+
+USE OurFirstDatabase
+GO
+SELECT * FROM DBO.STUDENT
+GO
+
+SELECT * FROM DBO.COURSE
+
+SELECT * FROM STUDENT s
+INNER JOIN COURSE c
+ON s.ROLLNO = c.ROLLNO
+
+SELECT S.ROLLNO,S.STUDENTNAME, C.COURSEID FROM STUDENT S
+LEFT JOIN COURSE C
+ON S.ROLLNO = C.ROLLNO
+
+SELECT S.ROLLNO, S.STUDENTNAME, C.COURSEID FROM STUDENT S
+RIGHT JOIN COURSE C
+ON S.ROLLNO = C.ROLLNO
+
+SELECT S.ROLLNO, S.STUDENTNAME, C.COURSEID FROM STUDENT S
+FULL JOIN COURSE C
+ON S.ROLLNO = C.ROLLNO
+
+--[AdventureWorks2022].[HumanResources].[EmployeePayHistory]
+--[Production].[Product]
+--[Production].[ProductInventory]
+
+SELECT * FROM [AdventureWorks2022].[HumanResources].[EmployeePayHistory]
+WHERE BusinessEntityID IN (SELECT BusinessEntityID FROM [HumanResources].[EmployeePayHistory] WHERE Rate > 60 )
+
+
+
+--ALL TABLES GET CREATED IN DBO SCHEMA UNLESS WE CREATE A NEW SCHEMA
+
+SELECT * FROM [AdventureWorks2022].[HumanResources].[EmployeePayHistory]
+WHERE BusinessEntityID = (SELECT BusinessEntityID FROM [HumanResources].[EmployeePayHistory] WHERE Rate = 39.06 )
+
+SELECT * FROM [Production].[Product]
+WHERE ProductID IN (SELECT ProductID FROM [Production].[ProductInventory] WHERE Quantity >= 300)
+
+
+create table salesstaff
+(   
+     staffid int not null primary key,
+     fName nvarchar(30) not null,
+     lName nvarchar(30) not null,
+)
+
+INSERT INTO salesstaff (staffid, fName, lName) VALUES (200,'Jabulane','Poulo')
+
+SELECT * FROM salesstaff
+
+INSERT INTO salesstaff (staffid, fName, lName) VALUES (300,'Siya','Poulo'),(325,'John','Wick'),(314,'Tony','Stark'),(315,'John','Snow')
+
+create table salesstaffnew
+(   
+     ID INT NOT NULL Identity Primary key,
+     staffid int not null,
+     fName nvarchar(30) ,
+     lName nvarchar(30) ,
+)
+
+INSERT INTO salesstaff (staffid, fName, lName) VALUES (300,'Siya','Poulo'),(325,'John','Wick'),(314,'Tony','Stark'),(315,'John','Snow')
+
+SELECT * FROM salesstaffNew
+
+INSERT INTO salesstaffnew (staffid, fName, lName) VALUES (300,'Siya','Poulo'),(325,'John','Wick'),(314,'Tony','Stark'),(315,'John','Snow')
+
+create table NameOnlyTable
+(   
+     
+     fName nvarchar(30) ,
+     lName nvarchar(30) ,
+)
+
+Select * from NameOnlyTable
+
+INSERT NameOnlyTable( fName, lName)
+select fname,lname from salesstaffNew where id >= 3
+
+select * into salessaffNew_bkp from salesstaffnew
+
+select * from salessaffNew_bkp
+
