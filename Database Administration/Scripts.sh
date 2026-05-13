@@ -535,3 +535,20 @@ select * into salessaffNew_bkp from salesstaffnew
 
 select * from salessaffNew_bkp
 
+select * from salesstaff
+truncate  table salesstaff
+
+create table employeenew (
+id int identity (1,1) not null,
+employeename nvarchar(50) not null
+)
+
+insert into employeenew
+(employeename)
+values ('Money'),('Power'),('Respect'),('Banana')
+
+select * from employeenew
+
+delete from employeenew
+
+truncate table  employeenew
