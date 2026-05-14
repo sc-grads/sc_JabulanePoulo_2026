@@ -552,3 +552,124 @@ select * from employeenew
 delete from employeenew
 
 truncate table  employeenew
+
+CREATE PROCEDURE [dbo].[SelectAllPersonAddress]
+AS
+SELECT * FROM  Person.Address
+go;
+
+GO
+
+execute [dbo].[SelectAllPersonAddress]
+
+drop procedure [dbo].[SelectAllPersonAddress]
+
+
+CREATE PROCEDURE [dbo].[SelectAllPersonAddressWithParams] (@City NVARCHAR(30))
+AS
+
+BEGIN
+SET NOCOUNT ON
+
+SELECT * FROM  Person.Address where City = @city;
+
+END
+GO
+
+
+exec SelectAllPersonAddressWithParams @city = 'New York'
+
+exec SelectAllPersonAddressWithParams 'Miami'
+
+
+drop procedure [SelectAllPersonAddressWithParams]
+
+
+CREATE PROCEDURE [dbo].[SelectAllPersonAddressWithParams] (@City NVARCHAR(30) = 'New York')
+AS
+
+BEGIN
+SET NOCOUNT ON
+
+SELECT * FROM  Person.Address where City = @city;
+
+END
+GO
+
+
+exec SelectAllPersonAddressWithParams 'Miami'
+
+
+CREATE PROCEDURE [dbo].[SelectAllPersonAddressWithParams] (@City NVARCHAR(30) = 'New York',@stateProvinceid int)
+AS
+
+BEGIN
+SET NOCOUNT ON
+
+SELECT * FROM  Person.Address where City = @city;
+
+END
+Go;
+
+CREATE PROCEDURE [dbo].[SelectAllPersonAddressWithParamswithEncryption] (@City NVARCHAR(30) = 'New York',@stateProvinceid int)
+AS
+
+BEGIN
+SET NOCOUNT ON
+
+SELECT * FROM  Person.Address where City = @city;
+
+END
+GO
+
+
+select count(Rate)
+   from [HumanResources].[EmployeePayHistory]
+
+   print upper('dotnet')
+   print convert(int,15.56)
+   print getdate()
+   print day(getdate())
+
+CREATE TABLE [dbo].[FunctionEmployee](
+	[EmpID] [int] NOT NULL,
+	[FirstName] [varchar](50) NULL,
+	[LastName] [varchar](50) NULL,
+	[Salary] [int] NULL,
+	[Address] [varchar](100) NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[EmpID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+
+GO
+
+insert into [FunctionEmployee] ([EmpID],[FirstName],[LastName],[Salary],[Address]) values (1,'Abbas','Mehmood', 20000, 'Delhi')
+insert into [FunctionEmployee] ([EmpID],[FirstName],[LastName],[Salary],[Address]) values (2,'Imran','Afzal', 50000, 'Delhi')
+insert into [FunctionEmployee] ([EmpID],[FirstName],[LastName],[Salary],[Address]) values (3,'James','Dino', 90000, 'Delhi')
+insert into [FunctionEmployee] ([EmpID],[FirstName],[LastName],[Salary],[Address]) values (4,'Jaga','Babu', 70000, 'Delhi')
+
+select * from [dbo].[FunctionEmployee]
+
+Create function fnGetEmpFullName
+( @FirstName varchar(50), @LastName varchar(50))
+returns varchar(101)
+As
+begin
+return (select @FirstName + ' '+@LastName);
+end
+GO
+
+select [dbo].fnGetEmpFullName (Firstname,Lastname) as Fullname , salary from FunctionEmployee
+
+select firstname + ' ' +lastname as Fullname , salary from FunctionEmployee
+
+
+create function fnGetEmployee()
+returns Table
+As
+return (select * from FunctionEmployee)
+GO
+
+select * from fnGetEmployee()
