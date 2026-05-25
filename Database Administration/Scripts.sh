@@ -1,3 +1,7 @@
+-- ============================================
+-- SECTION 1: DATABASE CONTEXT AND BASIC SELECTS
+-- ============================================
+
 -- Switches the current database context to AdventureWorks2022
 USE AdventureWorks2022;
 
@@ -11,6 +15,10 @@ FROM Sales.SalesOrderHeader
 WHERE OrderDate BETWEEN '2021-01-01' AND '2021-04-31';
 
 
+-- ============================================
+-- SECTION 2: UPDATE OPERATIONS
+-- ============================================
+
 -- Updates the OrderDate column in the SalesOrderHeader table
 -- Sets the OrderDate to the current system date and time
 UPDATE Sales.SalesOrderHeader
@@ -20,16 +28,22 @@ SET OrderDate = GETDATE()
 WHERE [OrderDate] = '1/1/2021';
 
 
+-- ============================================
+-- SECTION 3: SELECT AND DROP
+-- ============================================
+
 -- Retrieves all columns and rows again from the SalesOrderHeader table
 SELECT * 
 FROM [Sales].[SalesOrderHeader];
-
 
 -- Permanently deletes the SalesOrderHeader table
 -- including all its data and structure
 DROP TABLE [Sales].[SalesOrderHeader];
 
 
+-- ============================================
+-- SECTION 4: CREATE TABLES WITH FOREIGN KEYS
+-- ============================================
 
 -- Create parent table first
 CREATE TABLE Sales.storenew(
@@ -40,16 +54,11 @@ CREATE TABLE Sales.storenew(
 -- Create child table
 CREATE TABLE Sales.visits(
     visit_id INT PRIMARY KEY IDENTITY(1,1),
-
     first_name VARCHAR(50) NOT NULL,
     last_name VARCHAR(50) NOT NULL,
-
     visited_at DATETIME,
-
     phone VARCHAR(20),
-
     store_id INT NOT NULL,
-
     FOREIGN KEY (store_id)
         REFERENCES Sales.storenew(store_id)
 );
@@ -63,7 +72,18 @@ FROM [Person].[Person]
 WHERE Title = 'Mr.';
 
 
-what is views
+-- ============================================
+-- SECTION 5: VIEWS CONCEPT
+-- ============================================
+
+-- what is views
+-- Views are virtual tables that store SQL queries
+-- They don't store data physically but show data from underlying tables
+
+
+-- ============================================
+-- SECTION 6: ADVANCED SELECTS WITH JOINS
+-- ============================================
 
 -- Retrieves the BusinessEntityID, FirstName,
 -- LastName, and Title columns from the Person table
@@ -75,696 +95,490 @@ WHERE Title = 'Mr.';
 -- Selects all matching records from the joined tables
 -- TOP (100) PERCENT means return all rows
 SELECT TOP (100) PERCENT
-
     -- Retrieves the person's first name
     Person.Person.FirstName,
-
     -- Retrieves the person's last name
     Person.Person.LastName,
-
     -- Retrieves the person's phone number
     Person.PersonPhone.PhoneNumber,
-
     -- Retrieves the type of phone number
-    -- (for example: Cell, Home, Work)
     Person.PhoneNumberType.Name
-
--- Main table containing person information
 FROM Person.Person
-
--- Joins the PersonPhone table to match each person
--- with their phone numbers using BusinessEntityID
 INNER JOIN Person.PersonPhone
     ON Person.Person.BusinessEntityID =
        Person.PersonPhone.BusinessEntityID
-
--- Joins the PhoneNumberType table to identify
--- the type of each phone number
 INNER JOIN Person.PhoneNumberType
     ON Person.PersonPhone.PhoneNumberTypeID =
        Person.PhoneNumberType.PhoneNumberTypeID
-
--- Sorts the final results alphabetically
--- by first name
 ORDER BY Person.Person.FirstName;
 
-Select statements in details
 
--- Retrieves all columns and all rows
--- from the Address table
+-- ============================================
+-- SECTION 7: SELECT STATEMENT DETAILS
+-- ============================================
+
+-- Retrieves all columns and all rows from the Address table
 SELECT *
 FROM Person.Address;
 
-
--- Retrieves only the City, AddressID,
--- and ModifiedDate columns
--- from the Address table
+-- Retrieves only the City, AddressID, and ModifiedDate columns
 SELECT City, AddressID, ModifiedDate
 FROM [Person].[Address];
 
-
--- Retrieves only the first 10 rows
--- from the Address table
+-- Retrieves only the first 10 rows from the Address table
 SELECT TOP 10 *
 FROM [Person].[Address];
 
+
+-- ============================================
+-- SECTION 8: ADVENTUREWORKS2019 EXAMPLES
+-- ============================================
 
 -- Switches the database context to AdventureWorks2019
 USE [AdventureWorks2019];
 GO
 
-
 -- Retrieves all columns and rows from the Address table
 SELECT * 
 FROM Person.Address;
-
 
 -- Retrieves only AddressID, City, and ModifiedDate columns
 SELECT AddressID, City, ModifiedDate
 FROM Person.Address;
 
-
--- Retrieves City, AddressID, and ModifiedDate columns
--- in a different column order
+-- Retrieves City, AddressID, and ModifiedDate columns in different order
 SELECT City, AddressID, ModifiedDate
 FROM Person.Address;
-
 
 -- Retrieves only the first 10 rows from the Address table
 SELECT TOP 10 *
 FROM Person.Address;
 
---------------------------------------------------
+
+-- ============================================
+-- SECTION 9: WHERE CLAUSE FILTERING
+-- ============================================
 
 -- Retrieves addresses with PostalCode = 98011
 SELECT *
 FROM Person.Address
 WHERE PostalCode = '98011';
 
-
 -- Retrieves addresses where PostalCode is not 98011
 SELECT *
 FROM Person.Address
 WHERE PostalCode != '98011';
-
 
 -- Another way to check for not equal
 SELECT *
 FROM Person.Address
 WHERE PostalCode <> '98011';
 
-
 -- Counts addresses where PostalCode is not 98011
 SELECT COUNT(*)
 FROM Person.Address
 WHERE PostalCode <> '98011';
 
-
--- Retrieves records modified on or after 8 Nov 2013
+-- Date filtering examples
 SELECT *
 FROM Person.Address
 WHERE ModifiedDate >= '2013-11-08 00:00:00';
 
-
--- Retrieves records modified on or before 8 Nov 2013
 SELECT *
 FROM Person.Address
 WHERE ModifiedDate <= '2013-11-08 00:00:00';
 
-
--- Retrieves people whose first name starts with "Mat"
+-- LIKE pattern matching
 SELECT *
 FROM Person.Person
 WHERE FirstName LIKE 'Mat%';
 
-
--- Retrieves people whose first name ends with "ew"
 SELECT *
 FROM Person.Person
 WHERE FirstName LIKE '%ew';
 
-
--- Retrieves people whose first name ends with "EW"
--- SQL Server is usually case-insensitive
 SELECT *
 FROM Person.Person
 WHERE FirstName LIKE '%EW';
 
 
--- Retrieves all employee pay history records
+-- ============================================
+-- SECTION 10: AGGREGATE FUNCTIONS
+-- ============================================
+
 SELECT *
 FROM HumanResources.EmployeePayHistory;
 
-
--- Retrieves the highest pay rate
+-- Maximum pay rate
 SELECT MAX(Rate)
 FROM HumanResources.EmployeePayHistory;
 
-
--- Retrieves the highest pay rate with an alias
 SELECT MAX(Rate) AS MaxPayrate
 FROM HumanResources.EmployeePayHistory;
 
-
--- Retrieves the minimum pay rate
+-- Minimum pay rate
 SELECT MIN(Rate) AS [Min Pay rate]
 FROM HumanResources.EmployeePayHistory;
 
 
--- Retrieves product cost history for a specific start date
+-- ============================================
+-- SECTION 11: AND/OR CONDITIONS
+-- ============================================
+
 SELECT *
 FROM Production.ProductCostHistory
 WHERE StartDate = '2013-05-30 00:00:00';
 
-
--- Retrieves products with a specific start date
--- and StandardCost greater than or equal to 200
 SELECT *
 FROM Production.ProductCostHistory
 WHERE StartDate = '2013-05-30 00:00:00'
 AND StandardCost >= 200;
 
-
--- Retrieves records that either:
--- match the date and cost condition
--- OR have ProductID greater than 800
 SELECT *
 FROM Production.ProductCostHistory
 WHERE (StartDate = '2013-05-30 00:00:00'
        AND StandardCost >= 200)
    OR ProductID > 800;
 
-
--- Retrieves records matching all conditions
 SELECT *
 FROM Production.ProductCostHistory
 WHERE (StartDate = '2013-05-30 00:00:00'
        AND StandardCost >= 200)
 AND ProductID > 800;
 
-
--- Retrieves records where ProductID is one of the listed values
+-- IN operator
 SELECT *
 FROM Production.ProductCostHistory
 WHERE ProductID IN (802, 803, 820, 900);
 
-
--- Retrieves records where EndDate has no value
+-- NULL checks
 SELECT *
 FROM Production.ProductCostHistory
 WHERE EndDate IS NULL;
 
-
--- Retrieves records where EndDate contains a value
 SELECT *
 FROM Production.ProductCostHistory
 WHERE EndDate IS NOT NULL;
 
---------------------------------------------------
 
--- Retrieves employee pay history ordered by Rate ascending
+-- ============================================
+-- SECTION 12: ORDER BY
+-- ============================================
+
 SELECT *
 FROM HumanResources.EmployeePayHistory
 ORDER BY Rate;
 
-
--- Explicit ascending order
 SELECT *
 FROM HumanResources.EmployeePayHistory
 ORDER BY Rate ASC;
 
-
--- Orders employee pay history by Rate descending
 SELECT *
 FROM HumanResources.EmployeePayHistory
 ORDER BY Rate DESC;
 
-
--- Retrieves records modified after 30 June 2010
--- sorted from newest to oldest
 SELECT *
 FROM HumanResources.EmployeePayHistory
 WHERE ModifiedDate >= '2010-06-30 00:00:00'
 ORDER BY ModifiedDate DESC;
 
-
--- Retrieves records where ModifiedDate year is 2014 or later
+-- Date functions
 SELECT *
 FROM HumanResources.EmployeePayHistory
 WHERE YEAR(ModifiedDate) >= '2014'
 ORDER BY ModifiedDate DESC;
 
-
--- Retrieves records where the month is June
 SELECT *
 FROM HumanResources.EmployeePayHistory
 WHERE MONTH(ModifiedDate) = '06'
 ORDER BY ModifiedDate DESC;
 
---------------------------------------------------
 
--- Retrieves addresses with PostalCode 98011
-SELECT *
-FROM Person.Address
-WHERE PostalCode = '98011';
+-- ============================================
+-- SECTION 13: GROUP BY
+-- ============================================
 
-
--- Counts addresses with PostalCode 98011
-SELECT COUNT(*)
-FROM Person.Address
-WHERE PostalCode = '98011';
-
-
--- Counts addresses grouped by PostalCode
 SELECT COUNT(*), PostalCode
 FROM Person.Address
 GROUP BY PostalCode;
 
-
--- Counts addresses grouped by PostalCode
--- and renames the count column
-SELECT COUNT(*) AS NoOfAddresses, PostalCode
-FROM Person.Address
-GROUP BY PostalCode;
-
-
--- Counts addresses grouped by PostalCode
--- and sorts by PostalCode
 SELECT COUNT(*) AS NoOfAddresses, PostalCode
 FROM Person.Address
 GROUP BY PostalCode
 ORDER BY PostalCode;
 
-
--- Counts addresses grouped by City
 SELECT COUNT(*), City
 FROM Person.Address
 GROUP BY City;
 
-
--- Counts addresses grouped by both City and PostalCode
 SELECT COUNT(*), City, PostalCode
 FROM Person.Address
 GROUP BY City, PostalCode;
 
---------------------------------------------------
-
--- Retrieves all products
-SELECT *
-FROM Production.Product;
-
-
--- Counts yellow products grouped by Color
+-- HAVING clause
 SELECT COUNT(*) AS CountOfProduct, Color
 FROM Production.Product
 WHERE Color = 'Yellow'
 GROUP BY Color;
 
-
--- Groups products by Color
--- then filters groups to only Yellow
 SELECT COUNT(*) AS CountOfProduct, Color
 FROM Production.Product
 GROUP BY Color
 HAVING Color = 'Yellow';
 
-
--- Counts products grouped by Color and Size
--- only showing groups where Size >= 44
 SELECT COUNT(*) AS CountOfProduct, Color, Size
 FROM Production.Product
 GROUP BY Color, Size
 HAVING Size >= '44';
 
-drop table salesstaff
 
------------------------------------------
+-- ============================================
+-- SECTION 14: TABLE CREATION AND DELETION
+-- ============================================
+
+drop table salesstaff
 
 create table salesstaff
 (
-staffid int not null primary key,
-firstname nvarchar(50) not null,
-lastname nvarchar(50) not null,
-countryregion nvarchar(50) not null
+    staffid int not null primary key,
+    firstname nvarchar(50) not null,
+    lastname nvarchar(50) not null,
+    countryregion nvarchar(50) not null
 )
 
-----------------------------------------------
-
+-- INSERT operations
 insert into salesstaff
 select [BusinessEntityID],[FirstName],[LastName],[CountryRegionName] from [Sales].[vSalesPerson]
 
--------------------------------------
-
+-- DELETE operations
 delete salesstaff
-
-----------------------
-
-
 delete from salesstaff
+delete from salesstaff where countryregion = 'united states'
 
---------------------------
-
-delete from salesstaff where countryregion =  'united states'
-
------------------------------
+-- Transaction with rollback
 begin tran
-delete from salesstaff where countryregion =  'united states'
-
+delete from salesstaff where countryregion = 'united states'
 rollback tran
 
-------------------------------
-
+-- Transaction with commit
 begin tran
-delete from salesstaff where countryregion =  'united states'
-
+delete from salesstaff where countryregion = 'united states'
 commit
 
-------------------------
-
+-- DELETE with subquery
 delete from salesstaff where staffid in (select [BusinessEntityID] from [Sales].[vSalesPerson] where SalesLastYear = 0)
 
--------------------------------------
-
+-- DELETE with JOIN
 delete salesstaff 
-from  [Sales].[vSalesPerson] sp
+from [Sales].[vSalesPerson] sp
 inner join salesstaff ss
 on sp.[BusinessEntityID] = ss.staffid
 where sp.saleslastyear = 0
 
+
+-- ============================================
+-- SECTION 15: JOINS DEMONSTRATION
+-- ============================================
+
 USE OurFirstDatabase
 GO
-SELECT * FROM DBO.STUDENT
-GO
 
+SELECT * FROM DBO.STUDENT
 SELECT * FROM DBO.COURSE
 
+-- INNER JOIN
 SELECT * FROM STUDENT s
 INNER JOIN COURSE c
 ON s.ROLLNO = c.ROLLNO
 
+-- LEFT JOIN
 SELECT S.ROLLNO,S.STUDENTNAME, C.COURSEID FROM STUDENT S
 LEFT JOIN COURSE C
 ON S.ROLLNO = C.ROLLNO
 
+-- RIGHT JOIN
 SELECT S.ROLLNO, S.STUDENTNAME, C.COURSEID FROM STUDENT S
 RIGHT JOIN COURSE C
 ON S.ROLLNO = C.ROLLNO
 
+-- FULL JOIN
 SELECT S.ROLLNO, S.STUDENTNAME, C.COURSEID FROM STUDENT S
 FULL JOIN COURSE C
 ON S.ROLLNO = C.ROLLNO
 
---[AdventureWorks2022].[HumanResources].[EmployeePayHistory]
---[Production].[Product]
---[Production].[ProductInventory]
+
+-- ============================================
+-- SECTION 16: SUBQUERIES
+-- ============================================
 
 SELECT * FROM [AdventureWorks2022].[HumanResources].[EmployeePayHistory]
-WHERE BusinessEntityID IN (SELECT BusinessEntityID FROM [HumanResources].[EmployeePayHistory] WHERE Rate > 60 )
-
-
-
---ALL TABLES GET CREATED IN DBO SCHEMA UNLESS WE CREATE A NEW SCHEMA
+WHERE BusinessEntityID IN (SELECT BusinessEntityID FROM [HumanResources].[EmployeePayHistory] WHERE Rate > 60)
 
 SELECT * FROM [AdventureWorks2022].[HumanResources].[EmployeePayHistory]
-WHERE BusinessEntityID = (SELECT BusinessEntityID FROM [HumanResources].[EmployeePayHistory] WHERE Rate = 39.06 )
+WHERE BusinessEntityID = (SELECT BusinessEntityID FROM [HumanResources].[EmployeePayHistory] WHERE Rate = 39.06)
 
 SELECT * FROM [Production].[Product]
 WHERE ProductID IN (SELECT ProductID FROM [Production].[ProductInventory] WHERE Quantity >= 300)
 
 
+-- ============================================
+-- SECTION 17: MULTIPLE TABLE INSERTS
+-- ============================================
+
 create table salesstaff
 (   
-     staffid int not null primary key,
-     fName nvarchar(30) not null,
-     lName nvarchar(30) not null,
+    staffid int not null primary key,
+    fName nvarchar(30) not null,
+    lName nvarchar(30) not null,
 )
 
 INSERT INTO salesstaff (staffid, fName, lName) VALUES (200,'Jabulane','Poulo')
-
-SELECT * FROM salesstaff
-
 INSERT INTO salesstaff (staffid, fName, lName) VALUES (300,'Siya','Poulo'),(325,'John','Wick'),(314,'Tony','Stark'),(315,'John','Snow')
 
+-- Table with IDENTITY
 create table salesstaffnew
 (   
-     ID INT NOT NULL Identity Primary key,
-     staffid int not null,
-     fName nvarchar(30) ,
-     lName nvarchar(30) ,
+    ID INT NOT NULL Identity Primary key,
+    staffid int not null,
+    fName nvarchar(30),
+    lName nvarchar(30),
 )
-
-INSERT INTO salesstaff (staffid, fName, lName) VALUES (300,'Siya','Poulo'),(325,'John','Wick'),(314,'Tony','Stark'),(315,'John','Snow')
-
-SELECT * FROM salesstaffNew
 
 INSERT INTO salesstaffnew (staffid, fName, lName) VALUES (300,'Siya','Poulo'),(325,'John','Wick'),(314,'Tony','Stark'),(315,'John','Snow')
 
+-- INSERT with SELECT
 create table NameOnlyTable
 (   
-     
-     fName nvarchar(30) ,
-     lName nvarchar(30) ,
+    fName nvarchar(30),
+    lName nvarchar(30),
 )
 
-Select * from NameOnlyTable
-
-INSERT NameOnlyTable( fName, lName)
+INSERT NameOnlyTable(fName, lName)
 select fname,lname from salesstaffNew where id >= 3
 
+-- SELECT INTO for backup
 select * into salessaffNew_bkp from salesstaffnew
 
-select * from salessaffNew_bkp
+-- TRUNCATE vs DELETE
+truncate table salesstaff
 
-select * from salesstaff
-truncate  table salesstaff
+
+-- ============================================
+-- SECTION 18: IDENTITY COLUMNS
+-- ============================================
 
 create table employeenew (
-id int identity (1,1) not null,
-employeename nvarchar(50) not null
+    id int identity (1,1) not null,
+    employeename nvarchar(50) not null
 )
 
-insert into employeenew
-(employeename)
+insert into employeenew (employeename)
 values ('Money'),('Power'),('Respect'),('Banana')
 
-select * from employeenew
-
 delete from employeenew
+truncate table employeenew
 
-truncate table  employeenew
 
+-- ============================================
+-- SECTION 19: STORED PROCEDURES
+-- ============================================
+
+-- Basic stored procedure
 CREATE PROCEDURE [dbo].[SelectAllPersonAddress]
 AS
-SELECT * FROM  Person.Address
+SELECT * FROM Person.Address
 go;
 
-GO
+EXECUTE [dbo].[SelectAllPersonAddress]
 
-execute [dbo].[SelectAllPersonAddress]
-
-drop procedure [dbo].[SelectAllPersonAddress]
-
-
+-- Stored procedure with parameters
 CREATE PROCEDURE [dbo].[SelectAllPersonAddressWithParams] (@City NVARCHAR(30))
 AS
-
 BEGIN
-SET NOCOUNT ON
-
-SELECT * FROM  Person.Address where City = @city;
-
+    SET NOCOUNT ON
+    SELECT * FROM Person.Address where City = @city;
 END
 GO
 
+EXEC SelectAllPersonAddressWithParams @city = 'New York'
+EXEC SelectAllPersonAddressWithParams 'Miami'
 
-exec SelectAllPersonAddressWithParams @city = 'New York'
-
-exec SelectAllPersonAddressWithParams 'Miami'
-
-
-drop procedure [SelectAllPersonAddressWithParams]
-
-
+-- Stored procedure with default parameter
 CREATE PROCEDURE [dbo].[SelectAllPersonAddressWithParams] (@City NVARCHAR(30) = 'New York')
 AS
-
 BEGIN
-SET NOCOUNT ON
-
-SELECT * FROM  Person.Address where City = @city;
-
+    SET NOCOUNT ON
+    SELECT * FROM Person.Address where City = @city;
 END
 GO
 
-
-exec SelectAllPersonAddressWithParams 'Miami'
-
-
-CREATE PROCEDURE [dbo].[SelectAllPersonAddressWithParams] (@City NVARCHAR(30) = 'New York',@stateProvinceid int)
-AS
-
-BEGIN
-SET NOCOUNT ON
-
-SELECT * FROM  Person.Address where City = @city;
-
-END
-Go;
-
+-- Stored procedure with encryption
 CREATE PROCEDURE [dbo].[SelectAllPersonAddressWithParamswithEncryption] (@City NVARCHAR(30) = 'New York',@stateProvinceid int)
+WITH ENCRYPTION
 AS
-
 BEGIN
-SET NOCOUNT ON
-
-SELECT * FROM  Person.Address where City = @city;
-
+    SET NOCOUNT ON
+    SELECT * FROM Person.Address where City = @city;
 END
 GO
 
 
-select count(Rate)
-   from [HumanResources].[EmployeePayHistory]
+-- ============================================
+-- SECTION 20: BUILT-IN FUNCTIONS
+-- ============================================
 
-   print upper('dotnet')
-   print convert(int,15.56)
-   print getdate()
-   print day(getdate())
+select count(Rate) from [HumanResources].[EmployeePayHistory]
 
-CREATE TABLE [dbo].[FunctionEmployee](
-	[EmpID] [int] NOT NULL,
-	[FirstName] [varchar](50) NULL,
-	[LastName] [varchar](50) NULL,
-	[Salary] [int] NULL,
-	[Address] [varchar](100) NULL,
-PRIMARY KEY CLUSTERED 
-(
-	[EmpID] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
-) ON [PRIMARY]
+print upper('dotnet')
+print convert(int,15.56)
+print getdate()
+print day(getdate())
 
+
+-- ============================================
+-- SECTION 21: USER-DEFINED FUNCTIONS
+-- ============================================
+
+-- Scalar function
+CREATE FUNCTION fnGetEmpFullName(@FirstName varchar(50), @LastName varchar(50))
+RETURNS varchar(101)
+AS
+BEGIN
+    RETURN (SELECT @FirstName + ' ' + @LastName);
+END
 GO
 
-insert into [FunctionEmployee] ([EmpID],[FirstName],[LastName],[Salary],[Address]) values (1,'Abbas','Mehmood', 20000, 'Delhi')
-insert into [FunctionEmployee] ([EmpID],[FirstName],[LastName],[Salary],[Address]) values (2,'Imran','Afzal', 50000, 'Delhi')
-insert into [FunctionEmployee] ([EmpID],[FirstName],[LastName],[Salary],[Address]) values (3,'James','Dino', 90000, 'Delhi')
-insert into [FunctionEmployee] ([EmpID],[FirstName],[LastName],[Salary],[Address]) values (4,'Jaga','Babu', 70000, 'Delhi')
+SELECT [dbo].fnGetEmpFullName(Firstname, Lastname) as Fullname, salary 
+FROM FunctionEmployee
 
-select * from [dbo].[FunctionEmployee]
-
-Create function fnGetEmpFullName
-( @FirstName varchar(50), @LastName varchar(50))
-returns varchar(101)
-As
-begin
-return (select @FirstName + ' '+@LastName);
-end
+-- Table-valued function
+CREATE FUNCTION fnGetEmployee()
+RETURNS TABLE
+AS
+RETURN (SELECT * FROM FunctionEmployee)
 GO
 
-select [dbo].fnGetEmpFullName (Firstname,Lastname) as Fullname , salary from FunctionEmployee
-
-select firstname + ' ' +lastname as Fullname , salary from FunctionEmployee
+SELECT * FROM fnGetEmployee()
 
 
-create function fnGetEmployee()
-returns Table
-As
-return (select * from FunctionEmployee)
-GO
-
-select * from fnGetEmployee()
+-- ============================================
+-- SECTION 22: BACKUP AND RESTORE DEMONSTRATION
+-- ============================================
 
 CREATE TABLE SQLBackupRestoreTest (
-	ID INT NOT NULL PRIMARY KEY,
-	loginname VARCHAR(100) NOT NULL,
-	logindate DATETIME NOT NULL DEFAULT getdate()
+    ID INT NOT NULL PRIMARY KEY,
+    loginname VARCHAR(100) NOT NULL,
+    logindate DATETIME NOT NULL DEFAULT getdate()
 )
-GO
 
-
-select *  from SQLBackupRestoreTest
--- 21 rows
+-- Sample data for backup testing
 insert into SQLBackupRestoreTest (ID,loginname) values (1, 'test1')
 insert into SQLBackupRestoreTest (ID,loginname) values (2, 'test2')
-insert into SQLBackupRestoreTest (ID,loginname) values (3, 'test3')
-insert into SQLBackupRestoreTest (ID,loginname) values (4, 'test4')
-insert into SQLBackupRestoreTest (ID,loginname) values (5, 'test5')
+-- ... continue as needed
 
--- FULL Back up 5 rows
-
-insert into SQLBackupRestoreTest (ID,loginname) values (6, 'test6')
-insert into SQLBackupRestoreTest (ID,loginname) values (7, 'test7')
-insert into SQLBackupRestoreTest (ID,loginname) values (8, 'test8')
-insert into SQLBackupRestoreTest (ID,loginname) values (9, 'test9')
-insert into SQLBackupRestoreTest (ID,loginname) values (10, 'test10')
-
--- diff backup up 10 rows
-
-insert into SQLBackupRestoreTest (ID,loginname) values (11, 'test11')
-insert into SQLBackupRestoreTest (ID,loginname) values (12, 'test12')
-insert into SQLBackupRestoreTest (ID,loginname) values (13, 'test13')
-
--- tran log back - 1 up 13 rows
-
-insert into SQLBackupRestoreTest (ID,loginname) values (14, 'test14')
-insert into SQLBackupRestoreTest (ID,loginname) values (15, 'test15')
-insert into SQLBackupRestoreTest (ID,loginname) values (16, 'test16')
-insert into SQLBackupRestoreTest (ID,loginname) values (17, 'test17')
-
-
---FULL and DIFF
-
--- tran log back - 2 up 17 rows
--- Jul 26 2021  8:48AM
-insert into SQLBackupRestoreTest (ID,loginname) values (114, 'test14')
-
-
--- Jul 26 2021  8:49AM
-insert into SQLBackupRestoreTest (ID,loginname) values (115, 'test15')
--- Jul 26 2021  8:40AM
---- Transaction Log 
---Jul 26 2021  8:42AM
-
-
---Jul 26 2021  8:53AM
-
-insert into SQLBackupRestoreTest (ID,loginname) values (116, 'test16')
-insert into SQLBackupRestoreTest (ID,loginname) values (117, 'test17')
--- Jul 26 2021  8:42AM
-
--- 
---
-
-print getdate()
--- Jul 26 2021  7:17AM
-
+-- RESTORE examples
 USE [master]
-RESTORE DATABASE [AdventureWorks2016] FROM  DISK = N'C:\SQL_BACKUPS\AdventureWorks2016_full.BAK' WITH  FILE = 1,  NORECOVERY,  NOUNLOAD,  STATS = 5
-
-GO
-
-USE [master]
-RESTORE DATABASE [AdventureWorks2016] FROM  DISK = N'C:\SQL_BACKUPS\AdventureWorks2016_diff_1.diff' WITH  FILE = 1,  NORECOVERY,  NOUNLOAD,  STATS = 5
-
-GO
-
-RESTORE LOG [AdventureWorks2016] FROM  DISK = N'C:\SQL_BACKUPS\AdventureWorks2016_tran_3.trn' WITH  FILE = 1,  NORECOVERY,  NOUNLOAD,  STATS = 10
-GO
-
+RESTORE DATABASE [AdventureWorks2016] FROM DISK = N'C:\SQL_BACKUPS\AdventureWorks2016_full.BAK' 
+WITH FILE = 1, NORECOVERY, NOUNLOAD, STATS = 5
 
 RESTORE DATABASE [AdventureWorks2016_RestoreTest] WITH RECOVERY
-GO
-
-
-USE [master]
-RESTORE DATABASE [AdventureWorks2016_RestoreTest] FROM  DISK = N'C:\SQL_BACKUPS\AdventureWorks2016_full.BAK' WITH  FILE = 3,  
-MOVE N'AdventureWorks2016_Data' TO N'C:\SQL_DATA_FILES\AdventureWorks2016_RestoreTest_Data.mdf',  MOVE N'AdventureWorks2016_Log' 
-TO N'C:\SQL_LOG_FILES\AdventureWorks2016_RestoreTest_Log.ldf',  NORECOVERY,  NOUNLOAD,  STATS = 5
-RESTORE DATABASE [AdventureWorks2016_RestoreTest] FROM  DISK = N'C:\SQL_BACKUPS\AdventureWorks2016_diff_1.diff' WITH  FILE = 3,  NORECOVERY,  NOUNLOAD,  STATS = 5
-
-GO
-
-
-RESTORE LOG [AdventureWorks2016_RestoreTest] FROM  DISK = N'C:\SQL_BACKUPS\AdventureWorks2016_tran_final.trn' WITH  FILE = 1,  NOUNLOAD,  STATS = 10, 
- STOPAT = N'2021-07-26T08:54:23'
-GO
