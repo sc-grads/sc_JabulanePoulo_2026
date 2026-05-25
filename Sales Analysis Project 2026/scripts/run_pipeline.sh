@@ -1,4 +1,3 @@
-
 # =============================================================================
 # SALES DATA PIPELINE Mastermind Script
 # =============================================================================
@@ -33,7 +32,19 @@ echo ""
 echo "Running Python script..."
 echo ""
 
-python scripts/process_data.py
+# Try different Python commands
+if command -v python3 &> /dev/null; then
+    echo "Using python3 command"
+    python3 scripts/process_data.py
+elif command -v python &> /dev/null; then
+    echo "Using python command"
+    python scripts/process_data.py
+else
+    echo "ERROR: Neither python nor python3 found in PATH"
+    echo "Available Python versions:"
+    ls -la /usr/bin/python* 2>/dev/null || echo "No Python found"
+    exit 1
+fi
 
 if [ $? -ne 0 ]; then
     echo ""
