@@ -129,3 +129,91 @@ declare @chrMyCharacters as nvarchar(10)
 set @chrMyCharacters = N'Hello€'
 
 select @chrMycharacters as myString, len(@chrMycharacters) as MyLength, DATALENGTH(@chrMyCharacters) as myDataLength
+
+--NULL -an introduction
+
+declare @myvar as int
+
+select @myvar as myCol
+
+declare @myString as nvarchar(20)
+
+select datalength(@myString) as myString
+
+declare @mydecimal decimal(5,2)
+select try_convert(decimal(5,2),1000)
+select try_cast(1000 as decimal(5,2))
+
+--Joining two strings together
+
+
+declare @firstname as nvarchar(20)
+declare @middlename as nvarchar(20)
+declare @lastname as nvarchar(20)
+
+set @firstname = 'John'
+set @middlename = 'Walker'
+set @lastname = 'Smith'
+
+select @firstname + '  '+ @middlename +'  '+ @lastname as Fullname
+
+declare @firstname as nvarchar(20)
+declare @middlename as nvarchar(20)
+declare @lastname as nvarchar(20)
+
+set @firstname = 'John'
+set @middlename = 'Walker'
+set @lastname = 'Smith'
+
+select @firstname + ' ' + ISNULL(@middlename, '') + '  ' + @lastname as Fullname
+
+declare @firstname as nvarchar(20)
+declare @middlename as nvarchar(20)
+declare @lastname as nvarchar(20)
+
+set @firstname = 'John'
+set @lastname = 'Smith'
+
+select @firstname + CASE WHEN @middlename IS NULL THEN ' ' ELSE ' ' + @middlename END + '  ' + @lastname as Fullname
+
+select @firstname + ' ' + coalesce(' '+ @middlename,' ') + ' ' + @lastname as fullname
+
+select concat (@firstname, ' ' + @middlename, ' ', @lastname) as Fullname
+
+--Joining a string to a number
+
+
+select 'My Number is: ' + convert(varchar(20), 4567)
+select 'My Number is: ' + cast(4567 as varchar(20)) 
+
+select 'MY salary is: $' + convert(varchar(20),2345.6) --work, but not well
+select 'My salary is: ' + format(2345.6,'C','en-GB')
+select 'My salary is: ' + format(2345.6,'C','fr-FR')
+
+
+Practice Activity Number 5 - The Solution
+
+select [name] + 'A'
+from sys.all_columns
+
+select [name] + N'Ⱥ'
+from sys.all_columns
+
+select substring([name],2,len([name])-1) as [name]
+from sys.all_columns
+
+select substring([name],1,len([name])-1) as [name]
+from sys.all_columns
+
+
+--Setting dates and date extraction
+
+declare @mydate as datetime = '2015-06-24 12:34:56.124'
+select @mydate as MyDate
+
+declare @mydate2 as datetime(3) = '20150624 12:34:56.124'
+select @mydate as MyDate
+
+select datefromparts(2015,06,24) as ThisDate
+select datetime2fromparts(2015,06,24,12,34,56,124,3) as ThatDate
+select year(@mydate) as myYear, month(@mydate) as myMonth, day(@mydate) as myDay
