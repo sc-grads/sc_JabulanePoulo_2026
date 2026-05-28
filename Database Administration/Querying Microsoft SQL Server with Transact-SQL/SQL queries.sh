@@ -217,3 +217,13 @@ select @mydate as MyDate
 select datefromparts(2015,06,24) as ThisDate
 select datetime2fromparts(2015,06,24,12,34,56,124,3) as ThatDate
 select year(@mydate) as myYear, month(@mydate) as myMonth, day(@mydate) as myDay
+
+--Today's date, and more date functions
+
+select current_timestamp as RightNow
+select getdate() as RightNow
+select sysdatetime()  as RightNow
+select dateadd(Year,1,'2015-01-02 03:04:05') as myYear
+select datepart(hour,'2015-01-02 03:04:05') as myHour
+select datename(weekday, getdate()) as myHour
+select datediff(second,'2015-01-02 03:04:05', getdate()) as SecondsElapsed
