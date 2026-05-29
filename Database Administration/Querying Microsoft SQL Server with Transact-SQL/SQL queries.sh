@@ -325,3 +325,254 @@ add constraint chkAmount check (Ammount >-1000 and Amount < 1000)
 
 alter table tblEmployee
 add constraint PK_tblEmployee Primary key (EmployeeNumber)
+
+
+--Foreign key  in practice
+BEGIN TRAN
+ALTER TABLE tblTransaction ALTER COLUMN EmployeeNumber INT NULL 
+ALTER TABLE tblTransaction ADD CONSTRAINT DF_tblTransaction DEFAULT 124 FOR EmployeeNumber
+ALTER TABLE tblTransaction WITH NOCHECK
+ADD CONSTRAINT FK_tblTransaction_EmployeeNumber FOREIGN KEY (EmployeeNumber)
+REFERENCES tblEmployee(EmployeeNumber)
+ON UPDATE CASCADE
+ON DELETE set default
+--UPDATE tblEmployee SET EmployeeNumber = 9123 Where EmployeeNumber = 123
+DELETE tblEmployee Where EmployeeNumber = 123
+
+SELECT E.EmployeeNumber, T.*
+FROM tblEmployee as E
+RIGHT JOIN tblTransaction as T
+on E.EmployeeNumber = T.EmployeeNumber
+where T.Amount IN (-179.47, 786.22, -967.36, 957.03)
+
+ROLLBACK TRAN
+
+--Creating views
+
+create view ViewByDepartment as 
+select D.Department, T.EmployeeNumber, T.DateOfTransaction, T.Amount as TotalAmount
+from tblDepartment as D
+left join tblEmployee as E
+on D.Department = E.Department
+left join tblTransaction as T
+on E.EmployeeNumber = T.EmployeeNumber
+where T.EmployeeNumber between 120 and 139
+--order by D.Department, T.EmployeeNumber
+go
+create view ViewSummary as 
+select D.Department, T.EmployeeNumber as EmpNum, sum(T.Amount) as TotalAmount
+from tblDepartment as D
+left join tblEmployee as E
+on D.Department = E.Department
+left join tblTransaction as T
+on E.EmployeeNumber = T.EmployeeNumber
+group by D.Department, T.EmployeeNumber
+--order by D.Department, T.EmployeeNumber
+go
+select * from ViewByDepartment
+select * from ViewSummary
+
+--Altering and droping views
+
+--if exists(select * from sys.views where name = 'ViewByDepartment')
+if exists(select * from INFORMATION_SCHEMA.VIEWS
+where [TABLE_NAME] = 'ViewByDepartment' and [TABLE_SCHEMA] = 'dbo')
+   drop view dbo.ViewByDepartment
+go
+
+CREATE view [dbo].[ViewByDepartment] as 
+select D.Department, T.EmployeeNumber, T.DateOfTransaction, T.Amount as TotalAmount
+from tblDepartment as D
+left join tblEmployee as E
+on D.Department = E.Department
+left join tblTransaction as T
+on E.EmployeeNumber = T.EmployeeNumber
+where T.EmployeeNumber between 120 and 139
+--order by D.Department, T.EmployeeNumber
+
+GO
+
+--Adding new rows to views
+begin tran
+
+insert into ViewByDepartment(EmployeeNumber,DateOfTransaction,TotalAmount)
+values (132,'2015-07-07', 999.99)
+
+select * from ViewByDepartment order by Department, EmployeeNumber
+
+rollback tran
+
+begin tran
+select * from ViewByDepartment order by EmployeeNumber, DateOfTransaction
+--Select * from tblTransaction where EmployeeNumber in (132,142)
+
+update ViewByDepartment
+set EmployeeNumber = 142
+where EmployeeNumber = 132
+
+select * from ViewByDepartment order by EmployeeNumber, DateOfTransaction
+--Select * from tblTransaction where EmployeeNumber in (132,142)
+rollback tran
+
+USE [70-461]
+GO
+
+--if exists(select * from sys.views where name = 'ViewByDepartment')
+if exists(select * from INFORMATION_SCHEMA.VIEWS
+where [TABLE_NAME] = 'ViewByDepartment' and [TABLE_SCHEMA] = 'dbo')
+   drop view dbo.ViewByDepartment
+go
+
+CREATE view [dbo].[ViewByDepartment] as 
+select D.Department, T.EmployeeNumber, T.DateOfTransaction, T.Amount as TotalAmount
+from tblDepartment as D
+left join tblEmployee as E
+on D.Department = E.Department
+left join tblTransaction as T
+on E.EmployeeNumber = T.EmployeeNumber
+where T.EmployeeNumber between 120 and 139
+WITH CHECK OPTION
+--order by D.Department, T.EmployeeNumber
+GO
+
+
+
+--Deleting rows in views
+SELECT * FROM ViewByDepartment
+delete from ViewByDepartment
+where TotalAmount = 999.99 and EmployeeNumber = 132
+GO
+CREATE VIEW ViewSimple
+as
+SELECT * FROM tblTransaction
+GO
+BEGIN TRAN
+delete from ViewSimple
+where EmployeeNumber = 132
+select * from ViewSimple
+ROLLBACK TRAN
+
+--Creating an indexed view
+
+from dbo.tblDepartment as D
+inner join dbo.tblEmployee as E
+on D.Department = E.Department
+inner join dbo.tblTransaction as T
+on E.EmployeeNumber = T.EmployeeNumber
+where T.EmployeeNumber between 120 and 139
+GO
+
+CREATE UNIQUE CLUSTERED INDEX inx_ViewByDepartment on dbo.ViewByDepartment(EmployeeNumber, Department)
+
+begin tran
+drop table tblEmployee
+rollback tran
+
+--Creating an AFTER trigger
+
+ALTER TRIGGER TR_tblTransaction
+ON tblTransaction
+AFTER DELETE, INSERT, UPDATE
+AS
+BEGIN
+	--insert into tblTransaction2
+	select *, 'Inserted' from Inserted
+	--insert into tblTransaction2
+	select *, 'Deleted' from Deleted
+END
+GO
+
+BEGIN TRAN
+insert into tblTransaction(Amount, DateOfTransaction, EmployeeNumber)
+VALUES (123,'2015-07-10', 123)
+--delete tblTransaction 
+--where EmployeeNumber = 123 and DateOfTransaction = '2015-07-10'
+ROLLBACK TRAN
+GO
+DISABLE TRIGGER TR_tblTransaction ON tblTransaction;
+GO
+ENABLE TRIGGER TR_tblTransaction ON tblTransaction;
+GO
+DROP TRIGGER TR_tblTransaction;
+GO
+
+--Nested triggers
+ALTER TRIGGER TR_tblTransaction
+ON tblTransaction
+AFTER DELETE, INSERT, UPDATE
+AS
+BEGIN
+    if @@NESTLEVEL = 1
+	begin
+		select *,'TABLEINSERT' from Inserted
+		select *, 'TABLEDELETE' from Deleted
+	end
+END
+GO
+
+BEGIN TRAN
+insert into tblTransaction(Amount, DateOfTransaction, EmployeeNumber)
+VALUES (123,'2015-07-10', 123)
+ROLLBACK TRAN
+
+begin tran
+--SELECT * FROM ViewByDepartment where TotalAmount = -2.77 and EmployeeNumber = 132
+delete from ViewByDepartment
+where TotalAmount = -2.77 and EmployeeNumber = 132
+--SELECT * FROM ViewByDepartment where TotalAmount = -2.77 and EmployeeNumber = 132
+rollback tran
+
+EXEC sp_configure 'nested triggers';
+
+EXEC sp_configure 'nested triggers',0;
+RECONFIGURE
+GO
+
+--update functions
+
+Update functions
+ALTER TRIGGER TR_tblTransaction
+ON tblTransaction
+AFTER DELETE, INSERT, UPDATE
+AS
+BEGIN
+	IF @@ROWCOUNT > 0
+	BEGIN
+		select * from Inserted
+		select * from Deleted
+	END
+END
+GO
+
+insert into tblTransaction(Amount, DateOfTransaction, EmployeeNumber)
+VALUES (123,'2015-07-11', 123)
+
+SELECT * FROM ViewByDepartment where TotalAmount = -2.77 and EmployeeNumber = 132
+
+begin tran
+delete from ViewByDepartment
+where TotalAmount = -2.77 and EmployeeNumber = 132
+rollback tran
+
+ALTER TRIGGER TR_tblTransaction
+ON tblTransaction
+AFTER DELETE, INSERT, UPDATE
+AS
+BEGIN
+	--SELECT COLUMNS_UPDATED()
+	IF UPDATE(Amount) -- if (COLUMNS_UPDATED() & POWER(2,1-1)) > 0
+	BEGIN
+		select * from Inserted
+		select * from Deleted
+	END
+END
+go
+
+begin tran
+--SELECT * FROM ViewByDepartment where TotalAmount = -2.77 and EmployeeNumber = 132
+update ViewByDepartment
+set TotalAmount = +2.77
+where TotalAmount = -2.77 and EmployeeNumber = 132
+rollback tran
+
+
