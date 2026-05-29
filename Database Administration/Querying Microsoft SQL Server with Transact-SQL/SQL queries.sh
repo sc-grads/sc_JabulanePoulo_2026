@@ -227,3 +227,101 @@ select dateadd(Year,1,'2015-01-02 03:04:05') as myYear
 select datepart(hour,'2015-01-02 03:04:05') as myHour
 select datename(weekday, getdate()) as myHour
 select datediff(second,'2015-01-02 03:04:05', getdate()) as SecondsElapsed
+
+--Join query
+select * from tblEmployee
+join tblTransaction
+on tblEmployee.EmployeeNumber = tblTransaction.EmployeeNumber
+
+select tblEmployee.EmployeeNumber, EmployeeFirstName, EmployeeLastName, Amount
+from tblEmployee
+join tblTransaction
+on tblEmployee.EmployeeNumber = tblTransaction.EmployeeNumber
+
+select tblEmployee.EmployeeNumber, EmployeeFirstName, EmployeeLastName,sum(Amount) as SumOfAmount
+from tblEmployee
+join tblTransaction
+on tblEmployee.EmployeeNumber = tblTransaction.EmployeeNumber
+group by tblEmployee.EmployeeNumber, EmployeeFirstName, EmployeeLastName
+order by tblEmployee.EmployeeNumber
+
+--Different types of joins
+select tblEmployee.EmployeeNumber, EmployeeFirstName, EmployeeLastName,sum(Amount) as SumOfAmount
+from tblEmployee
+left join tblTransaction
+on tblEmployee.EmployeeNumber = tblTransaction.EmployeeNumber
+group by tblEmployee.EmployeeNumber, EmployeeFirstName, EmployeeLastName
+order by tblEmployee.EmployeeNumber
+
+select tblEmployee.EmployeeNumber, EmployeeFirstName, EmployeeLastName,sum(Amount) as SumOfAmount
+from tblEmployee
+right join tblTransaction
+on tblEmployee.EmployeeNumber = tblTransaction.EmployeeNumber
+group by tblEmployee.EmployeeNumber, EmployeeFirstName, EmployeeLastName
+order by tblEmployee.EmployeeNumber
+
+select tblEmployee.EmployeeNumber, EmployeeFirstName, EmployeeLastName,sum(Amount) as SumOfAmount
+from tblEmployee
+inner join tblTransaction
+on tblEmployee.EmployeeNumber = tblTransaction.EmployeeNumber
+group by tblEmployee.EmployeeNumber, EmployeeFirstName, EmployeeLastName
+order by tblEmployee.EmployeeNumber
+
+select tblEmployee.EmployeeNumber, EmployeeFirstName, EmployeeLastName,sum(Amount) as SumOfAmount
+from tblEmployee
+full outer join tblTransaction
+on tblEmployee.EmployeeNumber = tblTransaction.EmployeeNumber
+group by tblEmployee.EmployeeNumber, EmployeeFirstName, EmployeeLastName
+order by tblEmployee.EmployeeNumber
+
+--creating a third table
+
+select distinct Department, '' as DepartmentHead into
+ tblDepartment
+from tblEmployee
+
+
+--Joining three tables
+select * from tblDepartment
+join tblEmployee
+on tblDepartment.Department = tblEmployee.Department
+join tblTransaction
+on tblEmployee.employeeNumber = tblTransaction.EmployeeNumber
+
+select tblDepartment.Department,DepartmentHead, sum(Amount) as SumOfAmount
+from tblDepartment
+left join tblEmployee
+on tblDepartment.Department = tblEmployee.Department
+left join tblTransaction
+on tblEmployee.employeeNumber = tblTransaction.EmployeeNumber
+group by tblDepartment.Department, DepartmentHead
+
+select tblDepartment.Department,DepartmentHead, sum(Amount) as SumOfAmount
+from tblDepartment
+left join tblEmployee
+on tblDepartment.Department = tblEmployee.Department
+left join tblTransaction
+on tblEmployee.employeeNumber = tblTransaction.EmployeeNumber
+group by tblDepartment.Department, DepartmentHead
+order by DepartmentHead
+
+--Unique constraints
+
+alter table tblEmployee
+add constraint UQ_EmployeeNumber UNIQUE(EmployeeGonvernmentID)
+
+--Default constraints
+
+alter table tblTransaction
+add constraint defDateOfEntry Default getdate() for DateOfEntry;
+
+
+--Check constraints
+
+alter table tblTransaction
+add constraint chkAmount check (Ammount >-1000 and Amount < 1000)
+
+--Primary keys
+
+alter table tblEmployee
+add constraint PK_tblEmployee Primary key (EmployeeNumber)
