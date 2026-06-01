@@ -997,3 +997,211 @@ DECLARE @AvgBalance int, @ReturnStatus int
 exec @ReturnStatus = AverageBalance @EmployeeNumberFrom = 323, @EmployeeNumberTo = 327, @AverageBalance = @AvgBalance OUTPUT
 select @AvgBalance as Average_Balance, @ReturnStatus as Return_Status
 
+
+--Over()
+
+select A.EmployeeNumber, A.AttendanceMonth, A.NumberAttendance
+,sum(A.NumberAttendance) over() as TotalAttendance,
+convert(decimal(18,7),A.NumberAttendance) / sum(A.NumberAttendance) over() * 100.0000 as PercentageAttendance
+from tblEmployee as E join tblAttendance as A
+on E.EmployeeNumber = A.EmployeeNumber
+
+select sum(NumberAttendance) from tblAttendance
+
+--Partition by and Order by
+
+select A.EmployeeNumber, A.AttendanceMonth, 
+A.NumberAttendance, 
+sum(A.NumberAttendance) over(PARTITION BY E.EmployeeNumber) as SumAttendance,
+convert(money,A.NumberAttendance) / 
+sum(A.NumberAttendance) over(PARTITION BY E.EmployeeNumber) * 100 as PercentageAttendance
+from tblEmployee as E join tblAttendance as A
+on E.EmployeeNumber = A.EmployeeNumber
+
+select A.EmployeeNumber, A.AttendanceMonth, 
+A.NumberAttendance, 
+sum(A.NumberAttendance) over(PARTITION BY E.EmployeeNumber, year(A.AttendanceMonth)
+ ORDER BY A.AttendanceMonth) as SumAttendance,
+convert(money,A.NumberAttendance) / 
+sum(A.NumberAttendance) over(PARTITION BY E.EmployeeNumber) * 100 as PercentageAttendance
+from tblEmployee as E join tblAttendance as A
+on E.EmployeeNumber = A.EmployeeNumber
+order by A.EmployeeNumber, A.AttendanceMonth
+
+
+--Range
+select A.EmployeeNumber, A.AttendanceMonth, 
+A.NumberAttendance, 
+SUM(A.NumberAttendance) over(PARTITION BY E.EmployeeNumber ORDER BY A.AttendanceMonth ROWS BETWEEN 1 PRECEDING AND 1 FOLLOWING) as RollingTotal
+from tblEmployee as E join tblAttendance as A
+on E.EmployeeNumber = A.EmployeeNumber
+6. Current Row and Unbounded
+select A.EmployeeNumber, A.AttendanceMonth, 
+A.NumberAttendance, 
+SUM(A.NumberAttendance) over(PARTITION BY E.EmployeeNumber ORDER BY A.AttendanceMonth ROWS BETWEEN 2 PRECEDING AND CURRENT ROW) as RollingTotal
+from tblEmployee as E join tblAttendance as A
+on E.EmployeeNumber = A.EmployeeNumber
+
+select A.EmployeeNumber, A.AttendanceMonth, 
+A.NumberAttendance, 
+SUM(A.NumberAttendance) over(PARTITION BY E.EmployeeNumber ORDER BY A.AttendanceMonth ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) as RollingTotal
+from tblEmployee as E join tblAttendance as A
+on E.EmployeeNumber = A.EmployeeNumber
+
+select A.EmployeeNumber, A.AttendanceMonth, 
+A.NumberAttendance, 
+SUM(A.NumberAttendance) over(PARTITION BY E.EmployeeNumber ORDER BY A.AttendanceMonth ROWS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING) as RollingTotal
+from tblEmployee as E join tblAttendance as A
+on E.EmployeeNumber = A.EmployeeNumber
+
+
+--Range versus Rows
+select A.EmployeeNumber, A.AttendanceMonth, A.NumberAttendance
+,sum(A.NumberAttendance) 
+over(partition by A.EmployeeNumber, year(A.AttendanceMonth) 
+     order by A.AttendanceMonth 
+	 rows between current row and unbounded following) as RowsTotal
+,sum(A.NumberAttendance) 
+over(partition by A.EmployeeNumber, year(A.AttendanceMonth) 
+     order by A.AttendanceMonth 
+	 range between current row and unbounded following) as RangeTotal
+from tblEmployee as E join (select * from tblAttendance UNION ALL select * from tblAttendance) as A
+on E.EmployeeNumber = A.EmployeeNumber
+--where A.AttendanceMonth < '20150101'
+order by A.EmployeeNumber, A.AttendanceMonth
+
+--unbounded preceding and current row
+--current row and unbounded following
+--unbounded preceding and unbounded following - RANGE and ROWS
+
+
+--Omitting Range/Row?
+
+select A.EmployeeNumber, A.AttendanceMonth, A.NumberAttendance
+,sum(A.NumberAttendance) over() as TotalAttendance
+--,convert(decimal(18,7),A.NumberAttendance) / sum(A.NumberAttendance) over() * 100.0000 as PercentageAttendance
+from tblEmployee as E join tblAttendance as A
+on E.EmployeeNumber = A.EmployeeNumber
+
+select sum(NumberAttendance) from tblAttendance
+
+select A.EmployeeNumber, A.AttendanceMonth, 
+A.NumberAttendance, 
+sum(A.NumberAttendance) 
+over(PARTITION BY E.EmployeeNumber, year(A.AttendanceMonth)
+     ORDER BY A.AttendanceMonth) as SumAttendance
+from tblEmployee as E join (select * from tblAttendance UNION ALL Select * from tblAttendance) as A
+on E.EmployeeNumber = A.EmployeeNumber
+order by A.EmployeeNumber, A.AttendanceMonth
+
+--range between unbounded preceding and unbounded following - DEFAULT where there is no ORDER BY
+--range between unbounded preceding and current row         - DEFAULT where there IS an ORDER BY
+
+
+--ROW_NUMBER, RANK and DENSE_RANK
+
+select A.EmployeeNumber, A.AttendanceMonth, 
+A.NumberAttendance, 
+ROW_NUMBER() OVER(ORDER BY E.EmployeeNumber, A.AttendanceMonth) as TheRowNumber,
+RANK() OVER(ORDER BY E.EmployeeNumber, A.AttendanceMonth) as TheRank,
+DENSE_RANK() OVER(ORDER BY E.EmployeeNumber, A.AttendanceMonth) as TheDenseRank
+from tblEmployee as E join 
+(Select * from tblAttendance union all select * from tblAttendance) as A
+on E.EmployeeNumber = A.EmployeeNumber
+
+select A.EmployeeNumber, A.AttendanceMonth, 
+A.NumberAttendance, 
+ROW_NUMBER() OVER(PARTITION BY E.EmployeeNumber
+                  ORDER BY A.AttendanceMonth) as TheRowNumber,
+RANK()       OVER(PARTITION BY E.EmployeeNumber
+                  ORDER BY A.AttendanceMonth) as TheRank,
+DENSE_RANK() OVER(PARTITION BY E.EmployeeNumber
+                  ORDER BY A.AttendanceMonth) as TheDenseRank
+from tblEmployee as E join 
+(Select * from tblAttendance union all select * from tblAttendance) as A
+on E.EmployeeNumber = A.EmployeeNumber
+
+select *, row_number() over(order by (select null)) from tblAttendance
+
+
+--NTILE
+
+select A.EmployeeNumber, A.AttendanceMonth, 
+A.NumberAttendance, 
+NTILE(10) OVER(PARTITION BY E.EmployeeNumber
+          ORDER BY A.AttendanceMonth) as TheNTile,
+convert(int,(ROW_NUMBER() OVER(PARTITION BY E.EmployeeNumber
+                               ORDER BY A.AttendanceMonth)-1)
+ / (count(*) OVER(PARTITION BY E.EmployeeNumber 
+		          ORDER BY A.AttendanceMonth 
+				  ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING)/10.0))+1 as MyNTile
+from tblEmployee as E join tblAttendance as A
+on E.EmployeeNumber = A.EmployeeNumber
+where A.AttendanceMonth <'2015-05-01'
+
+
+--FIRST_VALUE and LAST_VALUE
+
+select A.EmployeeNumber, A.AttendanceMonth, 
+A.NumberAttendance, 
+first_value(NumberAttendance)
+over(partition by E.EmployeeNumber order by A.AttendanceMonth) as FirstMonth,
+last_value(NumberAttendance)
+over(partition by E.EmployeeNumber order by A.AttendanceMonth
+rows between unbounded preceding and unbounded following) as LastMonth
+from tblEmployee as E join tblAttendance as A
+on E.EmployeeNumber = A.EmployeeNumber
+
+
+--LAG and LEAD
+
+select A.EmployeeNumber, A.AttendanceMonth, 
+A.NumberAttendance, 
+lag(NumberAttendance, 1)  over(partition by E.EmployeeNumber 
+                            order by A.AttendanceMonth) as MyLag,
+lead(NumberAttendance, 1) over(partition by E.EmployeeNumber 
+                            order by A.AttendanceMonth) as MyLead,
+NumberAttendance - lag(NumberAttendance, 1)  over(partition by E.EmployeeNumber 
+                            order by A.AttendanceMonth) as MyDiff
+--first_value(NumberAttendance)  over(partition by E.EmployeeNumber 
+--                                    order by A.AttendanceMonth
+--							        rows between 1 preceding and current row) as MyFirstValue,
+--last_value(NumberAttendance) over(partition by E.EmployeeNumber 
+--                                  order by A.AttendanceMonth
+--								  rows between current row and 1 following) as MyLastValue
+from tblEmployee as E join tblAttendance as A
+on E.EmployeeNumber = A.EmployeeNumber
+
+
+--CUME_DIST and PERCENT_RANK
+
+select A.EmployeeNumber, A.AttendanceMonth, 
+A.NumberAttendance, 
+CUME_DIST()    over(partition by E.EmployeeNumber 
+               order by A.AttendanceMonth) as MyCume_Dist,
+PERCENT_RANK() over(partition by E.EmployeeNumber 
+                order by A.AttendanceMonth) as MyPercent_Rank,
+cast(row_number() over(partition by E.EmployeeNumber order by A.AttendanceMonth) as decimal(9,5))
+/ count(*) over(partition by E.EmployeeNumber) as CalcCume_Dist,
+cast(row_number() over(partition by E.EmployeeNumber order by A.AttendanceMonth) - 1 as decimal(9,5))
+/ (count(*) over(partition by E.EmployeeNumber) - 1) as CalcPercent_Rank
+from tblEmployee as E join tblAttendance as A
+on E.EmployeeNumber = A.EmployeeNumber
+
+
+--PERCENTILE_CONT and PERCENTILE_DISC
+
+select A.EmployeeNumber, A.AttendanceMonth, 
+A.NumberAttendance, 
+CUME_DIST()    over(partition by E.EmployeeNumber 
+               order by A.NumberAttendance) as MyCume_Dist,
+PERCENT_RANK() over(partition by E.EmployeeNumber 
+                order by A.NumberAttendance) * 100 as MyPercent_Rank
+from tblEmployee as E join tblAttendance as A
+on E.EmployeeNumber = A.EmployeeNumber
+
+SELECT DISTINCT EmployeeNumber,
+PERCENTILE_CONT(0.4) WITHIN GROUP (ORDER BY NumberAttendance) OVER (PARTITION BY EmployeeNumber) as AverageCont,
+PERCENTILE_DISC(0.4) WITHIN GROUP (ORDER BY NumberAttendance) OVER (PARTITION BY EmployeeNumber) as AverageDisc
+from tblAttendance
+
