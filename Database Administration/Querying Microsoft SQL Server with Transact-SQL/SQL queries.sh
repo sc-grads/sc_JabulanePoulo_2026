@@ -1205,3 +1205,110 @@ PERCENTILE_CONT(0.4) WITHIN GROUP (ORDER BY NumberAttendance) OVER (PARTITION BY
 PERCENTILE_DISC(0.4) WITHIN GROUP (ORDER BY NumberAttendance) OVER (PARTITION BY EmployeeNumber) as AverageDisc
 from tblAttendance
 
+
+--Adding Totals
+select E.Department, E.EmployeeNumber, A.AttendanceMonth as AttendanceMonth, sum(A.NumberAttendance) as NumberAttendance
+from tblEmployee as E join tblAttendance as A
+on E.EmployeeNumber = A.EmployeeNumber
+group by E.Department, E.EmployeeNumber, A.AttendanceMonth
+--order by Department, EmployeeNumber, AttendanceMonth
+UNION
+select E.Department, E.EmployeeNumber, null as AttendanceMonth, sum(A.NumberAttendance) as TotalAttendance
+from tblEmployee as E join tblAttendance as A
+on E.EmployeeNumber = A.EmployeeNumber
+group by E.Department, E.EmployeeNumber
+union
+select E.Department, null, null as AttendanceMonth, sum(A.NumberAttendance) as TotalAttendance
+from tblEmployee as E join tblAttendance as A
+on E.EmployeeNumber = A.EmployeeNumber
+group by E.Department
+union
+select null, null, null as AttendanceMonth, sum(A.NumberAttendance) as TotalAttendance
+from tblEmployee as E join tblAttendance as A
+on E.EmployeeNumber = A.EmployeeNumber
+order by Department, EmployeeNumber, AttendanceMonth
+
+
+
+--ROLLUP, GROUPING and GROUPING_ID
+select E.Department, E.EmployeeNumber, A.AttendanceMonth as AttendanceMonth, sum(A.NumberAttendance) as NumberAttendance,
+GROUPING(E.EmployeeNumber) AS EmployeeNumberGroupedBy,
+GROUPING_ID(E.Department, E.EmployeeNumber, A.AttendanceMonth) AS EmployeeNumberGroupedID
+from tblEmployee as E join tblAttendance as A
+on E.EmployeeNumber = A.EmployeeNumber
+group by ROLLUP (E.Department, E.EmployeeNumber, A.AttendanceMonth)
+order by Department, EmployeeNumber, AttendanceMonth
+
+
+--GROUPING SETS
+select E.Department, E.EmployeeNumber, A.AttendanceMonth as AttendanceMonth, sum(A.NumberAttendance) as NumberAttendance,
+GROUPING(E.EmployeeNumber) AS EmployeeNumberGroupedBy,
+GROUPING_ID(E.Department, E.EmployeeNumber, A.AttendanceMonth) AS EmployeeNumberGroupedID
+from tblEmployee as E join tblAttendance as A
+on E.EmployeeNumber = A.EmployeeNumber
+group by GROUPING SETS ((E.Department, E.EmployeeNumber, A.AttendanceMonth), (E.Department), ())
+order by coalesce(Department, 'zzzzzzz'), coalesce(E.EmployeeNumber, 99999), coalesce(AttendanceMonth,'2100-01-01')
+
+select E.Department, E.EmployeeNumber, A.AttendanceMonth as AttendanceMonth, sum(A.NumberAttendance) as NumberAttendance,
+GROUPING(E.EmployeeNumber) AS EmployeeNumberGroupedBy,
+GROUPING_ID(E.Department, E.EmployeeNumber, A.AttendanceMonth) AS EmployeeNumberGroupedID
+from tblEmployee as E join tblAttendance as A
+on E.EmployeeNumber = A.EmployeeNumber
+group by GROUPING SETS ((E.Department, E.EmployeeNumber, A.AttendanceMonth), (E.Department), ())
+order by CASE WHEN Department       IS NULL THEN 1 ELSE 0 END, Department, 
+         CASE WHEN E.EmployeeNumber IS NULL THEN 1 ELSE 0 END, E.EmployeeNumber, 
+         CASE WHEN AttendanceMonth  IS NULL THEN 1 ELSE 0 END, AttendanceMonth
+
+
+--Geometry Creating Point
+BEGIN TRAN
+CREATE TABLE tblGeom
+(GXY geometry,
+Description varchar(30),
+IDtblGeom int CONSTRAINT PK_tblGeom PRIMARY KEY IDENTITY(1,1))
+INSERT INTO tblGeom
+VALUES (geometry::STGeomFromText('POINT (3 4)', 0),'First point'),
+       (geometry::STGeomFromText('POINT (3 5)', 0),'Second point'),
+	   (geometry::Point(4, 6, 0),'Third Point'),
+	   (geometry::STGeomFromText('MULTIPOINT ((1 2), (2 3), (3 4))', 0), 'Three Points')
+
+Select * from tblGeom
+
+ROLLBACK TRAN
+
+
+
+--Queries Points
+begin tran
+create table tblGeom
+(GXY geometry,
+Description varchar(20),
+IDtblGeom int CONSTRAINT PK_tblGeom PRIMARY KEY IDENTITY(1,1))
+insert into tblGeom
+VALUES (geometry::STGeomFromText('POINT (3 4)', 0),'First point'),
+       (geometry::STGeomFromText('POINT (3 5)', 0),'Second point'),
+	   (geometry::Point(4, 6, 0),'Third Point'),
+	   (geometry::STGeomFromText('MULTIPOINT ((1 2), (2 3), (3 4))', 0),'Three Points')
+
+SELECT * from tblGeom
+
+select IDtblGeom, GXY.STGeometryType() as MyType
+, GXY.STStartPoint().ToString() as StartingPoint
+, GXY.STEndPoint().ToString() as EndingPoint
+, GXY.STPointN(1).ToString() as FirstPoint
+, GXY.STPointN(2).ToString() as SecondPoint
+, GXY.STPointN(1).STX as FirstPointX
+, GXY.STPointN(1).STY as FirstPointY
+, GXY.STNumPoints() as NumberPoints
+from tblGeom
+
+DECLARE @g as geometry
+DECLARE @h as geometry
+
+select @g = GXY from tblGeom where IDtblGeom = 1
+select @h = GXY from tblGeom where IDtblGeom = 3
+select @g.STDistance(@h) as MyDistance
+
+ROLLBACK TRAN
+
+
