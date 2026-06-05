@@ -12,7 +12,7 @@ jobs:
         uses: aliencube/teams-webhook-action@v2
         with:
           webhook_url: ${{ secrets.TEAMS_WEBHOOK_URL }}
-          title: " New Pull Request"
+          title: "📋 New Pull Request"
           summary: "${{ github.event.pull_request.title }}"
           themeColor: "0066b3"
           sections: |
