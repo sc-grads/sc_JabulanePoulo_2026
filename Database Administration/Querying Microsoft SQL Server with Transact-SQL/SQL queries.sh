@@ -2181,3 +2181,4 @@ left join dbo.tblTransaction as T on E.EmployeeNumber = T.EmployeeNumber
 group by E.EmployeeNumber
 
 /ddd
+print 'Hello World'
