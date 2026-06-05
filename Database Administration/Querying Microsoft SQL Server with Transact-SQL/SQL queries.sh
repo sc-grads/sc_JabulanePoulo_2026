@@ -2180,4 +2180,5 @@ from dbo.tblEmployee as E
 left join dbo.tblTransaction as T on E.EmployeeNumber = T.EmployeeNumber
 group by E.EmployeeNumber
 
-/ddddfhgdgfkk
+
+print 'Hello, World!'
