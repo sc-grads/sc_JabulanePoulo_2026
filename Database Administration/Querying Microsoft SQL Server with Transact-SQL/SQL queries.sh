@@ -2179,7 +2179,5 @@ select E.EmployeeNumber, sum(T.Amount) as TotalAmount
 from dbo.tblEmployee as E
 left join dbo.tblTransaction as T on E.EmployeeNumber = T.EmployeeNumber
 group by E.EmployeeNumber
-ll
-/ddd
-print 'Hello World'
-gh
+
+/ddddfhgdgfkk
