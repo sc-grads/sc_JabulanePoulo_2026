@@ -2180,3 +2180,7 @@ from dbo.tblEmployee as E
 left join dbo.tblTransaction as T on E.EmployeeNumber = T.EmployeeNumber
 group by E.EmployeeNumber
 
+<<<<<<< HEAD
+=======
+/ddd
+>>>>>>> f568f53b92e030a955be36ac1a592226f292a102
