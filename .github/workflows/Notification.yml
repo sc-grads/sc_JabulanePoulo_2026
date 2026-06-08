@@ -1,41 +1,39 @@
 name: GitHub-MS Teams Events Integration
-
+ 
 on:
   push:
   pull_request:
-    types: [opened, reopened, ready_for_review]
+    types: [opened, closed]
   create:
   pull_request_review:
     types: [submitted]
-
+ 
 jobs:
   notify-teams:
     runs-on: ubuntu-latest
-
+ 
     steps:
       - name: Send message to MS Teams
         run: |
           EVENT_NAME="${{ github.event_name }}"
-
+          EVENT_ACTION="${{ github.event.action }}"
+ 
           if [ "$EVENT_NAME" = "push" ]; then
             MESSAGE="Push event in ${{ github.repository }} by ${{ github.actor }}.\n\nCommit: ${{ github.event.head_commit.message }}\n${{ github.event.head_commit.url }}"
-
-          elif [ "$EVENT_NAME" = "pull_request" ]; then
-            MESSAGE=" **Approval Needed for Merge!** \n\nA new Pull Request has been opened in ${{ github.repository }} by ${{ github.actor }}.\n\nTitle: ${{ github.event.pull_request.title }}\nLink: ${{ github.event.pull_request.html_url }}\n\nPlease review and approve before merging."
-
+ 
+          elif [ "$EVENT_NAME" = "pull_request" ] && [ "$EVENT_ACTION" = "opened" ]; then
+            MESSAGE=" Approval required: Pull Request #${{ github.event.pull_request.number }} opened in ${{ github.repository }} by ${{ github.actor }}.\n\nTitle: ${{ github.event.pull_request.title }}\nAssigned reviewer(s): ${{ join(github.event.pull_request.requested_reviewers.*.login, ', ') }}\n${{ github.event.pull_request.html_url }}"
+ 
           elif [ "$EVENT_NAME" = "pull_request_review" ]; then
-            REVIEW_STATE="${{ github.event.review.state }}"
-            
-            if [ "$REVIEW_STATE" = "approved" ]; then
-              MESSAGE=" **Approval Received for Merge!** \n\nPR #${{ github.event.pull_request.number }} in ${{ github.repository }} has been approved by ${{ github.actor }}.\n\nTitle: ${{ github.event.pull_request.title }}\nLink: ${{ github.event.pull_request.html_url }}"
-            else
-              MESSAGE="Pull Request Review in ${{ github.repository }} by ${{ github.actor }}.\n\nPR #${{ github.event.pull_request.number }} reviewed.\nState: $REVIEW_STATE\n${{ github.event.pull_request.html_url }}"
-            fi
-
+            MESSAGE="Review update: Pull Request #${{ github.event.pull_request.number }} reviewed in ${{ github.repository }} by ${{ github.actor }}.\n\nDecision: ${{ github.event.review.state }}\n${{ github.event.pull_request.html_url }}"
+ 
+          elif [ "$EVENT_NAME" = "pull_request" ] && [ "$EVENT_ACTION" = "closed" ]; then
+            MESSAGE=" Merge complete: Pull Request #${{ github.event.pull_request.number }} merged into main in ${{ github.repository }} by ${{ github.actor }}.\n${{ github.event.pull_request.html_url }}"
+ 
           else
             MESSAGE="Create event in ${{ github.repository }} by ${{ github.actor }}.\nRef: ${{ github.ref }}"
           fi
-
+ 
           curl -H "Content-Type: application/json" \
           -d "{\"text\": \"$MESSAGE\"}" \
           ${{ secrets.TEAMS_WEBHOOK_URL }}
