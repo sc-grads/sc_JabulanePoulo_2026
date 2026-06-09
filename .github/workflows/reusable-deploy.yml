@@ -28,6 +28,12 @@ jobs:
           sudo apt-get update
           sudo ACCEPT_EULA=Y apt-get install -y mssql-tools18
       
+      - name: Debug connection info
+        run: |
+          echo "Connecting to server: ${{ inputs.server }}"
+          echo "Database: ${{ inputs.database }}"
+          echo "Username: ${{ secrets.username }}"
+      
       - name: Execute SQL Script
         run: |
           /opt/mssql-tools18/bin/sqlcmd \
