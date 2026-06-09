@@ -26,19 +26,19 @@ jobs:
           if [ -n "${{ secrets.SQL_SERVER }}" ]; then
             echo "SQL_SERVER secret exists (value hidden)"
           else
-            echo "❌ SQL_SERVER secret is MISSING"
+            echo " SQL_SERVER secret is MISSING"
           fi
           
           if [ -n "${{ secrets.SQL_USERNAME }}" ]; then
             echo "SQL_USERNAME secret exists (value hidden)"
           else
-            echo "❌ SQL_USERNAME secret is MISSING"
+            echo " SQL_USERNAME secret is MISSING"
           fi
           
           if [ -n "${{ secrets.SQL_PASSWORD }}" ]; then
             echo "SQL_PASSWORD secret exists (value hidden)"
           else
-            echo "❌ SQL_PASSWORD secret is MISSING"
+            echo " SQL_PASSWORD secret is MISSING"
           fi
       
       - name: Execute SQL Script
