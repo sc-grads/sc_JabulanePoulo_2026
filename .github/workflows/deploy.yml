@@ -11,7 +11,7 @@ jobs:
 
     with:
       server: ${{ vars.LOCAL_SQL_SERVER }}
-      database: GraduateDB
+      database: Cloud-tunnel-JP
 
     secrets:
       username: ${{ secrets.LOCAL_SQL_USERNAME }}
