@@ -8,11 +8,9 @@ on:
 jobs:
   deploy:
     uses: ./.github/workflows/reusable-deploy.yml
-
     with:
       server: ${{ vars.LOCAL_SQL_SERVER }}
       database: Cloud-tunnel-JP
-
     secrets:
       username: ${{ secrets.LOCAL_SQL_USERNAME }}
       password: ${{ secrets.LOCAL_SQL_PASSWORD }}
