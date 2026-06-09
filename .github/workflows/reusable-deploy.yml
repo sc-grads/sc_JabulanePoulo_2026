@@ -1,18 +1,37 @@
-name: Deploy Local SQL
+name: SQL Deployment Template
 
 on:
-  push:
-    branches:
-      - main
-  workflow_dispatch:
+  workflow_call:
+    inputs:
+      server:
+        required: true
+        type: string
+      database:
+        required: true
+        type: string
+    secrets:
+      username:
+        required: true
+      password:
+        required: true
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+      
+      - name: Debug - Show ALL input values
+        run: |
+          echo "=== DEBUG INFORMATION ==="
+          echo "Server value: '${{ inputs.server }}'"
+          echo "Server length: ${#SERVER}"
+          echo "Database value: '${{ inputs.database }}'"
+          echo "Username: '${{ secrets.username }}'"
+          echo "========================="
+        env:
+          SERVER: ${{ inputs.server }}
       
       - name: Install SQLCMD
         run: |
@@ -21,18 +40,28 @@ jobs:
           sudo apt-get update
           sudo ACCEPT_EULA=Y apt-get install -y mssql-tools18
       
-      - name: Show connection info
+      - name: Test basic network connectivity
         run: |
-          echo "Attempting to connect to SQL Server..."
-          echo "Server: kngsh-41-198-158-77.run.pinggy-free.link,36215"
-          echo "Database: Cloud-tunnel-JP"
+          # Extract host and port
+          SERVER_STR="${{ inputs.server }}"
+          echo "Testing connectivity to: $SERVER_STR"
+          
+          # Try to ping/telnet to the server
+          HOST=$(echo $SERVER_STR | cut -d',' -f1)
+          PORT=$(echo $SERVER_STR | cut -d',' -f2)
+          
+          echo "Host: $HOST"
+          echo "Port: $PORT"
+          
+          # Test if we can reach the host/port
+          timeout 5 nc -zv $HOST $PORT || echo "Connection failed"
       
       - name: Execute SQL Script
         run: |
           /opt/mssql-tools18/bin/sqlcmd \
-          -S "oomnr-41-198-158-77.run.pinggy-free.link,42975" \
-          -U "automation_user" \
-          -P "Jabulane@123" \
-          -d "Cloud-tunnel-JP" \
+          -S "${{ inputs.server }}" \
+          -U "${{ secrets.username }}" \
+          -P "${{ secrets.password }}" \
+          -d "${{ inputs.database }}" \
           -i Database/deploy.sql \
           -C
