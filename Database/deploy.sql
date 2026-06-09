@@ -13,7 +13,7 @@ CREATE TABLE People (
     ID INT IDENTITY(1,1) PRIMARY KEY,
     FirstName NVARCHAR(50),
     LastName NVARCHAR(50)
-);
+   );
 GO
 
 -- Insert random names
