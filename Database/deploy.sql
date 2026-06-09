@@ -35,5 +35,4 @@ SELECT PersonID, FirstName, LastName, CreatedDate FROM People;
 GO
 
 
-
 PRINT 'Deployment completed successfully';
