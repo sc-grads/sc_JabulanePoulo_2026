@@ -9,8 +9,8 @@ jobs:
   deploy:
     uses: ./.github/workflows/reusable-deploy.yml
     with:
-      server: ${{ vars.LOCAL_SQL_SERVER }}
+      server: oomnr-41-198-158-77.run.pinggy-free.link,42975
       database: Cloud-tunnel-JP
     secrets:
-      username: ${{ secrets.LOCAL_SQL_USERNAME }}
-      password: ${{ secrets.LOCAL_SQL_PASSWORD }}
+      username: automation_user
+      password: Jabulane@123
