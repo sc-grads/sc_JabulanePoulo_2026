@@ -35,5 +35,5 @@ jobs:
           -U "${{ secrets.username }}" \
           -P "${{ secrets.password }}" \
           -d "${{ inputs.database }}" \
-          -i database/deploy.sql \
+          -i Database/deploy.sql \
           -C
