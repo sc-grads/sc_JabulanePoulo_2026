@@ -29,6 +29,7 @@ INSERT INTO People (FirstName, LastName) VALUES
 ('Alice', 'Johnson'),
 ('Bob', 'Smith'),
 ('Carol', 'Davis');
+
 GO
 SELECT PersonID, FirstName, LastName, CreatedDate FROM People;
 GO
