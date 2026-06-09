@@ -8,7 +8,7 @@ on:
 
 jobs:
   deploy:
-    runs-on:  ubuntu-latest
+    runs-on: ubuntu-latest
     
     steps:
       - name: Checkout code
@@ -21,32 +21,24 @@ jobs:
           sudo apt-get update
           sudo ACCEPT_EULA=Y apt-get install -y mssql-tools18
       
-      - name: Debug - Check if secrets exist
+      - name: Show secret status (debug)
         run: |
-          if [ -n "${{ secrets.SQL_SERVER }}" ]; then
-            echo "SQL_SERVER secret exists (value hidden)"
+          if [[ -n "${{ secrets.SQL_SERVER }}" ]]; then
+            echo "Secret SQL_SERVER is configured"
           else
-            echo " SQL_SERVER secret is MISSING"
-          fi
-          
-          if [ -n "${{ secrets.SQL_USERNAME }}" ]; then
-            echo "SQL_USERNAME secret exists (value hidden)"
-          else
-            echo " SQL_USERNAME secret is MISSING"
-          fi
-          
-          if [ -n "${{ secrets.SQL_PASSWORD }}" ]; then
-            echo "SQL_PASSWORD secret exists (value hidden)"
-          else
-            echo " SQL_PASSWORD secret is MISSING"
+            echo "WARNING: SQL_SERVER secret is missing"
           fi
       
       - name: Execute SQL Script
+        env:
+          SERVER: ${{ secrets.SQL_SERVER }}
+          USERNAME: ${{ secrets.SQL_USERNAME }}
+          PASSWORD: ${{ secrets.SQL_PASSWORD }}
         run: |
           /opt/mssql-tools18/bin/sqlcmd \
-          -S "${{ secrets.SQL_SERVER }}" \
-          -U "${{ secrets.SQL_USERNAME }}" \
-          -P "${{ secrets.SQL_PASSWORD }}" \
+          -S "$SERVER" \
+          -U "$USERNAME" \
+          -P "$PASSWORD" \
           -d "Cloud-tunnel-JP" \
           -i Database/deploy.sql \
           -C
