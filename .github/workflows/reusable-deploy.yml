@@ -21,6 +21,26 @@ jobs:
           sudo apt-get update
           sudo ACCEPT_EULA=Y apt-get install -y mssql-tools18
       
+      - name: Debug - Check if secrets exist
+        run: |
+          if [ -n "${{ secrets.SQL_SERVER }}" ]; then
+            echo "SQL_SERVER secret exists (value hidden)"
+          else
+            echo " SQL_SERVER secret is MISSING"
+          fi
+          
+          if [ -n "${{ secrets.SQL_USERNAME }}" ]; then
+            echo "SQL_USERNAME secret exists (value hidden)"
+          else
+            echo " SQL_USERNAME secret is MISSING"
+          fi
+          
+          if [ -n "${{ secrets.SQL_PASSWORD }}" ]; then
+            echo "SQL_PASSWORD secret exists (value hidden)"
+          else
+            echo " SQL_PASSWORD secret is MISSING"
+          fi
+      
       - name: Execute SQL Script
         run: |
           /opt/mssql-tools18/bin/sqlcmd \
