@@ -4,12 +4,13 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
 
 jobs:
   deploy:
     uses: ./.github/workflows/reusable-deploy.yml
     with:
-      server: ${{ secrets.LOCAL_SQL_SERVER }}
+      server: ${{ vars.LOCAL_SQL_SERVER }}
       database: Cloud-tunnel-JP
     secrets:
       username: ${{ secrets.LOCAL_SQL_USERNAME }}
