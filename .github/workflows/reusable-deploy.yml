@@ -19,20 +19,42 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Debug - Show ALL input values
+        run: |
+          echo "=== DEBUG INFORMATION ==="
+          echo "Server value: '${{ inputs.server }}'"
+          echo "Server length: ${#SERVER}"
+          echo "Database value: '${{ inputs.database }}'"
+          echo "Username: '${{ secrets.username }}'"
+          echo "========================="
+        env:
+          SERVER: ${{ inputs.server }}
       
       - name: Install SQLCMD
         run: |
-          curl https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -
+          curl https://packages.microsoft.com/keys/microsoft.asc | sudo tee /etc/apt/trusted.gpg.d/microsoft.asc
           curl https://packages.microsoft.com/config/ubuntu/22.04/prod.list | sudo tee /etc/apt/sources.list.d/mssql-release.list
           sudo apt-get update
           sudo ACCEPT_EULA=Y apt-get install -y mssql-tools18
       
-      - name: Debug connection info
+      - name: Test basic network connectivity
         run: |
-          echo "Connecting to server: ${{ inputs.server }}"
-          echo "Database: ${{ inputs.database }}"
-          echo "Username: ${{ secrets.username }}"
+          # Extract host and port
+          SERVER_STR="${{ inputs.server }}"
+          echo "Testing connectivity to: $SERVER_STR"
+          
+          # Try to ping/telnet to the server
+          HOST=$(echo $SERVER_STR | cut -d',' -f1)
+          PORT=$(echo $SERVER_STR | cut -d',' -f2)
+          
+          echo "Host: $HOST"
+          echo "Port: $PORT"
+          
+          # Test if we can reach the host/port
+          timeout 5 nc -zv $HOST $PORT || echo "Connection failed"
       
       - name: Execute SQL Script
         run: |
