@@ -21,32 +21,18 @@ jobs:
           sudo apt-get update
           sudo ACCEPT_EULA=Y apt-get install -y mssql-tools18
       
-      - name: Debug - Check if secrets exist
+      - name: Show connection info
         run: |
-          if [ -n "${{ secrets.SQL_SERVER }}" ]; then
-            echo "SQL_SERVER secret exists (value hidden)"
-          else
-            echo " SQL_SERVER secret is MISSING"
-          fi
-          
-          if [ -n "${{ secrets.SQL_USERNAME }}" ]; then
-            echo "SQL_USERNAME secret exists (value hidden)"
-          else
-            echo " SQL_USERNAME secret is MISSING"
-          fi
-          
-          if [ -n "${{ secrets.SQL_PASSWORD }}" ]; then
-            echo "SQL_PASSWORD secret exists (value hidden)"
-          else
-            echo " SQL_PASSWORD secret is MISSING"
-          fi
+          echo "Attempting to connect to SQL Server..."
+          echo "Server: kngsh-41-198-158-77.run.pinggy-free.link,36215"
+          echo "Database: Cloud-tunnel-JP"
       
       - name: Execute SQL Script
         run: |
           /opt/mssql-tools18/bin/sqlcmd \
-          -S "${{ secrets.SQL_SERVER }}" \
-          -U "${{ secrets.SQL_USERNAME }}" \
-          -P "${{ secrets.SQL_PASSWORD }}" \
+          -S "oomnr-41-198-158-77.run.pinggy-free.link,42975" \
+          -U "automation_user" \
+          -P "Jabulane@123" \
           -d "Cloud-tunnel-JP" \
           -i Database/deploy.sql \
           -C
