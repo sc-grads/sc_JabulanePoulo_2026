@@ -1,0 +1,104 @@
+name: Deploy Local + Partner SQL
+ 
+on:
+  push:
+    branches:
+      - main
+ 
+  workflow_dispatch:
+ 
+jobs:
+ 
+ 
+  request-approval:
+    runs-on: ubuntu-latest
+ 
+    steps:
+      - name: Send approval request to Teams
+        run: |
+          curl -H "Content-Type: application/json" \
+          -d '{
+            "title": "LOCAL SQL DEPLOYMENT APPROVAL REQUIRED",
+            "text": "**A database deployment requires approval**\n\n**Requested by:** ${{ github.actor }}\n**Branch:** ${{ github.ref_name }}\n**Run:** ${{ github.run_id }}\n\n[Open Workflow](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})",
+            "themeColor": "FF0000"
+          }' \
+          ${{ secrets.TEAMS_WEBHOOK_URL }}
+ 
+      - name: Waiting for approval
+        run: echo "Waiting for local-sql approval..."
+ 
+ 
+  deploy-local:
+    needs: request-approval
+ 
+    uses: ./.github/workflows/reusable-sql-deploy.yml
+ 
+    with:
+      environment-name: local-sql
+ 
+    secrets: inherit
+ 
+ 
+  partner-approval:
+    needs: deploy-local
+ 
+    runs-on: ubuntu-latest
+ 
+    environment: partner-sql
+ 
+    steps:
+      - name: Waiting for Partner Approval
+        run: echo "Waiting for partner approval..."
+ 
+ 
+  deploy-partner:
+    needs: partner-approval
+ 
+    uses: ./.github/workflows/reusable-sql-deploy.yml
+ 
+    with:
+      environment-name: partner-sql
+ 
+    secrets: inherit
+ 
+ 
+  notify-success:
+    needs:
+      - deploy-local
+      - deploy-partner
+ 
+    if: success()
+ 
+    runs-on: ubuntu-latest
+ 
+    steps:
+      - name: Send Success Notification
+        run: |
+          curl -H "Content-Type: application/json" \
+          -d '{
+            "title": "SQL DEPLOYMENT SUCCESS",
+            "text": "**Local and Partner deployments completed successfully**\nRun: ${{ github.run_id }}",
+            "themeColor": "00FF00"
+          }' \
+          ${{ secrets.TEAMS_WEBHOOK_URL }}
+ 
+ 
+  notify-failure:
+    needs:
+      - deploy-local
+      - deploy-partner
+ 
+    if: failure()
+ 
+    runs-on: ubuntu-latest
+ 
+    steps:
+      - name: Send Failure Notification
+        run: |
+          curl -H "Content-Type: application/json" \
+          -d '{
+            "title": "SQL DEPLOYMENT FAILED",
+            "text": "**One of the deployments failed**\n\nView logs:\n${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}",
+            "themeColor": "FF0000"
+          }' \
+          ${{ secrets.TEAMS_WEBHOOK_URL }}
