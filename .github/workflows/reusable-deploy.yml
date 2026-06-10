@@ -39,9 +39,9 @@ jobs:
       
       - name: Wait for approval message
         run: |
-          echo "========================================"
+          echo "======================================="
           echo " APPROVAL REQUEST SENT TO TEAMS"
-          echo "========================================"
+          echo "======================================="
           echo ""
           echo "Waiting for reviewer to approve in GitHub..."
           echo ""
