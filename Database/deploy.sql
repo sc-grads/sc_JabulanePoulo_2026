@@ -51,7 +51,17 @@ INSERT INTO People (FirstName, LastName) VALUES
 ('Wendy', 'Young'),
 ('Xavier', 'King'),
 ('Yvonne', 'Wright'),
-('Zach', 'Scott');
+('Zach', 'Scott'),
+('Ava', 'Green'),
+('Ben', 'Adams'),
+('Cathy', 'Baker'),
+('Dan', 'Gonzalez'),
+('Ella', 'Nelson'),
+('Fred', 'Carter'),
+('Gina', 'Mitchell'),
+('Harry', 'Perez'),
+('Ivy', 'Roberts'),
+('Jake', 'Turner');
 
 
 
