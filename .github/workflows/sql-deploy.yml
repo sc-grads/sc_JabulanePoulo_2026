@@ -1,4 +1,4 @@
-name: Deploy Local + Partner SQL
+name: Deploy Local & Partner SQL
  
 on:
   push:
