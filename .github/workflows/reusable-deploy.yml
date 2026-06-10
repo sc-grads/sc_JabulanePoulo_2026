@@ -55,7 +55,7 @@ jobs:
           -S "$SERVER" \
           -U "$USERNAME" \
           -P "$PASSWORD" \
-          -d "Cloud-tunnel-JP" \
+          -d "master" \
           -i Database/deploy.sql \
           -C
       
