@@ -28,10 +28,16 @@ jobs:
     steps:
       - name: Send approval request to Teams
         run: |
+          if [ "${{ github.event_name }}" = "push" ]; then
+            TRIGGER_TYPE="Auto (Push)"
+          else
+            TRIGGER_TYPE="Manual"
+          fi
+          
           curl -H "Content-Type: application/json" \
           -d '{
             "title": " PARTNER DEPLOYMENT APPROVAL REQUIRED",
-            "text": "**A database deployment to PARTNER SQL Server requires your approval**\n\n**Trigger:** ${{ github.event_name == 'push' && 'Auto (Push)' || 'Manual' }}\n**Environment:** Partner SQL Server\n**Database:** Cloud-tunnel-JP\n**Requested by:** ${{ github.actor }}\n**Branch:** ${{ github.ref_name }}\n**Commit:** ${{ github.sha }}\n**Time:** ${{ github.run_started_at }}\n\n** This will deploy to your PARTNER'\''s database!**\n\n**To approve this deployment:**\n1. Go to GitHub Actions\n2. Click \"Review deployments\"\n3. Select \"Approve\"\n\n[Click here to review](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})",
+            "text": "**A database deployment to PARTNER SQL Server requires your approval**\n\n**Trigger:** '"$TRIGGER_TYPE"'\n**Environment:** Partner SQL Server\n**Database:** Cloud-tunnel-JP\n**Requested by:** ${{ github.actor }}\n**Branch:** ${{ github.ref_name }}\n**Commit:** ${{ github.sha }}\n**Time:** ${{ github.run_started_at }}\n\n** This will deploy to your PARTNER'\''s database!**\n\n**To approve this deployment:**\n1. Go to GitHub Actions\n2. Click \"Review deployments\"\n3. Select \"Approve\"\n\n[Click here to review](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})",
             "themeColor": "FF0000",
             "potentialAction": [
               {
@@ -50,13 +56,19 @@ jobs:
       
       - name: Wait for approval message
         run: |
+          if [ "${{ github.event_name }}" = "push" ]; then
+            TRIGGER_TYPE="Git Push"
+          else
+            TRIGGER_TYPE="Manual Trigger"
+          fi
+          
           echo "========================================="
           echo " PARTNER DEPLOYMENT APPROVAL REQUEST SENT"
           echo "========================================="
           echo ""
-          echo " WARNING: This will deploy to PARTNER'S DATABASE"
+          echo "  WARNING: This will deploy to PARTNER'S DATABASE"
           echo ""
-          echo "Triggered by: ${{ github.event_name == 'push' && 'Git Push' : 'Manual Trigger' }}"
+          echo "Triggered by: $TRIGGER_TYPE"
           echo "Branch: ${{ github.ref_name }}"
           echo "Commit: ${{ github.sha }}"
           echo ""
@@ -86,10 +98,16 @@ jobs:
       
       - name: Send deployment started notification to Teams
         run: |
+          if [ "${{ github.event_name }}" = "push" ]; then
+            TRIGGER_TYPE="Auto (Push)"
+          else
+            TRIGGER_TYPE="Manual"
+          fi
+          
           curl -H "Content-Type: application/json" \
           -d '{
             "title": " Partner Deployment Started (Approved)",
-            "text": "**Trigger:** ${{ github.event_name == 'push' && 'Auto (Push)' : 'Manual' }}\n**Environment:** Partner SQL Server\n**Database:** Cloud-tunnel-JP\n**Approved by:** ${{ github.actor }}\n**Branch:** ${{ github.ref_name }}\n**Commit:** ${{ github.sha }}\n**Time:** ${{ github.run_started_at }}\n\n[View Run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})",
+            "text": "**Trigger:** '"$TRIGGER_TYPE"'\n**Environment:** Partner SQL Server\n**Database:** Cloud-tunnel-JP\n**Approved by:** ${{ github.actor }}\n**Branch:** ${{ github.ref_name }}\n**Commit:** ${{ github.sha }}\n**Time:** ${{ github.run_started_at }}\n\n[View Run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})",
             "themeColor": "FFA500"
           }' \
           ${{ secrets.TEAMS_WEBHOOK_URL }}
@@ -151,10 +169,16 @@ jobs:
       - name: Send success notification to Teams
         if: success()
         run: |
+          if [ "${{ github.event_name }}" = "push" ]; then
+            TRIGGER_TYPE="Auto (Push)"
+          else
+            TRIGGER_TYPE="Manual"
+          fi
+          
           curl -H "Content-Type: application/json" \
           -d '{
             "title": " Partner Deployment Successful!",
-            "text": "**Trigger:** ${{ github.event_name == 'push' && 'Auto (Push)' : 'Manual' }}\n**Environment:** Partner SQL Server\n**Database:** Cloud-tunnel-JP\n**Status:**  Success\n**Branch:** ${{ github.ref_name }}\n**Completed:** $(date)\n\n[View Run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})",
+            "text": "**Trigger:** '"$TRIGGER_TYPE"'\n**Environment:** Partner SQL Server\n**Database:** Cloud-tunnel-JP\n**Status:**  Success\n**Branch:** ${{ github.ref_name }}\n**Completed:** $(date)\n\n[View Run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})",
             "themeColor": "00FF00"
           }' \
           ${{ secrets.TEAMS_WEBHOOK_URL }}
@@ -162,10 +186,16 @@ jobs:
       - name: Send failure notification to Teams
         if: failure()
         run: |
+          if [ "${{ github.event_name }}" = "push" ]; then
+            TRIGGER_TYPE="Auto (Push)"
+          else
+            TRIGGER_TYPE="Manual"
+          fi
+          
           curl -H "Content-Type: application/json" \
           -d '{
             "title": " Partner Deployment Failed!",
-            "text": "**Trigger:** ${{ github.event_name == 'push' && 'Auto (Push)' : 'Manual' }}\n**Environment:** Partner SQL Server\n**Database:** Cloud-tunnel-JP\n**Status:**  Failed\n**Branch:** ${{ github.ref_name }}\n**Time:** $(date)\n\n**Check logs:** ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\n\n**Action required:** Review the error and fix the deployment script.",
+            "text": "**Trigger:** '"$TRIGGER_TYPE"'\n**Environment:** Partner SQL Server\n**Database:** Cloud-tunnel-JP\n**Status:**  Failed\n**Branch:** ${{ github.ref_name }}\n**Time:** $(date)\n\n**Check logs:** ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\n\n**Action required:** Review the error and fix the deployment script.",
             "themeColor": "FF0000"
           }' \
           ${{ secrets.TEAMS_WEBHOOK_URL }}
