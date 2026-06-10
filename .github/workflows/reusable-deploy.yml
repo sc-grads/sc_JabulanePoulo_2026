@@ -18,7 +18,7 @@ jobs:
         run: |
           curl -H "Content-Type: application/json" \
           -d '{
-            "title": "🔄 SQL Deployment Started",
+            "title": " SQL Deployment Started",
             "text": "**Environment:** Local SQL Server\n**Database:** Cloud-tunnel-JP\n**Triggered by:** ${{ github.actor }}\n**Branch:** ${{ github.ref_name }}\n**Time:** ${{ github.run_started_at }}\n\n[View Run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})",
             "themeColor": "FFA500"
           }' \
@@ -65,7 +65,7 @@ jobs:
           curl -H "Content-Type: application/json" \
           -d '{
             "title": " Deployment Successful!",
-            "text": "**Environment:** Local SQL Server\n**Database:** Cloud-tunnel-JP\n**Status:** ✅ Success\n**Completed:** $(date)\n**Duration:** ${{ github.run_duration }}\n\n[View Run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})",
+            "text": "**Environment:** Local SQL Server\n**Database:** Cloud-tunnel-JP\n**Status:**  Success\n**Completed:** $(date)\n**Duration:** ${{ github.run_duration }}\n\n[View Run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})",
             "themeColor": "00FF00"
           }' \
           ${{ secrets.TEAMS_WEBHOOK_URL }}
@@ -76,7 +76,7 @@ jobs:
           curl -H "Content-Type: application/json" \
           -d '{
             "title": " Deployment Failed!",
-            "text": "**Environment:** Local SQL Server\n**Database:** Cloud-tunnel-JP\n**Status:** ❌ Failed\n**Time:** $(date)\n\n**Check logs:** ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\n\n**Action required:** Review the error and fix the deployment script.",
+            "text": "**Environment:** Local SQL Server\n**Database:** Cloud-tunnel-JP\n**Status:**  Failed\n**Time:** $(date)\n\n**Check logs:** ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\n\n**Action required:** Review the error and fix the deployment script.",
             "themeColor": "FF0000"
           }' \
           ${{ secrets.TEAMS_WEBHOOK_URL }}
