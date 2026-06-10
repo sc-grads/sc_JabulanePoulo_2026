@@ -33,7 +33,7 @@ jobs:
       - name: Send approval request to Teams
         shell: pwsh
         env:
-          TEAMS_WEBHOOK: ${{ secrets.TEAMS_WEBHOOK }}
+          TEAMS_WEBHOOK: ${{ secrets.TEAMS_WEBHOOK_URL }}
           REPO: ${{ github.repository }}
           ACTOR: ${{ github.actor }}
         run: |
