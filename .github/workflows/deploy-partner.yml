@@ -134,7 +134,7 @@ jobs:
           curl -H "Content-Type: application/json" \
           -d '{
             "title": " Partner Deployment Failed!",
-            "text": "**Environment:** Partner SQL Server\n**Database:** Cloud-tunnel-JP\n**Status:** ❌ Failed\n**Time:** $(date)\n\n**Check logs:** ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\n\n**Action required:** Review the error and fix the deployment script.",
+            "text": "**Environment:** Partner SQL Server\n**Database:** Cloud-tunnel-JP\n**Status:**  Failed\n**Time:** $(date)\n\n**Check logs:** ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\n\n**Action required:** Review the error and fix the deployment script.",
             "themeColor": "FF0000"
           }' \
           ${{ secrets.TEAMS_WEBHOOK_URL }}
