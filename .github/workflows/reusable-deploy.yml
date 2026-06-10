@@ -1,34 +1,57 @@
 name: Deploy Local SQL
-
 on:
   push:
     branches:
       - main
   workflow_dispatch:
-
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    
+ 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
+ 
+      # STEP 1: Install SQLCMD
       - name: Install SQLCMD
         run: |
           curl https://packages.microsoft.com/keys/microsoft.asc | sudo tee /etc/apt/trusted.gpg.d/microsoft.asc
           curl https://packages.microsoft.com/config/ubuntu/22.04/prod.list | sudo tee /etc/apt/sources.list.d/mssql-release.list
           sudo apt-get update
           sudo ACCEPT_EULA=Y apt-get install -y mssql-tools18
-      
+ 
+      # STEP 2: Show secret status (debug)
       - name: Show secret status (debug)
         run: |
           if [[ -n "${{ secrets.SQL_SERVER }}" ]]; then
             echo "Secret SQL_SERVER is configured"
           else
-            echo "WARNING: SQL_SERVER secret is missing"
+            echo "WARNING: SQL_SERVER is missing"
           fi
-      
+ 
+      # STEP 3: Send Teams approval request (BEFORE deployment)
+      - name: Send approval request to Teams
+        shell: pwsh
+        env:
+          TEAMS_WEBHOOK: ${{ secrets.TEAMS_WEBHOOK }}
+          REPO: ${{ github.repository }}
+          ACTOR: ${{ github.actor }}
+        run: |
+          if (-not $env:TEAMS_WEBHOOK) {
+            Write-Host "TEAMS_WEBHOOK is missing or empty"
+            exit 1
+          }
+ 
+          $body = @{
+            text = "Approval required: SQL deployment is waiting for $env:REPO by $env:ACTOR."
+          } | ConvertTo-Json
+ 
+          Invoke-RestMethod -Method Post `
+            -Uri $env:TEAMS_WEBHOOK `
+            -ContentType "application/json" `
+            -Body $body
+ 
+      # STEP 4: Execute SQL Script (DEPLOYMENT)
       - name: Execute SQL Script
         env:
           SERVER: ${{ secrets.SQL_SERVER }}
