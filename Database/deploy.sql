@@ -33,6 +33,7 @@ INSERT INTO People (FirstName, LastName) VALUES
 ('Eve', 'Brown');
 
 
+
 GO
 SELECT PersonID, FirstName, LastName, CreatedDate FROM People;
 GO
