@@ -48,6 +48,7 @@ INSERT INTO People (FirstName, LastName) VALUES
 ('Tina', 'Walker'),
 ('Uma', 'Hall'),
 
+
 ('Victor', 'Allen'),
 ('Wendy', 'Young'),
 ('Xavier', 'King'),
