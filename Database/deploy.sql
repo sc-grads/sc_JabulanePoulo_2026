@@ -30,7 +30,12 @@ INSERT INTO People (FirstName, LastName) VALUES
 ('Bob', 'Smith'),
 ('Carol', 'Davis'),
 ('David', 'Wilson'),
-('Eve', 'Brown');
+('Eve', 'Brown'),
+('Frank', 'Miller'),
+('Grace', 'Taylor'),
+('Hannah', 'Anderson'),
+('Ian', 'Thomas'),
+('Jack', 'Moore');
 
 
 
