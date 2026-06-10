@@ -34,6 +34,7 @@ INSERT INTO People (FirstName, LastName) VALUES
 
 
 
+
 GO
 SELECT PersonID, FirstName, LastName, CreatedDate FROM People;
 GO
