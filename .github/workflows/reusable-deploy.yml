@@ -14,15 +14,26 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
       
-      - name: Send started notification to Teams
+      - name: Debug Teams Webhook
         run: |
-          curl -H "Content-Type: application/json" \
+          if [[ -n "${{ secrets.TEAMS_WEBHOOK_URL }}" ]]; then
+            echo " TEAMS_WEBHOOK_URL secret is configured"
+          else
+            echo " TEAMS_WEBHOOK_URL secret is MISSING!"
+            echo "Please add it in GitHub Settings"
+          fi
+      
+      - name: Send started notification to Teams
+        if: success()
+        run: |
+          curl -X POST \
+          -H "Content-Type: application/json" \
           -d '{
             "title": " SQL Deployment Started",
-            "text": "**Environment:** Local SQL Server\n**Database:** Cloud-tunnel-JP\n**Triggered by:** ${{ github.actor }}\n**Branch:** ${{ github.ref_name }}\n**Time:** ${{ github.run_started_at }}\n\n[View Run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})",
+            "text": "**Environment:** Local SQL Server\n**Database:** Cloud-tunnel-JP\n**Triggered by:** ${{ github.actor }}\n**Time:** ${{ github.run_started_at }}\n\n[View Run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})",
             "themeColor": "FFA500"
           }' \
-          ${{ secrets.TEAMS_WEBHOOK_URL }}
+          "${{ secrets.TEAMS_WEBHOOK_URL }}" || echo "Failed to send Teams notification"
       
       - name: Install SQLCMD
         run: |
@@ -30,20 +41,6 @@ jobs:
           curl https://packages.microsoft.com/config/ubuntu/22.04/prod.list | sudo tee /etc/apt/sources.list.d/mssql-release.list
           sudo apt-get update
           sudo ACCEPT_EULA=Y apt-get install -y mssql-tools18
-      
-      - name: Show secret status (debug)
-        run: |
-          if [[ -n "${{ secrets.SQL_SERVER }}" ]]; then
-            echo " SQL_SERVER secret is configured"
-          else
-            echo " WARNING: SQL_SERVER secret is missing"
-          fi
-          
-          if [[ -n "${{ secrets.TEAMS_WEBHOOK_URL }}" ]]; then
-            echo " TEAMS_WEBHOOK_URL secret is configured"
-          else
-            echo " TEAMS_WEBHOOK_URL secret is missing - notifications disabled"
-          fi
       
       - name: Execute SQL Script
         env:
@@ -62,21 +59,23 @@ jobs:
       - name: Send success notification to Teams
         if: success()
         run: |
-          curl -H "Content-Type: application/json" \
+          curl -X POST \
+          -H "Content-Type: application/json" \
           -d '{
             "title": " Deployment Successful!",
-            "text": "**Environment:** Local SQL Server\n**Database:** Cloud-tunnel-JP\n**Status:**  Success\n**Completed:** $(date)\n**Duration:** ${{ github.run_duration }}\n\n[View Run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})",
+            "text": "**Environment:** Local SQL Server\n**Database:** Cloud-tunnel-JP\n**Status:**  Success\n**Completed:** $(date)\n\n[View Run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})",
             "themeColor": "00FF00"
           }' \
-          ${{ secrets.TEAMS_WEBHOOK_URL }}
+          "${{ secrets.TEAMS_WEBHOOK_URL }}" || echo "Failed to send Teams notification"
       
       - name: Send failure notification to Teams
         if: failure()
         run: |
-          curl -H "Content-Type: application/json" \
+          curl -X POST \
+          -H "Content-Type: application/json" \
           -d '{
             "title": " Deployment Failed!",
-            "text": "**Environment:** Local SQL Server\n**Database:** Cloud-tunnel-JP\n**Status:**  Failed\n**Time:** $(date)\n\n**Check logs:** ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\n\n**Action required:** Review the error and fix the deployment script.",
+            "text": "**Environment:** Local SQL Server\n**Database:** Cloud-tunnel-JP\n**Status:**  Failed\n**Check logs:** ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}",
             "themeColor": "FF0000"
           }' \
-          ${{ secrets.TEAMS_WEBHOOK_URL }}
+          "${{ secrets.TEAMS_WEBHOOK_URL }}" || echo "Failed to send Teams notification"
