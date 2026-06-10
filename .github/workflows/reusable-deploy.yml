@@ -1,57 +1,50 @@
 name: Deploy Local SQL
+
 on:
   push:
     branches:
       - main
   workflow_dispatch:
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
- 
+    
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
- 
-      # STEP 1: Install SQLCMD
+      
+      - name: Send started notification to Teams
+        run: |
+          curl -H "Content-Type: application/json" \
+          -d '{
+            "title": "🔄 SQL Deployment Started",
+            "text": "**Environment:** Local SQL Server\n**Database:** Cloud-tunnel-JP\n**Triggered by:** ${{ github.actor }}\n**Branch:** ${{ github.ref_name }}\n**Time:** ${{ github.run_started_at }}\n\n[View Run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})",
+            "themeColor": "FFA500"
+          }' \
+          ${{ secrets.TEAMS_WEBHOOK_URL }}
+      
       - name: Install SQLCMD
         run: |
           curl https://packages.microsoft.com/keys/microsoft.asc | sudo tee /etc/apt/trusted.gpg.d/microsoft.asc
           curl https://packages.microsoft.com/config/ubuntu/22.04/prod.list | sudo tee /etc/apt/sources.list.d/mssql-release.list
           sudo apt-get update
           sudo ACCEPT_EULA=Y apt-get install -y mssql-tools18
- 
-      # STEP 2: Show secret status (debug)
+      
       - name: Show secret status (debug)
         run: |
           if [[ -n "${{ secrets.SQL_SERVER }}" ]]; then
-            echo "Secret SQL_SERVER is configured"
+            echo " SQL_SERVER secret is configured"
           else
-            echo "WARNING: SQL_SERVER is missing"
+            echo " WARNING: SQL_SERVER secret is missing"
           fi
- 
-      # STEP 3: Send Teams approval request (BEFORE deployment)
-      - name: Send approval request to Teams
-        shell: pwsh
-        env:
-          TEAMS_WEBHOOK: ${{ secrets.TEAMS_WEBHOOK_URL }}
-          REPO: ${{ github.repository }}
-          ACTOR: ${{ github.actor }}
-        run: |
-          if (-not $env:TEAMS_WEBHOOK) {
-            Write-Host "TEAMS_WEBHOOK is missing or empty"
-            exit 1
-          }
- 
-          $body = @{
-            text = "Approval required: SQL deployment is waiting for $env:REPO by $env:ACTOR."
-          } | ConvertTo-Json
- 
-          Invoke-RestMethod -Method Post `
-            -Uri $env:TEAMS_WEBHOOK `
-            -ContentType "application/json" `
-            -Body $body
- 
-      # STEP 4: Execute SQL Script (DEPLOYMENT)
+          
+          if [[ -n "${{ secrets.TEAMS_WEBHOOK_URL }}" ]]; then
+            echo " TEAMS_WEBHOOK_URL secret is configured"
+          else
+            echo " TEAMS_WEBHOOK_URL secret is missing - notifications disabled"
+          fi
+      
       - name: Execute SQL Script
         env:
           SERVER: ${{ secrets.SQL_SERVER }}
@@ -62,6 +55,28 @@ jobs:
           -S "$SERVER" \
           -U "$USERNAME" \
           -P "$PASSWORD" \
-          -d "Cloud-tunnel-JP" \
+          -d "Cloud_tunnel-JP" \
           -i Database/deploy.sql \
           -C
+      
+      - name: Send success notification to Teams
+        if: success()
+        run: |
+          curl -H "Content-Type: application/json" \
+          -d '{
+            "title": " Deployment Successful!",
+            "text": "**Environment:** Local SQL Server\n**Database:** Cloud-tunnel-JP\n**Status:** ✅ Success\n**Completed:** $(date)\n**Duration:** ${{ github.run_duration }}\n\n[View Run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})",
+            "themeColor": "00FF00"
+          }' \
+          ${{ secrets.TEAMS_WEBHOOK_URL }}
+      
+      - name: Send failure notification to Teams
+        if: failure()
+        run: |
+          curl -H "Content-Type: application/json" \
+          -d '{
+            "title": " Deployment Failed!",
+            "text": "**Environment:** Local SQL Server\n**Database:** Cloud-tunnel-JP\n**Status:** ❌ Failed\n**Time:** $(date)\n\n**Check logs:** ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\n\n**Action required:** Review the error and fix the deployment script.",
+            "themeColor": "FF0000"
+          }' \
+          ${{ secrets.TEAMS_WEBHOOK_URL }}
