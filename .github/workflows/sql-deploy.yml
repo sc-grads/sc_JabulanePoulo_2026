@@ -18,10 +18,10 @@ jobs:
   request-approval-partner:
     needs: DevTest
     runs-on: ubuntu-latest
-    environment: partner-sql  # This triggers GitHub's manual approval
+    environment: partner-sql 
  
     steps:
-      - name: Send Partner approval request to Teams
+      - name: Send Approval Required notification to Teams
         run: |
           curl -H "Content-Type: application/json" \
           -d '{
@@ -47,22 +47,75 @@ jobs:
               {
                 "name": " DevTest Status",
                 "value": "Completed Successfully"
-              },
-              {
-                "name": " Timestamp",
-                "value": "${{ github.event.head_commit.timestamp }}"
               }
             ],
-            "potentialAction": "[View Workflow Run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})",
+            "potentialAction": "[Approve Deployment](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})",
             "themeColor": "FFA500"
           }' \
           ${{ secrets.TEAMS_WEBHOOK_URL }}
  
       - name: Waiting for partner approval
-        run: echo " Waiting for partner-sql approval..."
+        run: echo "⏳ Waiting for partner-sql approval..."
+ 
+  approval-granted:
+    needs: request-approval-partner
+    runs-on: ubuntu-latest
+    if: success()
+    steps:
+      - name: Send Approval Granted notification to Teams
+        run: |
+          curl -H "Content-Type: application/json" \
+          -d '{
+            "title": " PARTNER SQL DEPLOYMENT - APPROVAL GRANTED",
+            "text": "**Production deployment has been approved and will now proceed**\n\n",
+            "facts": [
+              {
+                "name": " Environment",
+                "value": "Partner SQL (Production)"
+              },
+              {
+                "name": " Approved by",
+                "value": "${{ github.actor }}"
+              },
+              {
+                "name": " Run ID",
+                "value": "${{ github.run_id }}"
+              }
+            ],
+            "themeColor": "00FF00"
+          }' \
+          ${{ secrets.TEAMS_WEBHOOK_URL }}
+  
+  deployment-started:
+    needs: approval-granted
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Deployment Started notification to Teams
+        run: |
+          curl -H "Content-Type: application/json" \
+          -d '{
+            "title": " PARTNER SQL DEPLOYMENT STARTED",
+            "text": "**Production deployment is now in progress**\n\n",
+            "facts": [
+              {
+                "name": " Environment",
+                "value": "Partner SQL (Production)"
+              },
+              {
+                "name": " Deployed by",
+                "value": "${{ github.actor }}"
+              },
+              {
+                "name": " Run ID",
+                "value": "${{ github.run_id }}"
+              }
+            ],
+            "themeColor": "1E90FF"
+          }' \
+          ${{ secrets.TEAMS_WEBHOOK_URL }}
  
   Production:
-    needs: request-approval-partner
+    needs: deployment-started
     uses: ./.github/workflows/reusable-sql-deploy.yml
     with:
       environment-name: partner-sql
@@ -75,7 +128,7 @@ jobs:
     if: success()
     runs-on: ubuntu-latest
     steps:
-      - name: Send Success Notification
+      - name: Send Success Notification to Teams
         run: |
           curl -H "Content-Type: application/json" \
           -d '{
@@ -118,10 +171,8 @@ jobs:
     if: failure()
     runs-on: ubuntu-latest
     steps:
-      - name: Send Failure Notification
+      - name: Send Failure Notification to Teams
         run: |
-          ERROR_TYPE="${{ contains(needs.*.result, 'failure') && 'One or more deployments failed' || 'Unknown error' }}"
-          
           curl -H "Content-Type: application/json" \
           -d '{
             "title": " SQL DEPLOYMENT FAILED",
@@ -130,10 +181,6 @@ jobs:
               {
                 "name": " Status",
                 "value": "Deployment Failed"
-              },
-              {
-                "name": " Failed Environment",
-                "value": "${{ contains(needs.DevTest.result, 'failure') && 'DevTest' || '' }}${{ contains(needs.Production.result, 'failure') && 'Partner' || '' }}"
               },
               {
                 "name": " Triggered by",
@@ -150,10 +197,6 @@ jobs:
               {
                 "name": " Commit",
                 "value": "${{ github.sha }}"
-              },
-              {
-                "name": " Time",
-                "value": "${{ github.event.head_commit.timestamp }}"
               }
             ],
             "potentialAction": "[View Logs](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})",
