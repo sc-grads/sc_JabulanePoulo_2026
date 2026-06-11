@@ -9,14 +9,14 @@ on:
  
 jobs:
  
-  deploy-local:
+  DevTest:
     uses: ./.github/workflows/reusable-sql-deploy.yml
     with:
       environment-name: local-sql
     secrets: inherit
  
   request-approval-partner:
-    needs: deploy-local
+    needs: DevTest
     runs-on: ubuntu-latest
     environment: partner-sql  # This triggers GitHub's manual approval
  
@@ -34,7 +34,7 @@ jobs:
       - name: Waiting for partner approval
         run: echo "Waiting for partner-sql approval..."
  
-  deploy-partner:
+  Production:
     needs: request-approval-partner
     uses: ./.github/workflows/reusable-sql-deploy.yml
     with:
@@ -43,8 +43,8 @@ jobs:
  
   notify-success:
     needs:
-      - deploy-local
-      - deploy-partner
+      - DevTest
+      - Production
     if: success()
     runs-on: ubuntu-latest
     steps:
@@ -60,8 +60,8 @@ jobs:
  
   notify-failure:
     needs:
-      - deploy-local
-      - deploy-partner
+      - DevTest
+      - Production
     if: failure()
     runs-on: ubuntu-latest
     steps:
