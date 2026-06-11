@@ -9,7 +9,6 @@ on:
  
 jobs:
  
- 
   request-approval:
     runs-on: ubuntu-latest
  
@@ -27,7 +26,6 @@ jobs:
       - name: Waiting for approval
         run: echo "Waiting for local-sql approval..."
  
- 
   deploy-local:
     needs: request-approval
  
@@ -38,26 +36,20 @@ jobs:
  
     secrets: inherit
  
+  deploy-partner:
+    needs: deploy-local   # Runs immediately after deploy-local completes
  
-  partner-approval:
-    needs: deploy-local
+    uses: ./.github/workflows/reusable-sql-deploy.yml
  
-    runs-on: ubuntu-latest
+    with:
+      environment-name: partner-sql
  
-    environment: partner-sql
+    secrets: inherit
  
-    steps:
-      - name: Waiting for Partner Approval
-        run: echo "Waiting for partner approval..."
- 
- 
-  
- 
-
   notify-success:
     needs:
       - deploy-local
-     
+      - deploy-partner
  
     if: success()
  
@@ -74,11 +66,10 @@ jobs:
           }' \
           ${{ secrets.TEAMS_WEBHOOK_URL }}
  
- 
   notify-failure:
     needs:
       - deploy-local
-      
+      - deploy-partner
  
     if: failure()
  
