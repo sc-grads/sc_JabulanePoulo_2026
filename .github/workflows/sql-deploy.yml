@@ -51,21 +51,13 @@ jobs:
         run: echo "Waiting for partner approval..."
  
  
-  deploy-partner:
-    needs: partner-approval
+  
  
-    uses: ./.github/workflows/reusable-sql-deploy.yml
- 
-    with:
-      environment-name: partner-sql
- 
-    secrets: inherit
- 
- 
+
   notify-success:
     needs:
       - deploy-local
-      - deploy-partner
+     
  
     if: success()
  
@@ -86,7 +78,7 @@ jobs:
   notify-failure:
     needs:
       - deploy-local
-      - deploy-partner
+      
  
     if: failure()
  
