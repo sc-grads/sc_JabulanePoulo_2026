@@ -9,32 +9,33 @@ on:
  
 jobs:
  
-  request-approval:
-    runs-on: ubuntu-latest
- 
-    steps:
-      - name: Send approval request to Teams
-        run: |
-          curl -H "Content-Type: application/json" \
-          -d '{
-            "title": "LOCAL SQL DEPLOYMENT APPROVAL REQUIRED",
-            "text": "**A database deployment requires approval**\n\n**Requested by:** ${{ github.actor }}\n**Branch:** ${{ github.ref_name }}\n**Run:** ${{ github.run_id }}\n\n[Open Workflow](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})",
-            "themeColor": "FF0000"
-          }' \
-          ${{ secrets.TEAMS_WEBHOOK_URL }}
- 
-      - name: Waiting for approval
-        run: echo "Waiting for local-sql approval..."
- 
   deploy-local:
-    needs: request-approval   # Both jobs start after request-approval
     uses: ./.github/workflows/reusable-sql-deploy.yml
     with:
       environment-name: local-sql
     secrets: inherit
  
+  request-approval-partner:
+    needs: deploy-local
+    runs-on: ubuntu-latest
+    environment: partner-sql  # This triggers GitHub's manual approval
+ 
+    steps:
+      - name: Send Partner approval request to Teams
+        run: |
+          curl -H "Content-Type: application/json" \
+          -d '{
+            "title": "PARTNER SQL DEPLOYMENT APPROVAL REQUIRED",
+            "text": "**Partner database deployment requires approval**\n\n**Requested by:** ${{ github.actor }}\n**Local deployment completed successfully**\n**Run:** ${{ github.run_id }}\n\n[Open Workflow](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})",
+            "themeColor": "FFA500"
+          }' \
+          ${{ secrets.TEAMS_WEBHOOK_URL }}
+ 
+      - name: Waiting for partner approval
+        run: echo "Waiting for partner-sql approval..."
+ 
   deploy-partner:
-    needs: request-approval   # Both jobs start after request-approval
+    needs: request-approval-partner
     uses: ./.github/workflows/reusable-sql-deploy.yml
     with:
       environment-name: partner-sql
