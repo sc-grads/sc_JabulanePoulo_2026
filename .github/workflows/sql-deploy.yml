@@ -27,34 +27,25 @@ jobs:
         run: echo "Waiting for local-sql approval..."
  
   deploy-local:
-    needs: request-approval
- 
+    needs: request-approval   # Both jobs start after request-approval
     uses: ./.github/workflows/reusable-sql-deploy.yml
- 
     with:
       environment-name: local-sql
- 
     secrets: inherit
  
   deploy-partner:
-    needs: deploy-local   # Runs immediately after deploy-local completes
- 
+    needs: request-approval   # Both jobs start after request-approval
     uses: ./.github/workflows/reusable-sql-deploy.yml
- 
     with:
       environment-name: partner-sql
- 
     secrets: inherit
  
   notify-success:
     needs:
       - deploy-local
       - deploy-partner
- 
     if: success()
- 
     runs-on: ubuntu-latest
- 
     steps:
       - name: Send Success Notification
         run: |
@@ -70,11 +61,8 @@ jobs:
     needs:
       - deploy-local
       - deploy-partner
- 
     if: failure()
- 
     runs-on: ubuntu-latest
- 
     steps:
       - name: Send Failure Notification
         run: |
