@@ -25,14 +25,41 @@ jobs:
         run: |
           curl -H "Content-Type: application/json" \
           -d '{
-            "title": "PARTNER SQL DEPLOYMENT APPROVAL REQUIRED",
-            "text": "**Partner database deployment requires approval**\n\n**Requested by:** ${{ github.actor }}\n**Local deployment completed successfully**\n**Run:** ${{ github.run_id }}\n\n[Open Workflow](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})",
+            "title": " PARTNER SQL DEPLOYMENT APPROVAL REQUIRED",
+            "text": "**A production deployment is waiting for your approval**\n\n",
+            "facts": [
+              {
+                "name": " Environment",
+                "value": "Partner SQL (Production)"
+              },
+              {
+                "name": " Requested by",
+                "value": "${{ github.actor }}"
+              },
+              {
+                "name": " Branch",
+                "value": "${{ github.ref_name }}"
+              },
+              {
+                "name": " Run ID",
+                "value": "${{ github.run_id }}"
+              },
+              {
+                "name": " DevTest Status",
+                "value": "Completed Successfully"
+              },
+              {
+                "name": " Timestamp",
+                "value": "${{ github.event.head_commit.timestamp }}"
+              }
+            ],
+            "potentialAction": "[View Workflow Run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})",
             "themeColor": "FFA500"
           }' \
           ${{ secrets.TEAMS_WEBHOOK_URL }}
  
       - name: Waiting for partner approval
-        run: echo "Waiting for partner-sql approval..."
+        run: echo " Waiting for partner-sql approval..."
  
   Production:
     needs: request-approval-partner
@@ -52,8 +79,34 @@ jobs:
         run: |
           curl -H "Content-Type: application/json" \
           -d '{
-            "title": "SQL DEPLOYMENT SUCCESS",
-            "text": "**Local and Partner deployments completed successfully**\nRun: ${{ github.run_id }}",
+            "title": " SQL DEPLOYMENT SUCCESS",
+            "text": "**All deployments completed successfully!**\n\n",
+            "facts": [
+              {
+                "name": " DevTest Environment",
+                "value": "Deployed Successfully"
+              },
+              {
+                "name": " Partner Environment",
+                "value": "Deployed Successfully"
+              },
+              {
+                "name": " Deployed by",
+                "value": "${{ github.actor }}"
+              },
+              {
+                "name": " Branch",
+                "value": "${{ github.ref_name }}"
+              },
+              {
+                "name": " Run ID",
+                "value": "${{ github.run_id }}"
+              },
+              {
+                "name": " Commit",
+                "value": "${{ github.sha }}"
+              }
+            ],
             "themeColor": "00FF00"
           }' \
           ${{ secrets.TEAMS_WEBHOOK_URL }}
@@ -67,10 +120,43 @@ jobs:
     steps:
       - name: Send Failure Notification
         run: |
+          ERROR_TYPE="${{ contains(needs.*.result, 'failure') && 'One or more deployments failed' || 'Unknown error' }}"
+          
           curl -H "Content-Type: application/json" \
           -d '{
-            "title": "SQL DEPLOYMENT FAILED",
-            "text": "**One of the deployments failed**\n\nView logs:\n${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}",
+            "title": " SQL DEPLOYMENT FAILED",
+            "text": "**Deployment failure detected - immediate action required**\n\n",
+            "facts": [
+              {
+                "name": " Status",
+                "value": "Deployment Failed"
+              },
+              {
+                "name": " Failed Environment",
+                "value": "${{ contains(needs.DevTest.result, 'failure') && 'DevTest' || '' }}${{ contains(needs.Production.result, 'failure') && 'Partner' || '' }}"
+              },
+              {
+                "name": " Triggered by",
+                "value": "${{ github.actor }}"
+              },
+              {
+                "name": " Branch",
+                "value": "${{ github.ref_name }}"
+              },
+              {
+                "name": " Run ID",
+                "value": "${{ github.run_id }}"
+              },
+              {
+                "name": " Commit",
+                "value": "${{ github.sha }}"
+              },
+              {
+                "name": " Time",
+                "value": "${{ github.event.head_commit.timestamp }}"
+              }
+            ],
+            "potentialAction": "[View Logs](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})",
             "themeColor": "FF0000"
           }' \
           ${{ secrets.TEAMS_WEBHOOK_URL }}
