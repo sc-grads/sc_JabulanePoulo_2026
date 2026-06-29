@@ -11,8 +11,8 @@
   DTS:LocaleID="7177"
   DTS:ObjectName="Package"
   DTS:PackageType="5"
-  DTS:VersionBuild="141"
-  DTS:VersionGUID="{F7EDE51B-1A70-4949-9D12-EA28BCA6A231}">
+  DTS:VersionBuild="150"
+  DTS:VersionGUID="{E9060687-A94C-4897-AD8B-BA7C90D72E50}">
   <DTS:Property
     DTS:Name="PackageFormatVersion">8</DTS:Property>
   <DTS:ConnectionManagers>
@@ -150,7 +150,7 @@
           DTS:LocaleID="-1"
           DTS:ObjectName="Audit log"
           DTS:TaskContact="Execute SQL Task; Microsoft Corporation; SQL Server 2025; © 2025 Microsoft Corporation; All Rights Reserved;http://www.microsoft.com/sql/support/default.asp;1"
-          DTS:ThreadHint="1">
+          DTS:ThreadHint="0">
           <DTS:Variables />
           <DTS:ObjectData>
             <SQLTask:SqlTaskData
@@ -192,7 +192,7 @@
           DTS:ExecutableType="Microsoft.ScriptTask"
           DTS:LocaleID="-1"
           DTS:ObjectName="Extract File Info"
-          DTS:ThreadHint="1">
+          DTS:ThreadHint="0">
           <DTS:Variables />
           <DTS:ObjectData>
             <ScriptProject
@@ -828,7 +828,7 @@ AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</BinaryItem>
           DTS:LocaleID="-1"
           DTS:ObjectName="Get EmployeeID"
           DTS:TaskContact="Execute SQL Task; Microsoft Corporation; SQL Server 2025; © 2025 Microsoft Corporation; All Rights Reserved;http://www.microsoft.com/sql/support/default.asp;1"
-          DTS:ThreadHint="1">
+          DTS:ThreadHint="0">
           <DTS:Variables />
           <DTS:ObjectData>
             <SQLTask:SqlTaskData
@@ -857,7 +857,7 @@ AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</BinaryItem>
           DTS:LocaleID="-1"
           DTS:ObjectName="Get EmployeeName"
           DTS:TaskContact="Execute SQL Task; Microsoft Corporation; SQL Server 2025; © 2025 Microsoft Corporation; All Rights Reserved;http://www.microsoft.com/sql/support/default.asp;1"
-          DTS:ThreadHint="1">
+          DTS:ThreadHint="0">
           <DTS:Variables />
           <DTS:ObjectData>
             <SQLTask:SqlTaskData
@@ -882,617 +882,6 @@ AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</BinaryItem>
                 SQLTask:DataType="129"
                 SQLTask:ParameterSize="2" />
             </SQLTask:SqlTaskData>
-          </DTS:ObjectData>
-        </DTS:Executable>
-        <DTS:Executable
-          DTS:refId="Package\Foreach Loop Container\Load Leave"
-          DTS:CreationName="Microsoft.Pipeline"
-          DTS:Description="Data Flow Task"
-          DTS:DTSID="{28A1F068-FD36-4588-9F4C-0E9EAEF386F3}"
-          DTS:ExecutableType="Microsoft.Pipeline"
-          DTS:LocaleID="-1"
-          DTS:ObjectName="Load Leave"
-          DTS:TaskContact="Performs high-performance data extraction, transformation and loading;Microsoft Corporation; Microsoft SQL Server; (C) Microsoft Corporation; All Rights Reserved;http://www.microsoft.com/sql/support/default.asp;1">
-          <DTS:Variables />
-          <DTS:ObjectData>
-            <pipeline
-              version="1">
-              <components>
-                <component
-                  refId="Package\Foreach Loop Container\Load Leave\Data Conversion"
-                  componentClassID="Microsoft.DataConvert"
-                  contactInfo="Data Conversion;Microsoft Corporation; Microsoft SQL Server; (C) Microsoft Corporation; All Rights Reserved; http://www.microsoft.com/sql/support;0"
-                  description="Data Conversion"
-                  name="Data Conversion"
-                  usesDispositions="true">
-                  <inputs>
-                    <input
-                      refId="Package\Foreach Loop Container\Load Leave\Data Conversion.Inputs[Data Conversion Input]"
-                      name="Data Conversion Input">
-                      <inputColumns>
-                        <inputColumn
-                          refId="Package\Foreach Loop Container\Load Leave\Data Conversion.Inputs[Data Conversion Input].Columns[Type of Leave]"
-                          cachedDataType="wstr"
-                          cachedLength="255"
-                          cachedName="Type of Leave"
-                          lineageId="Package\Foreach Loop Container\Load Leave\Excel Source.Outputs[Excel Source Output].Columns[Type of Leave]" />
-                        <inputColumn
-                          refId="Package\Foreach Loop Container\Load Leave\Data Conversion.Inputs[Data Conversion Input].Columns[Start Date]"
-                          cachedDataType="date"
-                          cachedName="Start Date"
-                          lineageId="Package\Foreach Loop Container\Load Leave\Excel Source.Outputs[Excel Source Output].Columns[Start Date]" />
-                        <inputColumn
-                          refId="Package\Foreach Loop Container\Load Leave\Data Conversion.Inputs[Data Conversion Input].Columns[End Date]"
-                          cachedDataType="date"
-                          cachedName="End Date"
-                          lineageId="Package\Foreach Loop Container\Load Leave\Excel Source.Outputs[Excel Source Output].Columns[End Date]" />
-                        <inputColumn
-                          refId="Package\Foreach Loop Container\Load Leave\Data Conversion.Inputs[Data Conversion Input].Columns[Number of days ]"
-                          cachedDataType="r8"
-                          cachedName="Number of days "
-                          lineageId="Package\Foreach Loop Container\Load Leave\Excel Source.Outputs[Excel Source Output].Columns[Number of days ]" />
-                        <inputColumn
-                          refId="Package\Foreach Loop Container\Load Leave\Data Conversion.Inputs[Data Conversion Input].Columns[Approval Obtained]"
-                          cachedDataType="wstr"
-                          cachedLength="255"
-                          cachedName="Approval Obtained"
-                          lineageId="Package\Foreach Loop Container\Load Leave\Excel Source.Outputs[Excel Source Output].Columns[Approval Obtained]" />
-                        <inputColumn
-                          refId="Package\Foreach Loop Container\Load Leave\Data Conversion.Inputs[Data Conversion Input].Columns[Sick Note]"
-                          cachedDataType="wstr"
-                          cachedLength="255"
-                          cachedName="Sick Note"
-                          lineageId="Package\Foreach Loop Container\Load Leave\Excel Source.Outputs[Excel Source Output].Columns[Sick Note]" />
-                      </inputColumns>
-                      <externalMetadataColumns />
-                    </input>
-                  </inputs>
-                  <outputs>
-                    <output
-                      refId="Package\Foreach Loop Container\Load Leave\Data Conversion.Outputs[Data Conversion Output]"
-                      exclusionGroup="1"
-                      name="Data Conversion Output"
-                      synchronousInputId="Package\Foreach Loop Container\Load Leave\Data Conversion.Inputs[Data Conversion Input]">
-                      <outputColumns>
-                        <outputColumn
-                          refId="Package\Foreach Loop Container\Load Leave\Data Conversion.Outputs[Data Conversion Output].Columns[Copy of Type of Leave]"
-                          codePage="1252"
-                          dataType="str"
-                          errorOrTruncationOperation="Conversion"
-                          errorRowDisposition="FailComponent"
-                          length="100"
-                          lineageId="Package\Foreach Loop Container\Load Leave\Data Conversion.Outputs[Data Conversion Output].Columns[Copy of Type of Leave]"
-                          name="Copy of Type of Leave"
-                          truncationRowDisposition="FailComponent">
-                          <properties>
-                            <property
-                              containsID="true"
-                              dataType="System.Int32"
-                              description="Specifies the input column used as the source of data for the conversion."
-                              name="SourceInputColumnLineageID">#{Package\Foreach Loop Container\Load Leave\Excel Source.Outputs[Excel Source Output].Columns[Type of Leave]}</property>
-                            <property
-                              dataType="System.Boolean"
-                              description="Indicates whether the column uses the faster, locale-neutral parsing routines."
-                              name="FastParse">false</property>
-                          </properties>
-                        </outputColumn>
-                        <outputColumn
-                          refId="Package\Foreach Loop Container\Load Leave\Data Conversion.Outputs[Data Conversion Output].Columns[Copy of Start Date]"
-                          dataType="date"
-                          errorOrTruncationOperation="Conversion"
-                          errorRowDisposition="FailComponent"
-                          lineageId="Package\Foreach Loop Container\Load Leave\Data Conversion.Outputs[Data Conversion Output].Columns[Copy of Start Date]"
-                          name="Copy of Start Date"
-                          truncationRowDisposition="FailComponent">
-                          <properties>
-                            <property
-                              containsID="true"
-                              dataType="System.Int32"
-                              description="Specifies the input column used as the source of data for the conversion."
-                              name="SourceInputColumnLineageID">#{Package\Foreach Loop Container\Load Leave\Excel Source.Outputs[Excel Source Output].Columns[Start Date]}</property>
-                            <property
-                              dataType="System.Boolean"
-                              description="Indicates whether the column uses the faster, locale-neutral parsing routines."
-                              name="FastParse">false</property>
-                          </properties>
-                        </outputColumn>
-                        <outputColumn
-                          refId="Package\Foreach Loop Container\Load Leave\Data Conversion.Outputs[Data Conversion Output].Columns[Copy of End Date]"
-                          dataType="date"
-                          errorOrTruncationOperation="Conversion"
-                          errorRowDisposition="FailComponent"
-                          lineageId="Package\Foreach Loop Container\Load Leave\Data Conversion.Outputs[Data Conversion Output].Columns[Copy of End Date]"
-                          name="Copy of End Date"
-                          truncationRowDisposition="FailComponent">
-                          <properties>
-                            <property
-                              containsID="true"
-                              dataType="System.Int32"
-                              description="Specifies the input column used as the source of data for the conversion."
-                              name="SourceInputColumnLineageID">#{Package\Foreach Loop Container\Load Leave\Excel Source.Outputs[Excel Source Output].Columns[End Date]}</property>
-                            <property
-                              dataType="System.Boolean"
-                              description="Indicates whether the column uses the faster, locale-neutral parsing routines."
-                              name="FastParse">false</property>
-                          </properties>
-                        </outputColumn>
-                        <outputColumn
-                          refId="Package\Foreach Loop Container\Load Leave\Data Conversion.Outputs[Data Conversion Output].Columns[Copy of Number of days]"
-                          dataType="r8"
-                          errorOrTruncationOperation="Conversion"
-                          errorRowDisposition="FailComponent"
-                          lineageId="Package\Foreach Loop Container\Load Leave\Data Conversion.Outputs[Data Conversion Output].Columns[Copy of Number of days]"
-                          name="Copy of Number of days"
-                          truncationRowDisposition="FailComponent">
-                          <properties>
-                            <property
-                              containsID="true"
-                              dataType="System.Int32"
-                              description="Specifies the input column used as the source of data for the conversion."
-                              name="SourceInputColumnLineageID">#{Package\Foreach Loop Container\Load Leave\Excel Source.Outputs[Excel Source Output].Columns[Number of days ]}</property>
-                            <property
-                              dataType="System.Boolean"
-                              description="Indicates whether the column uses the faster, locale-neutral parsing routines."
-                              name="FastParse">false</property>
-                          </properties>
-                        </outputColumn>
-                        <outputColumn
-                          refId="Package\Foreach Loop Container\Load Leave\Data Conversion.Outputs[Data Conversion Output].Columns[Copy of Approval Obtained]"
-                          dataType="wstr"
-                          errorOrTruncationOperation="Conversion"
-                          errorRowDisposition="FailComponent"
-                          length="255"
-                          lineageId="Package\Foreach Loop Container\Load Leave\Data Conversion.Outputs[Data Conversion Output].Columns[Copy of Approval Obtained]"
-                          name="Copy of Approval Obtained"
-                          truncationRowDisposition="FailComponent">
-                          <properties>
-                            <property
-                              containsID="true"
-                              dataType="System.Int32"
-                              description="Specifies the input column used as the source of data for the conversion."
-                              name="SourceInputColumnLineageID">#{Package\Foreach Loop Container\Load Leave\Excel Source.Outputs[Excel Source Output].Columns[Approval Obtained]}</property>
-                            <property
-                              dataType="System.Boolean"
-                              description="Indicates whether the column uses the faster, locale-neutral parsing routines."
-                              name="FastParse">false</property>
-                          </properties>
-                        </outputColumn>
-                        <outputColumn
-                          refId="Package\Foreach Loop Container\Load Leave\Data Conversion.Outputs[Data Conversion Output].Columns[Copy of Sick Note]"
-                          dataType="wstr"
-                          errorOrTruncationOperation="Conversion"
-                          errorRowDisposition="FailComponent"
-                          length="255"
-                          lineageId="Package\Foreach Loop Container\Load Leave\Data Conversion.Outputs[Data Conversion Output].Columns[Copy of Sick Note]"
-                          name="Copy of Sick Note"
-                          truncationRowDisposition="FailComponent">
-                          <properties>
-                            <property
-                              containsID="true"
-                              dataType="System.Int32"
-                              description="Specifies the input column used as the source of data for the conversion."
-                              name="SourceInputColumnLineageID">#{Package\Foreach Loop Container\Load Leave\Excel Source.Outputs[Excel Source Output].Columns[Sick Note]}</property>
-                            <property
-                              dataType="System.Boolean"
-                              description="Indicates whether the column uses the faster, locale-neutral parsing routines."
-                              name="FastParse">false</property>
-                          </properties>
-                        </outputColumn>
-                      </outputColumns>
-                      <externalMetadataColumns />
-                    </output>
-                    <output
-                      refId="Package\Foreach Loop Container\Load Leave\Data Conversion.Outputs[Data Conversion Error Output]"
-                      exclusionGroup="1"
-                      isErrorOut="true"
-                      name="Data Conversion Error Output"
-                      synchronousInputId="Package\Foreach Loop Container\Load Leave\Data Conversion.Inputs[Data Conversion Input]">
-                      <outputColumns>
-                        <outputColumn
-                          refId="Package\Foreach Loop Container\Load Leave\Data Conversion.Outputs[Data Conversion Error Output].Columns[ErrorCode]"
-                          dataType="i4"
-                          lineageId="Package\Foreach Loop Container\Load Leave\Data Conversion.Outputs[Data Conversion Error Output].Columns[ErrorCode]"
-                          name="ErrorCode"
-                          specialFlags="1" />
-                        <outputColumn
-                          refId="Package\Foreach Loop Container\Load Leave\Data Conversion.Outputs[Data Conversion Error Output].Columns[ErrorColumn]"
-                          dataType="i4"
-                          lineageId="Package\Foreach Loop Container\Load Leave\Data Conversion.Outputs[Data Conversion Error Output].Columns[ErrorColumn]"
-                          name="ErrorColumn"
-                          specialFlags="2" />
-                      </outputColumns>
-                      <externalMetadataColumns />
-                    </output>
-                  </outputs>
-                </component>
-                <component
-                  refId="Package\Foreach Loop Container\Load Leave\Excel Source"
-                  componentClassID="Microsoft.ExcelSource"
-                  contactInfo="Excel Source;Microsoft Corporation; Microsoft SQL Server; (C) Microsoft Corporation; All Rights Reserved; http://www.microsoft.com/sql/support;1"
-                  description="Excel Source"
-                  name="Excel Source"
-                  usesDispositions="true"
-                  version="1">
-                  <properties>
-                    <property
-                      dataType="System.Int32"
-                      description="The number of seconds before a command times out.  A value of 0 indicates an infinite time-out."
-                      name="CommandTimeout">0</property>
-                    <property
-                      dataType="System.String"
-                      description="Specifies the name of the database object used to open a rowset."
-                      name="OpenRowset">Leave$</property>
-                    <property
-                      dataType="System.String"
-                      description="Specifies the variable that contains the name of the database object used to open a rowset."
-                      name="OpenRowsetVariable"></property>
-                    <property
-                      dataType="System.String"
-                      description="The SQL command to be executed."
-                      name="SqlCommand"
-                      UITypeEditor="Microsoft.DataTransformationServices.Controls.ModalMultilineStringEditor">SELECT * FROM [Leave$A10:Z1000]</property>
-                    <property
-                      dataType="System.String"
-                      description="The variable that contains the SQL command to be executed."
-                      name="SqlCommandVariable"></property>
-                    <property
-                      dataType="System.Int32"
-                      description="Specifies the mode used to access the database."
-                      name="AccessMode"
-                      typeConverter="AccessMode">2</property>
-                    <property
-                      dataType="System.String"
-                      description="The mapping from parameters in the SQL command to variables."
-                      name="ParameterMapping"></property>
-                  </properties>
-                  <connections>
-                    <connection
-                      refId="Package\Foreach Loop Container\Load Leave\Excel Source.Connections[OleDbConnection]"
-                      connectionManagerID="Package.ConnectionManagers[Excel Connection Manager]"
-                      connectionManagerRefId="Package.ConnectionManagers[Excel Connection Manager]"
-                      description="The OLE DB runtime connection used to access the database."
-                      name="OleDbConnection" />
-                  </connections>
-                  <outputs>
-                    <output
-                      refId="Package\Foreach Loop Container\Load Leave\Excel Source.Outputs[Excel Source Output]"
-                      name="Excel Source Output">
-                      <outputColumns>
-                        <outputColumn
-                          refId="Package\Foreach Loop Container\Load Leave\Excel Source.Outputs[Excel Source Output].Columns[Type of Leave]"
-                          dataType="wstr"
-                          errorOrTruncationOperation="Conversion"
-                          errorRowDisposition="FailComponent"
-                          externalMetadataColumnId="Package\Foreach Loop Container\Load Leave\Excel Source.Outputs[Excel Source Output].ExternalColumns[Type of Leave]"
-                          length="255"
-                          lineageId="Package\Foreach Loop Container\Load Leave\Excel Source.Outputs[Excel Source Output].Columns[Type of Leave]"
-                          name="Type of Leave"
-                          truncationRowDisposition="FailComponent" />
-                        <outputColumn
-                          refId="Package\Foreach Loop Container\Load Leave\Excel Source.Outputs[Excel Source Output].Columns[Start Date]"
-                          dataType="date"
-                          errorOrTruncationOperation="Conversion"
-                          errorRowDisposition="FailComponent"
-                          externalMetadataColumnId="Package\Foreach Loop Container\Load Leave\Excel Source.Outputs[Excel Source Output].ExternalColumns[Start Date]"
-                          lineageId="Package\Foreach Loop Container\Load Leave\Excel Source.Outputs[Excel Source Output].Columns[Start Date]"
-                          name="Start Date"
-                          truncationRowDisposition="FailComponent" />
-                        <outputColumn
-                          refId="Package\Foreach Loop Container\Load Leave\Excel Source.Outputs[Excel Source Output].Columns[End Date]"
-                          dataType="date"
-                          errorOrTruncationOperation="Conversion"
-                          errorRowDisposition="FailComponent"
-                          externalMetadataColumnId="Package\Foreach Loop Container\Load Leave\Excel Source.Outputs[Excel Source Output].ExternalColumns[End Date]"
-                          lineageId="Package\Foreach Loop Container\Load Leave\Excel Source.Outputs[Excel Source Output].Columns[End Date]"
-                          name="End Date"
-                          truncationRowDisposition="FailComponent" />
-                        <outputColumn
-                          refId="Package\Foreach Loop Container\Load Leave\Excel Source.Outputs[Excel Source Output].Columns[Number of days ]"
-                          dataType="r8"
-                          errorOrTruncationOperation="Conversion"
-                          errorRowDisposition="FailComponent"
-                          externalMetadataColumnId="Package\Foreach Loop Container\Load Leave\Excel Source.Outputs[Excel Source Output].ExternalColumns[Number of days ]"
-                          lineageId="Package\Foreach Loop Container\Load Leave\Excel Source.Outputs[Excel Source Output].Columns[Number of days ]"
-                          name="Number of days "
-                          truncationRowDisposition="FailComponent" />
-                        <outputColumn
-                          refId="Package\Foreach Loop Container\Load Leave\Excel Source.Outputs[Excel Source Output].Columns[Approval Obtained]"
-                          dataType="wstr"
-                          errorOrTruncationOperation="Conversion"
-                          errorRowDisposition="FailComponent"
-                          externalMetadataColumnId="Package\Foreach Loop Container\Load Leave\Excel Source.Outputs[Excel Source Output].ExternalColumns[Approval Obtained]"
-                          length="255"
-                          lineageId="Package\Foreach Loop Container\Load Leave\Excel Source.Outputs[Excel Source Output].Columns[Approval Obtained]"
-                          name="Approval Obtained"
-                          truncationRowDisposition="FailComponent" />
-                        <outputColumn
-                          refId="Package\Foreach Loop Container\Load Leave\Excel Source.Outputs[Excel Source Output].Columns[Sick Note]"
-                          dataType="wstr"
-                          errorOrTruncationOperation="Conversion"
-                          errorRowDisposition="FailComponent"
-                          externalMetadataColumnId="Package\Foreach Loop Container\Load Leave\Excel Source.Outputs[Excel Source Output].ExternalColumns[Sick Note]"
-                          length="255"
-                          lineageId="Package\Foreach Loop Container\Load Leave\Excel Source.Outputs[Excel Source Output].Columns[Sick Note]"
-                          name="Sick Note"
-                          truncationRowDisposition="FailComponent" />
-                      </outputColumns>
-                      <externalMetadataColumns
-                        isUsed="True">
-                        <externalMetadataColumn
-                          refId="Package\Foreach Loop Container\Load Leave\Excel Source.Outputs[Excel Source Output].ExternalColumns[Type of Leave]"
-                          dataType="wstr"
-                          length="255"
-                          name="Type of Leave" />
-                        <externalMetadataColumn
-                          refId="Package\Foreach Loop Container\Load Leave\Excel Source.Outputs[Excel Source Output].ExternalColumns[Start Date]"
-                          dataType="date"
-                          name="Start Date" />
-                        <externalMetadataColumn
-                          refId="Package\Foreach Loop Container\Load Leave\Excel Source.Outputs[Excel Source Output].ExternalColumns[End Date]"
-                          dataType="date"
-                          name="End Date" />
-                        <externalMetadataColumn
-                          refId="Package\Foreach Loop Container\Load Leave\Excel Source.Outputs[Excel Source Output].ExternalColumns[Number of days ]"
-                          dataType="r8"
-                          name="Number of days " />
-                        <externalMetadataColumn
-                          refId="Package\Foreach Loop Container\Load Leave\Excel Source.Outputs[Excel Source Output].ExternalColumns[Approval Obtained]"
-                          dataType="wstr"
-                          length="255"
-                          name="Approval Obtained" />
-                        <externalMetadataColumn
-                          refId="Package\Foreach Loop Container\Load Leave\Excel Source.Outputs[Excel Source Output].ExternalColumns[Sick Note]"
-                          dataType="wstr"
-                          length="255"
-                          name="Sick Note" />
-                      </externalMetadataColumns>
-                    </output>
-                    <output
-                      refId="Package\Foreach Loop Container\Load Leave\Excel Source.Outputs[Excel Source Error Output]"
-                      isErrorOut="true"
-                      name="Excel Source Error Output">
-                      <outputColumns>
-                        <outputColumn
-                          refId="Package\Foreach Loop Container\Load Leave\Excel Source.Outputs[Excel Source Error Output].Columns[ErrorCode]"
-                          dataType="i4"
-                          lineageId="Package\Foreach Loop Container\Load Leave\Excel Source.Outputs[Excel Source Error Output].Columns[ErrorCode]"
-                          name="ErrorCode"
-                          specialFlags="1" />
-                        <outputColumn
-                          refId="Package\Foreach Loop Container\Load Leave\Excel Source.Outputs[Excel Source Error Output].Columns[ErrorColumn]"
-                          dataType="i4"
-                          lineageId="Package\Foreach Loop Container\Load Leave\Excel Source.Outputs[Excel Source Error Output].Columns[ErrorColumn]"
-                          name="ErrorColumn"
-                          specialFlags="2" />
-                        <outputColumn
-                          refId="Package\Foreach Loop Container\Load Leave\Excel Source.Outputs[Excel Source Error Output].Columns[Type of Leave]"
-                          dataType="wstr"
-                          length="255"
-                          lineageId="Package\Foreach Loop Container\Load Leave\Excel Source.Outputs[Excel Source Error Output].Columns[Type of Leave]"
-                          name="Type of Leave" />
-                        <outputColumn
-                          refId="Package\Foreach Loop Container\Load Leave\Excel Source.Outputs[Excel Source Error Output].Columns[Start Date]"
-                          dataType="date"
-                          lineageId="Package\Foreach Loop Container\Load Leave\Excel Source.Outputs[Excel Source Error Output].Columns[Start Date]"
-                          name="Start Date" />
-                        <outputColumn
-                          refId="Package\Foreach Loop Container\Load Leave\Excel Source.Outputs[Excel Source Error Output].Columns[End Date]"
-                          dataType="date"
-                          lineageId="Package\Foreach Loop Container\Load Leave\Excel Source.Outputs[Excel Source Error Output].Columns[End Date]"
-                          name="End Date" />
-                        <outputColumn
-                          refId="Package\Foreach Loop Container\Load Leave\Excel Source.Outputs[Excel Source Error Output].Columns[Number of days ]"
-                          dataType="r8"
-                          lineageId="Package\Foreach Loop Container\Load Leave\Excel Source.Outputs[Excel Source Error Output].Columns[Number of days ]"
-                          name="Number of days " />
-                        <outputColumn
-                          refId="Package\Foreach Loop Container\Load Leave\Excel Source.Outputs[Excel Source Error Output].Columns[Approval Obtained]"
-                          dataType="wstr"
-                          length="255"
-                          lineageId="Package\Foreach Loop Container\Load Leave\Excel Source.Outputs[Excel Source Error Output].Columns[Approval Obtained]"
-                          name="Approval Obtained" />
-                        <outputColumn
-                          refId="Package\Foreach Loop Container\Load Leave\Excel Source.Outputs[Excel Source Error Output].Columns[Sick Note]"
-                          dataType="wstr"
-                          length="255"
-                          lineageId="Package\Foreach Loop Container\Load Leave\Excel Source.Outputs[Excel Source Error Output].Columns[Sick Note]"
-                          name="Sick Note" />
-                      </outputColumns>
-                      <externalMetadataColumns />
-                    </output>
-                  </outputs>
-                </component>
-                <component
-                  refId="Package\Foreach Loop Container\Load Leave\OLE DB Destination"
-                  componentClassID="Microsoft.OLEDBDestination"
-                  contactInfo="OLE DB Destination;Microsoft Corporation; Microsoft SQL Server; (C) Microsoft Corporation; All Rights Reserved; http://www.microsoft.com/sql/support;4"
-                  description="OLE DB Destination"
-                  name="OLE DB Destination"
-                  usesDispositions="true"
-                  version="4">
-                  <properties>
-                    <property
-                      dataType="System.Int32"
-                      description="The number of seconds before a command times out.  A value of 0 indicates an infinite time-out."
-                      name="CommandTimeout">0</property>
-                    <property
-                      dataType="System.String"
-                      description="Specifies the name of the database object used to open a rowset."
-                      name="OpenRowset">[timesheet].[EmployeeLeave]</property>
-                    <property
-                      dataType="System.String"
-                      description="Specifies the variable that contains the name of the database object used to open a rowset."
-                      name="OpenRowsetVariable"></property>
-                    <property
-                      dataType="System.String"
-                      description="The SQL command to be executed."
-                      name="SqlCommand"
-                      UITypeEditor="Microsoft.DataTransformationServices.Controls.ModalMultilineStringEditor"></property>
-                    <property
-                      dataType="System.Int32"
-                      description="Specifies the column code page to use when code page information is unavailable from the data source."
-                      name="DefaultCodePage">1252</property>
-                    <property
-                      dataType="System.Boolean"
-                      description="Forces the use of the DefaultCodePage property value when describing character data."
-                      name="AlwaysUseDefaultCodePage">false</property>
-                    <property
-                      dataType="System.Int32"
-                      description="Specifies the mode used to access the database."
-                      name="AccessMode"
-                      typeConverter="AccessMode">0</property>
-                    <property
-                      dataType="System.Boolean"
-                      description="Indicates whether the values supplied for identity columns will be copied to the destination. If false, values for identity columns will be auto-generated at the destination. Applies only if fast load is turned on."
-                      name="FastLoadKeepIdentity">false</property>
-                    <property
-                      dataType="System.Boolean"
-                      description="Indicates whether the columns containing null will have null inserted in the destination. If false, columns containing null will have their default values inserted at the destination. Applies only if fast load is turned on."
-                      name="FastLoadKeepNulls">false</property>
-                    <property
-                      dataType="System.String"
-                      description="Specifies options to be used with fast load.  Applies only if fast load is turned on."
-                      name="FastLoadOptions"></property>
-                    <property
-                      dataType="System.Int32"
-                      description="Specifies when commits are issued during data insertion.  A value of 0 specifies that one commit will be issued at the end of data insertion.  Applies only if fast load is turned on."
-                      name="FastLoadMaxInsertCommitSize">2147483647</property>
-                  </properties>
-                  <connections>
-                    <connection
-                      refId="Package\Foreach Loop Container\Load Leave\OLE DB Destination.Connections[OleDbConnection]"
-                      connectionManagerID="Package.ConnectionManagers[LocalHost.TimesheetDB]"
-                      connectionManagerRefId="Package.ConnectionManagers[LocalHost.TimesheetDB]"
-                      description="The OLE DB runtime connection used to access the database."
-                      name="OleDbConnection" />
-                  </connections>
-                  <inputs>
-                    <input
-                      refId="Package\Foreach Loop Container\Load Leave\OLE DB Destination.Inputs[OLE DB Destination Input]"
-                      errorOrTruncationOperation="Insert"
-                      errorRowDisposition="FailComponent"
-                      hasSideEffects="true"
-                      name="OLE DB Destination Input">
-                      <inputColumns>
-                        <inputColumn
-                          refId="Package\Foreach Loop Container\Load Leave\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[Copy of Type of Leave]"
-                          cachedCodepage="1252"
-                          cachedDataType="str"
-                          cachedLength="100"
-                          cachedName="Copy of Type of Leave"
-                          externalMetadataColumnId="Package\Foreach Loop Container\Load Leave\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[LeaveType]"
-                          lineageId="Package\Foreach Loop Container\Load Leave\Data Conversion.Outputs[Data Conversion Output].Columns[Copy of Type of Leave]" />
-                        <inputColumn
-                          refId="Package\Foreach Loop Container\Load Leave\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[Copy of Start Date]"
-                          cachedDataType="date"
-                          cachedName="Copy of Start Date"
-                          externalMetadataColumnId="Package\Foreach Loop Container\Load Leave\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[StartDate]"
-                          lineageId="Package\Foreach Loop Container\Load Leave\Data Conversion.Outputs[Data Conversion Output].Columns[Copy of Start Date]" />
-                        <inputColumn
-                          refId="Package\Foreach Loop Container\Load Leave\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[Copy of End Date]"
-                          cachedDataType="date"
-                          cachedName="Copy of End Date"
-                          externalMetadataColumnId="Package\Foreach Loop Container\Load Leave\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[EndDate]"
-                          lineageId="Package\Foreach Loop Container\Load Leave\Data Conversion.Outputs[Data Conversion Output].Columns[Copy of End Date]" />
-                        <inputColumn
-                          refId="Package\Foreach Loop Container\Load Leave\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[Copy of Number of days]"
-                          cachedDataType="r8"
-                          cachedName="Copy of Number of days"
-                          externalMetadataColumnId="Package\Foreach Loop Container\Load Leave\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[NumberOfDays]"
-                          lineageId="Package\Foreach Loop Container\Load Leave\Data Conversion.Outputs[Data Conversion Output].Columns[Copy of Number of days]" />
-                      </inputColumns>
-                      <externalMetadataColumns
-                        isUsed="True">
-                        <externalMetadataColumn
-                          refId="Package\Foreach Loop Container\Load Leave\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[LeaveID]"
-                          dataType="i4"
-                          name="LeaveID" />
-                        <externalMetadataColumn
-                          refId="Package\Foreach Loop Container\Load Leave\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[EmployeeID]"
-                          dataType="i4"
-                          name="EmployeeID" />
-                        <externalMetadataColumn
-                          refId="Package\Foreach Loop Container\Load Leave\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[LeaveType]"
-                          codePage="1252"
-                          dataType="str"
-                          length="100"
-                          name="LeaveType" />
-                        <externalMetadataColumn
-                          refId="Package\Foreach Loop Container\Load Leave\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[StartDate]"
-                          dataType="wstr"
-                          length="10"
-                          name="StartDate" />
-                        <externalMetadataColumn
-                          refId="Package\Foreach Loop Container\Load Leave\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[EndDate]"
-                          dataType="wstr"
-                          length="10"
-                          name="EndDate" />
-                        <externalMetadataColumn
-                          refId="Package\Foreach Loop Container\Load Leave\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[NumberOfDays]"
-                          dataType="numeric"
-                          name="NumberOfDays"
-                          precision="5"
-                          scale="2" />
-                        <externalMetadataColumn
-                          refId="Package\Foreach Loop Container\Load Leave\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[ApprovalObtained]"
-                          codePage="1252"
-                          dataType="str"
-                          length="50"
-                          name="ApprovalObtained" />
-                        <externalMetadataColumn
-                          refId="Package\Foreach Loop Container\Load Leave\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[SickNote]"
-                          codePage="1252"
-                          dataType="str"
-                          length="50"
-                          name="SickNote" />
-                        <externalMetadataColumn
-                          refId="Package\Foreach Loop Container\Load Leave\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[FileName]"
-                          codePage="1252"
-                          dataType="str"
-                          length="255"
-                          name="FileName" />
-                      </externalMetadataColumns>
-                    </input>
-                  </inputs>
-                  <outputs>
-                    <output
-                      refId="Package\Foreach Loop Container\Load Leave\OLE DB Destination.Outputs[OLE DB Destination Error Output]"
-                      exclusionGroup="1"
-                      isErrorOut="true"
-                      name="OLE DB Destination Error Output"
-                      synchronousInputId="Package\Foreach Loop Container\Load Leave\OLE DB Destination.Inputs[OLE DB Destination Input]">
-                      <outputColumns>
-                        <outputColumn
-                          refId="Package\Foreach Loop Container\Load Leave\OLE DB Destination.Outputs[OLE DB Destination Error Output].Columns[ErrorCode]"
-                          dataType="i4"
-                          lineageId="Package\Foreach Loop Container\Load Leave\OLE DB Destination.Outputs[OLE DB Destination Error Output].Columns[ErrorCode]"
-                          name="ErrorCode"
-                          specialFlags="1" />
-                        <outputColumn
-                          refId="Package\Foreach Loop Container\Load Leave\OLE DB Destination.Outputs[OLE DB Destination Error Output].Columns[ErrorColumn]"
-                          dataType="i4"
-                          lineageId="Package\Foreach Loop Container\Load Leave\OLE DB Destination.Outputs[OLE DB Destination Error Output].Columns[ErrorColumn]"
-                          name="ErrorColumn"
-                          specialFlags="2" />
-                      </outputColumns>
-                      <externalMetadataColumns />
-                    </output>
-                  </outputs>
-                </component>
-              </components>
-              <paths>
-                <path
-                  refId="Package\Foreach Loop Container\Load Leave.Paths[Data Conversion Output]"
-                  endId="Package\Foreach Loop Container\Load Leave\OLE DB Destination.Inputs[OLE DB Destination Input]"
-                  name="Data Conversion Output"
-                  startId="Package\Foreach Loop Container\Load Leave\Data Conversion.Outputs[Data Conversion Output]" />
-                <path
-                  refId="Package\Foreach Loop Container\Load Leave.Paths[Excel Source Output]"
-                  endId="Package\Foreach Loop Container\Load Leave\Data Conversion.Inputs[Data Conversion Input]"
-                  name="Excel Source Output"
-                  startId="Package\Foreach Loop Container\Load Leave\Excel Source.Outputs[Excel Source Output]" />
-              </paths>
-            </pipeline>
           </DTS:ObjectData>
         </DTS:Executable>
         <DTS:Executable
@@ -2447,14 +1836,6 @@ AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</BinaryItem>
                           externalMetadataColumnId="Package\Foreach Loop Container\Load Timesheet\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[BillableStatus]"
                           lineageId="Package\Foreach Loop Container\Load Timesheet\Data Conversion.Outputs[Data Conversion Output].Columns[Copy of Billable or Non Billable]" />
                         <inputColumn
-                          refId="Package\Foreach Loop Container\Load Timesheet\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[Copy of Total Hours]"
-                          cachedDataType="numeric"
-                          cachedName="Copy of Total Hours"
-                          cachedPrecision="5"
-                          cachedScale="2"
-                          externalMetadataColumnId="Package\Foreach Loop Container\Load Timesheet\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[TotalHours]"
-                          lineageId="Package\Foreach Loop Container\Load Timesheet\Data Conversion.Outputs[Data Conversion Output].Columns[Copy of Total Hours]" />
-                        <inputColumn
                           refId="Package\Foreach Loop Container\Load Timesheet\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[Copy of Start Time]"
                           cachedDataType="wstr"
                           cachedLength="16"
@@ -2468,6 +1849,14 @@ AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</BinaryItem>
                           cachedName="Copy of End Time"
                           externalMetadataColumnId="Package\Foreach Loop Container\Load Timesheet\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[EndTime]"
                           lineageId="Package\Foreach Loop Container\Load Timesheet\Data Conversion.Outputs[Data Conversion Output].Columns[Copy of End Time]" />
+                        <inputColumn
+                          refId="Package\Foreach Loop Container\Load Timesheet\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[Copy of TotalHours]"
+                          cachedDataType="numeric"
+                          cachedName="Copy of TotalHours"
+                          cachedPrecision="5"
+                          cachedScale="2"
+                          externalMetadataColumnId="Package\Foreach Loop Container\Load Timesheet\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[TotalHours]"
+                          lineageId="Package\Foreach Loop Container\Load Timesheet\Data Conversion.Outputs[Data Conversion Output].Columns[Copy of TotalHours]" />
                       </inputColumns>
                       <externalMetadataColumns
                         isUsed="True">
@@ -2624,7 +2013,7 @@ AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</BinaryItem>
           DTS:LocaleID="-1"
           DTS:ObjectName="Move Staging To Final"
           DTS:TaskContact="Execute SQL Task; Microsoft Corporation; SQL Server 2025; © 2025 Microsoft Corporation; All Rights Reserved;http://www.microsoft.com/sql/support/default.asp;1"
-          DTS:ThreadHint="1">
+          DTS:ThreadHint="0">
           <DTS:Variables />
           <DTS:ObjectData>
             <SQLTask:SqlTaskData
@@ -2659,14 +2048,6 @@ AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</BinaryItem>
           DTS:ObjectName="Constraint 2"
           DTS:To="Package\Foreach Loop Container\Move Staging To Final" />
         <DTS:PrecedenceConstraint
-          DTS:refId="Package\Foreach Loop Container.PrecedenceConstraints[Constraint 3]"
-          DTS:CreationName=""
-          DTS:DTSID="{0F9059BA-9D1B-42BF-9ABF-F331B4E236F7}"
-          DTS:From="Package\Foreach Loop Container\Audit log"
-          DTS:LogicalAnd="True"
-          DTS:ObjectName="Constraint 3"
-          DTS:To="Package\Foreach Loop Container\Load Leave" />
-        <DTS:PrecedenceConstraint
           DTS:refId="Package\Foreach Loop Container.PrecedenceConstraints[Constraint 4]"
           DTS:CreationName=""
           DTS:DTSID="{D060D8DE-2FF1-46F4-9506-F973A4610E28}"
@@ -2694,20 +2075,614 @@ AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</BinaryItem>
     </DTS:Executable>
     <DTS:Executable
       DTS:refId="Package\Load Leave"
-      DTS:CreationName="Microsoft.ExecuteSQLTask"
-      DTS:DelayValidation="True"
-      DTS:Description="Execute SQL Task"
-      DTS:DTSID="{CE2A6CCC-7CA3-4449-AE14-9FE787650EC5}"
-      DTS:ExecutableType="Microsoft.ExecuteSQLTask"
+      DTS:CreationName="Microsoft.Pipeline"
+      DTS:Description="Data Flow Task"
+      DTS:Disabled="True"
+      DTS:DTSID="{28A1F068-FD36-4588-9F4C-0E9EAEF386F3}"
+      DTS:ExecutableType="Microsoft.Pipeline"
       DTS:LocaleID="-1"
       DTS:ObjectName="Load Leave"
-      DTS:TaskContact="Execute SQL Task; Microsoft Corporation; SQL Server 2025; © 2025 Microsoft Corporation; All Rights Reserved;http://www.microsoft.com/sql/support/default.asp;1"
-      DTS:ThreadHint="0">
+      DTS:TaskContact="Performs high-performance data extraction, transformation and loading;Microsoft Corporation; Microsoft SQL Server; (C) Microsoft Corporation; All Rights Reserved;http://www.microsoft.com/sql/support/default.asp;1">
       <DTS:Variables />
       <DTS:ObjectData>
-        <SQLTask:SqlTaskData
-          SQLTask:Connection="{E2A7938E-19ED-4A50-9E63-536CDFAE52A1}"
-          SQLTask:SqlStatementSource="-- =========================================================&#xA;-- 4. INSERT EMPLOYEE LEAVE&#xA;-- =========================================================&#xA;&#xA;INSERT INTO timesheet.EmployeeLeave&#xA;(&#xA;    EmployeeID,&#xA;    LeaveType,&#xA;    StartDate,&#xA;    EndDate,&#xA;    NumberOfDays,&#xA;    ApprovalObtained,&#xA;    SickNote,&#xA;    FileName&#xA;)&#xA;SELECT&#xA;    EmployeeID,&#xA;    LeaveType,&#xA;    StartDate,&#xA;    EndDate,&#xA;    NumberOfDays,&#xA;    ApprovalObtained,&#xA;    SickNote,&#xA;    FileName&#xA;FROM StagingTimesheet&#xA;WHERE&#xA;    EmployeeID IS NOT NULL&#xA;    AND LeaveType IS NOT NULL&#xA;    AND LTRIM(RTRIM(LeaveType)) &lt;&gt; ' '&#xA;    AND StartDate IS NOT NULL&#xA;    AND EndDate IS NOT NULL;" xmlns:SQLTask="www.microsoft.com/sqlserver/dts/tasks/sqltask" />
+        <pipeline
+          version="1">
+          <components>
+            <component
+              refId="Package\Load Leave\Data Conversion"
+              componentClassID="Microsoft.DataConvert"
+              contactInfo="Data Conversion;Microsoft Corporation; Microsoft SQL Server; (C) Microsoft Corporation; All Rights Reserved; http://www.microsoft.com/sql/support;0"
+              description="Data Conversion"
+              name="Data Conversion"
+              usesDispositions="true">
+              <inputs>
+                <input
+                  refId="Package\Load Leave\Data Conversion.Inputs[Data Conversion Input]"
+                  name="Data Conversion Input">
+                  <inputColumns>
+                    <inputColumn
+                      refId="Package\Load Leave\Data Conversion.Inputs[Data Conversion Input].Columns[Type of Leave]"
+                      cachedDataType="wstr"
+                      cachedLength="255"
+                      cachedName="Type of Leave"
+                      lineageId="Package\Load Leave\Excel Source.Outputs[Excel Source Output].Columns[Type of Leave]" />
+                    <inputColumn
+                      refId="Package\Load Leave\Data Conversion.Inputs[Data Conversion Input].Columns[Start Date]"
+                      cachedDataType="date"
+                      cachedName="Start Date"
+                      lineageId="Package\Load Leave\Excel Source.Outputs[Excel Source Output].Columns[Start Date]" />
+                    <inputColumn
+                      refId="Package\Load Leave\Data Conversion.Inputs[Data Conversion Input].Columns[End Date]"
+                      cachedDataType="date"
+                      cachedName="End Date"
+                      lineageId="Package\Load Leave\Excel Source.Outputs[Excel Source Output].Columns[End Date]" />
+                    <inputColumn
+                      refId="Package\Load Leave\Data Conversion.Inputs[Data Conversion Input].Columns[Number of days ]"
+                      cachedDataType="r8"
+                      cachedName="Number of days "
+                      lineageId="Package\Load Leave\Excel Source.Outputs[Excel Source Output].Columns[Number of days ]" />
+                    <inputColumn
+                      refId="Package\Load Leave\Data Conversion.Inputs[Data Conversion Input].Columns[Approval Obtained]"
+                      cachedDataType="wstr"
+                      cachedLength="255"
+                      cachedName="Approval Obtained"
+                      lineageId="Package\Load Leave\Excel Source.Outputs[Excel Source Output].Columns[Approval Obtained]" />
+                    <inputColumn
+                      refId="Package\Load Leave\Data Conversion.Inputs[Data Conversion Input].Columns[Sick Note]"
+                      cachedDataType="wstr"
+                      cachedLength="255"
+                      cachedName="Sick Note"
+                      lineageId="Package\Load Leave\Excel Source.Outputs[Excel Source Output].Columns[Sick Note]" />
+                  </inputColumns>
+                  <externalMetadataColumns />
+                </input>
+              </inputs>
+              <outputs>
+                <output
+                  refId="Package\Load Leave\Data Conversion.Outputs[Data Conversion Output]"
+                  exclusionGroup="1"
+                  name="Data Conversion Output"
+                  synchronousInputId="Package\Load Leave\Data Conversion.Inputs[Data Conversion Input]">
+                  <outputColumns>
+                    <outputColumn
+                      refId="Package\Load Leave\Data Conversion.Outputs[Data Conversion Output].Columns[Copy of Type of Leave]"
+                      codePage="1252"
+                      dataType="str"
+                      errorOrTruncationOperation="Conversion"
+                      errorRowDisposition="FailComponent"
+                      length="100"
+                      lineageId="Package\Load Leave\Data Conversion.Outputs[Data Conversion Output].Columns[Copy of Type of Leave]"
+                      name="Copy of Type of Leave"
+                      truncationRowDisposition="FailComponent">
+                      <properties>
+                        <property
+                          containsID="true"
+                          dataType="System.Int32"
+                          description="Specifies the input column used as the source of data for the conversion."
+                          name="SourceInputColumnLineageID">#{Package\Load Leave\Excel Source.Outputs[Excel Source Output].Columns[Type of Leave]}</property>
+                        <property
+                          dataType="System.Boolean"
+                          description="Indicates whether the column uses the faster, locale-neutral parsing routines."
+                          name="FastParse">false</property>
+                      </properties>
+                    </outputColumn>
+                    <outputColumn
+                      refId="Package\Load Leave\Data Conversion.Outputs[Data Conversion Output].Columns[Copy of Start Date]"
+                      dataType="date"
+                      errorOrTruncationOperation="Conversion"
+                      errorRowDisposition="FailComponent"
+                      lineageId="Package\Load Leave\Data Conversion.Outputs[Data Conversion Output].Columns[Copy of Start Date]"
+                      name="Copy of Start Date"
+                      truncationRowDisposition="FailComponent">
+                      <properties>
+                        <property
+                          containsID="true"
+                          dataType="System.Int32"
+                          description="Specifies the input column used as the source of data for the conversion."
+                          name="SourceInputColumnLineageID">#{Package\Load Leave\Excel Source.Outputs[Excel Source Output].Columns[Start Date]}</property>
+                        <property
+                          dataType="System.Boolean"
+                          description="Indicates whether the column uses the faster, locale-neutral parsing routines."
+                          name="FastParse">false</property>
+                      </properties>
+                    </outputColumn>
+                    <outputColumn
+                      refId="Package\Load Leave\Data Conversion.Outputs[Data Conversion Output].Columns[Copy of End Date]"
+                      dataType="date"
+                      errorOrTruncationOperation="Conversion"
+                      errorRowDisposition="FailComponent"
+                      lineageId="Package\Load Leave\Data Conversion.Outputs[Data Conversion Output].Columns[Copy of End Date]"
+                      name="Copy of End Date"
+                      truncationRowDisposition="FailComponent">
+                      <properties>
+                        <property
+                          containsID="true"
+                          dataType="System.Int32"
+                          description="Specifies the input column used as the source of data for the conversion."
+                          name="SourceInputColumnLineageID">#{Package\Load Leave\Excel Source.Outputs[Excel Source Output].Columns[End Date]}</property>
+                        <property
+                          dataType="System.Boolean"
+                          description="Indicates whether the column uses the faster, locale-neutral parsing routines."
+                          name="FastParse">false</property>
+                      </properties>
+                    </outputColumn>
+                    <outputColumn
+                      refId="Package\Load Leave\Data Conversion.Outputs[Data Conversion Output].Columns[Copy of Number of days]"
+                      dataType="r8"
+                      errorOrTruncationOperation="Conversion"
+                      errorRowDisposition="FailComponent"
+                      lineageId="Package\Load Leave\Data Conversion.Outputs[Data Conversion Output].Columns[Copy of Number of days]"
+                      name="Copy of Number of days"
+                      truncationRowDisposition="FailComponent">
+                      <properties>
+                        <property
+                          containsID="true"
+                          dataType="System.Int32"
+                          description="Specifies the input column used as the source of data for the conversion."
+                          name="SourceInputColumnLineageID">#{Package\Load Leave\Excel Source.Outputs[Excel Source Output].Columns[Number of days ]}</property>
+                        <property
+                          dataType="System.Boolean"
+                          description="Indicates whether the column uses the faster, locale-neutral parsing routines."
+                          name="FastParse">false</property>
+                      </properties>
+                    </outputColumn>
+                    <outputColumn
+                      refId="Package\Load Leave\Data Conversion.Outputs[Data Conversion Output].Columns[Copy of Approval Obtained]"
+                      dataType="wstr"
+                      errorOrTruncationOperation="Conversion"
+                      errorRowDisposition="FailComponent"
+                      length="255"
+                      lineageId="Package\Load Leave\Data Conversion.Outputs[Data Conversion Output].Columns[Copy of Approval Obtained]"
+                      name="Copy of Approval Obtained"
+                      truncationRowDisposition="FailComponent">
+                      <properties>
+                        <property
+                          containsID="true"
+                          dataType="System.Int32"
+                          description="Specifies the input column used as the source of data for the conversion."
+                          name="SourceInputColumnLineageID">#{Package\Load Leave\Excel Source.Outputs[Excel Source Output].Columns[Approval Obtained]}</property>
+                        <property
+                          dataType="System.Boolean"
+                          description="Indicates whether the column uses the faster, locale-neutral parsing routines."
+                          name="FastParse">false</property>
+                      </properties>
+                    </outputColumn>
+                    <outputColumn
+                      refId="Package\Load Leave\Data Conversion.Outputs[Data Conversion Output].Columns[Copy of Sick Note]"
+                      dataType="wstr"
+                      errorOrTruncationOperation="Conversion"
+                      errorRowDisposition="FailComponent"
+                      length="255"
+                      lineageId="Package\Load Leave\Data Conversion.Outputs[Data Conversion Output].Columns[Copy of Sick Note]"
+                      name="Copy of Sick Note"
+                      truncationRowDisposition="FailComponent">
+                      <properties>
+                        <property
+                          containsID="true"
+                          dataType="System.Int32"
+                          description="Specifies the input column used as the source of data for the conversion."
+                          name="SourceInputColumnLineageID">#{Package\Load Leave\Excel Source.Outputs[Excel Source Output].Columns[Sick Note]}</property>
+                        <property
+                          dataType="System.Boolean"
+                          description="Indicates whether the column uses the faster, locale-neutral parsing routines."
+                          name="FastParse">false</property>
+                      </properties>
+                    </outputColumn>
+                  </outputColumns>
+                  <externalMetadataColumns />
+                </output>
+                <output
+                  refId="Package\Load Leave\Data Conversion.Outputs[Data Conversion Error Output]"
+                  exclusionGroup="1"
+                  isErrorOut="true"
+                  name="Data Conversion Error Output"
+                  synchronousInputId="Package\Load Leave\Data Conversion.Inputs[Data Conversion Input]">
+                  <outputColumns>
+                    <outputColumn
+                      refId="Package\Load Leave\Data Conversion.Outputs[Data Conversion Error Output].Columns[ErrorCode]"
+                      dataType="i4"
+                      lineageId="Package\Load Leave\Data Conversion.Outputs[Data Conversion Error Output].Columns[ErrorCode]"
+                      name="ErrorCode"
+                      specialFlags="1" />
+                    <outputColumn
+                      refId="Package\Load Leave\Data Conversion.Outputs[Data Conversion Error Output].Columns[ErrorColumn]"
+                      dataType="i4"
+                      lineageId="Package\Load Leave\Data Conversion.Outputs[Data Conversion Error Output].Columns[ErrorColumn]"
+                      name="ErrorColumn"
+                      specialFlags="2" />
+                  </outputColumns>
+                  <externalMetadataColumns />
+                </output>
+              </outputs>
+            </component>
+            <component
+              refId="Package\Load Leave\Excel Source"
+              componentClassID="Microsoft.ExcelSource"
+              contactInfo="Excel Source;Microsoft Corporation; Microsoft SQL Server; (C) Microsoft Corporation; All Rights Reserved; http://www.microsoft.com/sql/support;1"
+              description="Excel Source"
+              name="Excel Source"
+              usesDispositions="true"
+              version="1">
+              <properties>
+                <property
+                  dataType="System.Int32"
+                  description="The number of seconds before a command times out.  A value of 0 indicates an infinite time-out."
+                  name="CommandTimeout">0</property>
+                <property
+                  dataType="System.String"
+                  description="Specifies the name of the database object used to open a rowset."
+                  name="OpenRowset">Leave$</property>
+                <property
+                  dataType="System.String"
+                  description="Specifies the variable that contains the name of the database object used to open a rowset."
+                  name="OpenRowsetVariable"></property>
+                <property
+                  dataType="System.String"
+                  description="The SQL command to be executed."
+                  name="SqlCommand"
+                  UITypeEditor="Microsoft.DataTransformationServices.Controls.ModalMultilineStringEditor">SELECT * FROM [Leave$A10:Z1000]</property>
+                <property
+                  dataType="System.String"
+                  description="The variable that contains the SQL command to be executed."
+                  name="SqlCommandVariable"></property>
+                <property
+                  dataType="System.Int32"
+                  description="Specifies the mode used to access the database."
+                  name="AccessMode"
+                  typeConverter="AccessMode">2</property>
+                <property
+                  dataType="System.String"
+                  description="The mapping from parameters in the SQL command to variables."
+                  name="ParameterMapping"></property>
+              </properties>
+              <connections>
+                <connection
+                  refId="Package\Load Leave\Excel Source.Connections[OleDbConnection]"
+                  connectionManagerID="Package.ConnectionManagers[Excel Connection Manager]"
+                  connectionManagerRefId="Package.ConnectionManagers[Excel Connection Manager]"
+                  description="The OLE DB runtime connection used to access the database."
+                  name="OleDbConnection" />
+              </connections>
+              <outputs>
+                <output
+                  refId="Package\Load Leave\Excel Source.Outputs[Excel Source Output]"
+                  name="Excel Source Output">
+                  <outputColumns>
+                    <outputColumn
+                      refId="Package\Load Leave\Excel Source.Outputs[Excel Source Output].Columns[Type of Leave]"
+                      dataType="wstr"
+                      errorOrTruncationOperation="Conversion"
+                      errorRowDisposition="FailComponent"
+                      externalMetadataColumnId="Package\Load Leave\Excel Source.Outputs[Excel Source Output].ExternalColumns[Type of Leave]"
+                      length="255"
+                      lineageId="Package\Load Leave\Excel Source.Outputs[Excel Source Output].Columns[Type of Leave]"
+                      name="Type of Leave"
+                      truncationRowDisposition="FailComponent" />
+                    <outputColumn
+                      refId="Package\Load Leave\Excel Source.Outputs[Excel Source Output].Columns[Start Date]"
+                      dataType="date"
+                      errorOrTruncationOperation="Conversion"
+                      errorRowDisposition="FailComponent"
+                      externalMetadataColumnId="Package\Load Leave\Excel Source.Outputs[Excel Source Output].ExternalColumns[Start Date]"
+                      lineageId="Package\Load Leave\Excel Source.Outputs[Excel Source Output].Columns[Start Date]"
+                      name="Start Date"
+                      truncationRowDisposition="FailComponent" />
+                    <outputColumn
+                      refId="Package\Load Leave\Excel Source.Outputs[Excel Source Output].Columns[End Date]"
+                      dataType="date"
+                      errorOrTruncationOperation="Conversion"
+                      errorRowDisposition="FailComponent"
+                      externalMetadataColumnId="Package\Load Leave\Excel Source.Outputs[Excel Source Output].ExternalColumns[End Date]"
+                      lineageId="Package\Load Leave\Excel Source.Outputs[Excel Source Output].Columns[End Date]"
+                      name="End Date"
+                      truncationRowDisposition="FailComponent" />
+                    <outputColumn
+                      refId="Package\Load Leave\Excel Source.Outputs[Excel Source Output].Columns[Number of days ]"
+                      dataType="r8"
+                      errorOrTruncationOperation="Conversion"
+                      errorRowDisposition="FailComponent"
+                      externalMetadataColumnId="Package\Load Leave\Excel Source.Outputs[Excel Source Output].ExternalColumns[Number of days ]"
+                      lineageId="Package\Load Leave\Excel Source.Outputs[Excel Source Output].Columns[Number of days ]"
+                      name="Number of days "
+                      truncationRowDisposition="FailComponent" />
+                    <outputColumn
+                      refId="Package\Load Leave\Excel Source.Outputs[Excel Source Output].Columns[Approval Obtained]"
+                      dataType="wstr"
+                      errorOrTruncationOperation="Conversion"
+                      errorRowDisposition="FailComponent"
+                      externalMetadataColumnId="Package\Load Leave\Excel Source.Outputs[Excel Source Output].ExternalColumns[Approval Obtained]"
+                      length="255"
+                      lineageId="Package\Load Leave\Excel Source.Outputs[Excel Source Output].Columns[Approval Obtained]"
+                      name="Approval Obtained"
+                      truncationRowDisposition="FailComponent" />
+                    <outputColumn
+                      refId="Package\Load Leave\Excel Source.Outputs[Excel Source Output].Columns[Sick Note]"
+                      dataType="wstr"
+                      errorOrTruncationOperation="Conversion"
+                      errorRowDisposition="FailComponent"
+                      externalMetadataColumnId="Package\Load Leave\Excel Source.Outputs[Excel Source Output].ExternalColumns[Sick Note]"
+                      length="255"
+                      lineageId="Package\Load Leave\Excel Source.Outputs[Excel Source Output].Columns[Sick Note]"
+                      name="Sick Note"
+                      truncationRowDisposition="FailComponent" />
+                  </outputColumns>
+                  <externalMetadataColumns
+                    isUsed="True">
+                    <externalMetadataColumn
+                      refId="Package\Load Leave\Excel Source.Outputs[Excel Source Output].ExternalColumns[Type of Leave]"
+                      dataType="wstr"
+                      length="255"
+                      name="Type of Leave" />
+                    <externalMetadataColumn
+                      refId="Package\Load Leave\Excel Source.Outputs[Excel Source Output].ExternalColumns[Start Date]"
+                      dataType="date"
+                      name="Start Date" />
+                    <externalMetadataColumn
+                      refId="Package\Load Leave\Excel Source.Outputs[Excel Source Output].ExternalColumns[End Date]"
+                      dataType="date"
+                      name="End Date" />
+                    <externalMetadataColumn
+                      refId="Package\Load Leave\Excel Source.Outputs[Excel Source Output].ExternalColumns[Number of days ]"
+                      dataType="r8"
+                      name="Number of days " />
+                    <externalMetadataColumn
+                      refId="Package\Load Leave\Excel Source.Outputs[Excel Source Output].ExternalColumns[Approval Obtained]"
+                      dataType="wstr"
+                      length="255"
+                      name="Approval Obtained" />
+                    <externalMetadataColumn
+                      refId="Package\Load Leave\Excel Source.Outputs[Excel Source Output].ExternalColumns[Sick Note]"
+                      dataType="wstr"
+                      length="255"
+                      name="Sick Note" />
+                  </externalMetadataColumns>
+                </output>
+                <output
+                  refId="Package\Load Leave\Excel Source.Outputs[Excel Source Error Output]"
+                  isErrorOut="true"
+                  name="Excel Source Error Output">
+                  <outputColumns>
+                    <outputColumn
+                      refId="Package\Load Leave\Excel Source.Outputs[Excel Source Error Output].Columns[ErrorCode]"
+                      dataType="i4"
+                      lineageId="Package\Load Leave\Excel Source.Outputs[Excel Source Error Output].Columns[ErrorCode]"
+                      name="ErrorCode"
+                      specialFlags="1" />
+                    <outputColumn
+                      refId="Package\Load Leave\Excel Source.Outputs[Excel Source Error Output].Columns[ErrorColumn]"
+                      dataType="i4"
+                      lineageId="Package\Load Leave\Excel Source.Outputs[Excel Source Error Output].Columns[ErrorColumn]"
+                      name="ErrorColumn"
+                      specialFlags="2" />
+                    <outputColumn
+                      refId="Package\Load Leave\Excel Source.Outputs[Excel Source Error Output].Columns[Type of Leave]"
+                      dataType="wstr"
+                      length="255"
+                      lineageId="Package\Load Leave\Excel Source.Outputs[Excel Source Error Output].Columns[Type of Leave]"
+                      name="Type of Leave" />
+                    <outputColumn
+                      refId="Package\Load Leave\Excel Source.Outputs[Excel Source Error Output].Columns[Start Date]"
+                      dataType="date"
+                      lineageId="Package\Load Leave\Excel Source.Outputs[Excel Source Error Output].Columns[Start Date]"
+                      name="Start Date" />
+                    <outputColumn
+                      refId="Package\Load Leave\Excel Source.Outputs[Excel Source Error Output].Columns[End Date]"
+                      dataType="date"
+                      lineageId="Package\Load Leave\Excel Source.Outputs[Excel Source Error Output].Columns[End Date]"
+                      name="End Date" />
+                    <outputColumn
+                      refId="Package\Load Leave\Excel Source.Outputs[Excel Source Error Output].Columns[Number of days ]"
+                      dataType="r8"
+                      lineageId="Package\Load Leave\Excel Source.Outputs[Excel Source Error Output].Columns[Number of days ]"
+                      name="Number of days " />
+                    <outputColumn
+                      refId="Package\Load Leave\Excel Source.Outputs[Excel Source Error Output].Columns[Approval Obtained]"
+                      dataType="wstr"
+                      length="255"
+                      lineageId="Package\Load Leave\Excel Source.Outputs[Excel Source Error Output].Columns[Approval Obtained]"
+                      name="Approval Obtained" />
+                    <outputColumn
+                      refId="Package\Load Leave\Excel Source.Outputs[Excel Source Error Output].Columns[Sick Note]"
+                      dataType="wstr"
+                      length="255"
+                      lineageId="Package\Load Leave\Excel Source.Outputs[Excel Source Error Output].Columns[Sick Note]"
+                      name="Sick Note" />
+                  </outputColumns>
+                  <externalMetadataColumns />
+                </output>
+              </outputs>
+            </component>
+            <component
+              refId="Package\Load Leave\OLE DB Destination"
+              componentClassID="Microsoft.OLEDBDestination"
+              contactInfo="OLE DB Destination;Microsoft Corporation; Microsoft SQL Server; (C) Microsoft Corporation; All Rights Reserved; http://www.microsoft.com/sql/support;4"
+              description="OLE DB Destination"
+              name="OLE DB Destination"
+              usesDispositions="true"
+              version="4">
+              <properties>
+                <property
+                  dataType="System.Int32"
+                  description="The number of seconds before a command times out.  A value of 0 indicates an infinite time-out."
+                  name="CommandTimeout">0</property>
+                <property
+                  dataType="System.String"
+                  description="Specifies the name of the database object used to open a rowset."
+                  name="OpenRowset">[timesheet].[EmployeeLeave]</property>
+                <property
+                  dataType="System.String"
+                  description="Specifies the variable that contains the name of the database object used to open a rowset."
+                  name="OpenRowsetVariable"></property>
+                <property
+                  dataType="System.String"
+                  description="The SQL command to be executed."
+                  name="SqlCommand"
+                  UITypeEditor="Microsoft.DataTransformationServices.Controls.ModalMultilineStringEditor"></property>
+                <property
+                  dataType="System.Int32"
+                  description="Specifies the column code page to use when code page information is unavailable from the data source."
+                  name="DefaultCodePage">1252</property>
+                <property
+                  dataType="System.Boolean"
+                  description="Forces the use of the DefaultCodePage property value when describing character data."
+                  name="AlwaysUseDefaultCodePage">false</property>
+                <property
+                  dataType="System.Int32"
+                  description="Specifies the mode used to access the database."
+                  name="AccessMode"
+                  typeConverter="AccessMode">0</property>
+                <property
+                  dataType="System.Boolean"
+                  description="Indicates whether the values supplied for identity columns will be copied to the destination. If false, values for identity columns will be auto-generated at the destination. Applies only if fast load is turned on."
+                  name="FastLoadKeepIdentity">false</property>
+                <property
+                  dataType="System.Boolean"
+                  description="Indicates whether the columns containing null will have null inserted in the destination. If false, columns containing null will have their default values inserted at the destination. Applies only if fast load is turned on."
+                  name="FastLoadKeepNulls">false</property>
+                <property
+                  dataType="System.String"
+                  description="Specifies options to be used with fast load.  Applies only if fast load is turned on."
+                  name="FastLoadOptions"></property>
+                <property
+                  dataType="System.Int32"
+                  description="Specifies when commits are issued during data insertion.  A value of 0 specifies that one commit will be issued at the end of data insertion.  Applies only if fast load is turned on."
+                  name="FastLoadMaxInsertCommitSize">2147483647</property>
+              </properties>
+              <connections>
+                <connection
+                  refId="Package\Load Leave\OLE DB Destination.Connections[OleDbConnection]"
+                  connectionManagerID="Package.ConnectionManagers[LocalHost.TimesheetDB]"
+                  connectionManagerRefId="Package.ConnectionManagers[LocalHost.TimesheetDB]"
+                  description="The OLE DB runtime connection used to access the database."
+                  name="OleDbConnection" />
+              </connections>
+              <inputs>
+                <input
+                  refId="Package\Load Leave\OLE DB Destination.Inputs[OLE DB Destination Input]"
+                  errorOrTruncationOperation="Insert"
+                  errorRowDisposition="FailComponent"
+                  hasSideEffects="true"
+                  name="OLE DB Destination Input">
+                  <inputColumns>
+                    <inputColumn
+                      refId="Package\Load Leave\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[Copy of Type of Leave]"
+                      cachedCodepage="1252"
+                      cachedDataType="str"
+                      cachedLength="100"
+                      cachedName="Copy of Type of Leave"
+                      externalMetadataColumnId="Package\Load Leave\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[LeaveType]"
+                      lineageId="Package\Load Leave\Data Conversion.Outputs[Data Conversion Output].Columns[Copy of Type of Leave]" />
+                    <inputColumn
+                      refId="Package\Load Leave\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[Copy of Start Date]"
+                      cachedDataType="date"
+                      cachedName="Copy of Start Date"
+                      externalMetadataColumnId="Package\Load Leave\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[StartDate]"
+                      lineageId="Package\Load Leave\Data Conversion.Outputs[Data Conversion Output].Columns[Copy of Start Date]" />
+                    <inputColumn
+                      refId="Package\Load Leave\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[Copy of End Date]"
+                      cachedDataType="date"
+                      cachedName="Copy of End Date"
+                      externalMetadataColumnId="Package\Load Leave\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[EndDate]"
+                      lineageId="Package\Load Leave\Data Conversion.Outputs[Data Conversion Output].Columns[Copy of End Date]" />
+                    <inputColumn
+                      refId="Package\Load Leave\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[Copy of Number of days]"
+                      cachedDataType="r8"
+                      cachedName="Copy of Number of days"
+                      externalMetadataColumnId="Package\Load Leave\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[NumberOfDays]"
+                      lineageId="Package\Load Leave\Data Conversion.Outputs[Data Conversion Output].Columns[Copy of Number of days]" />
+                  </inputColumns>
+                  <externalMetadataColumns
+                    isUsed="True">
+                    <externalMetadataColumn
+                      refId="Package\Load Leave\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[LeaveID]"
+                      dataType="i4"
+                      name="LeaveID" />
+                    <externalMetadataColumn
+                      refId="Package\Load Leave\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[EmployeeID]"
+                      dataType="i4"
+                      name="EmployeeID" />
+                    <externalMetadataColumn
+                      refId="Package\Load Leave\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[LeaveType]"
+                      codePage="1252"
+                      dataType="str"
+                      length="100"
+                      name="LeaveType" />
+                    <externalMetadataColumn
+                      refId="Package\Load Leave\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[StartDate]"
+                      dataType="wstr"
+                      length="10"
+                      name="StartDate" />
+                    <externalMetadataColumn
+                      refId="Package\Load Leave\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[EndDate]"
+                      dataType="wstr"
+                      length="10"
+                      name="EndDate" />
+                    <externalMetadataColumn
+                      refId="Package\Load Leave\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[NumberOfDays]"
+                      dataType="numeric"
+                      name="NumberOfDays"
+                      precision="5"
+                      scale="2" />
+                    <externalMetadataColumn
+                      refId="Package\Load Leave\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[ApprovalObtained]"
+                      codePage="1252"
+                      dataType="str"
+                      length="50"
+                      name="ApprovalObtained" />
+                    <externalMetadataColumn
+                      refId="Package\Load Leave\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[SickNote]"
+                      codePage="1252"
+                      dataType="str"
+                      length="50"
+                      name="SickNote" />
+                    <externalMetadataColumn
+                      refId="Package\Load Leave\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[FileName]"
+                      codePage="1252"
+                      dataType="str"
+                      length="255"
+                      name="FileName" />
+                  </externalMetadataColumns>
+                </input>
+              </inputs>
+              <outputs>
+                <output
+                  refId="Package\Load Leave\OLE DB Destination.Outputs[OLE DB Destination Error Output]"
+                  exclusionGroup="1"
+                  isErrorOut="true"
+                  name="OLE DB Destination Error Output"
+                  synchronousInputId="Package\Load Leave\OLE DB Destination.Inputs[OLE DB Destination Input]">
+                  <outputColumns>
+                    <outputColumn
+                      refId="Package\Load Leave\OLE DB Destination.Outputs[OLE DB Destination Error Output].Columns[ErrorCode]"
+                      dataType="i4"
+                      lineageId="Package\Load Leave\OLE DB Destination.Outputs[OLE DB Destination Error Output].Columns[ErrorCode]"
+                      name="ErrorCode"
+                      specialFlags="1" />
+                    <outputColumn
+                      refId="Package\Load Leave\OLE DB Destination.Outputs[OLE DB Destination Error Output].Columns[ErrorColumn]"
+                      dataType="i4"
+                      lineageId="Package\Load Leave\OLE DB Destination.Outputs[OLE DB Destination Error Output].Columns[ErrorColumn]"
+                      name="ErrorColumn"
+                      specialFlags="2" />
+                  </outputColumns>
+                  <externalMetadataColumns />
+                </output>
+              </outputs>
+            </component>
+          </components>
+          <paths>
+            <path
+              refId="Package\Load Leave.Paths[Data Conversion Output]"
+              endId="Package\Load Leave\OLE DB Destination.Inputs[OLE DB Destination Input]"
+              name="Data Conversion Output"
+              startId="Package\Load Leave\Data Conversion.Outputs[Data Conversion Output]" />
+            <path
+              refId="Package\Load Leave.Paths[Excel Source Output]"
+              endId="Package\Load Leave\Data Conversion.Inputs[Data Conversion Input]"
+              name="Excel Source Output"
+              startId="Package\Load Leave\Excel Source.Outputs[Excel Source Output]" />
+          </paths>
+        </pipeline>
       </DTS:ObjectData>
     </DTS:Executable>
   </DTS:Executables>
@@ -2857,32 +2832,6 @@ AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</BinaryItem>
             <EdgeLabelCollection />
           </EdgeLayout.Labels>
         </EdgeLayout>
-        <NodeLayout
-          Size="132.8,41.6"
-          Id="Package\Foreach Loop Container\Load Leave"
-          TopLeft="63.1666514136731,596.333331639833" />
-        <EdgeLayout
-          Id="Package\Foreach Loop Container.PrecedenceConstraints[Constraint 3]"
-          TopLeft="131.749984769772,559.666664454871">
-          <EdgeLayout.Curve>
-            <mssgle:Curve
-              StartConnector="{assembly:Null}"
-              EndConnector="0,36.666667184962"
-              Start="0,0"
-              End="0,29.166667184962">
-              <mssgle:Curve.Segments>
-                <mssgle:SegmentCollection
-                  Capacity="5">
-                  <mssgle:LineSegment
-                    End="0,29.166667184962" />
-                </mssgle:SegmentCollection>
-              </mssgle:Curve.Segments>
-            </mssgle:Curve>
-          </EdgeLayout.Curve>
-          <EdgeLayout.Labels>
-            <EdgeLabelCollection />
-          </EdgeLayout.Labels>
-        </EdgeLayout>
         <ContainerLayout
           HeaderHeight="43"
           IsExpanded="True"
@@ -2893,7 +2842,7 @@ AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</BinaryItem>
         <NodeLayout
           Size="132.8,41.6"
           Id="Package\Load Leave"
-          TopLeft="560.648117515685,691.111109303103" />
+          TopLeft="298.333317033119,899.199997468789" />
       </GraphLayout>
     </LayoutInfo>
   </Package>
@@ -3040,20 +2989,24 @@ AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</BinaryItem>
     </Properties>
   </PipelineComponentMetadata>
   <TaskHost
-    design-time-name="Package\Foreach Loop Container\Load Leave">
+    design-time-name="Package\Load Leave">
     <LayoutInfo>
       <GraphLayout
-        Capacity="8" xmlns="clr-namespace:Microsoft.SqlServer.IntegrationServices.Designer.Model.Serialization;assembly=Microsoft.SqlServer.IntegrationServices.Graph" xmlns:mssgle="clr-namespace:Microsoft.SqlServer.Graph.LayoutEngine;assembly=Microsoft.SqlServer.Graph" xmlns:assembly="http://schemas.microsoft.com/winfx/2006/xaml">
-        <NodeLayout
-          Size="140,41.6"
-          Id="Package\Foreach Loop Container\Load Leave\Excel Source"
-          TopLeft="347.999994814396,36.999999448657" />
+        Capacity="8" xmlns="clr-namespace:Microsoft.SqlServer.IntegrationServices.Designer.Model.Serialization;assembly=Microsoft.SqlServer.IntegrationServices.Graph" xmlns:mssgle="clr-namespace:Microsoft.SqlServer.Graph.LayoutEngine;assembly=Microsoft.SqlServer.Graph" xmlns:assembly="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:mssgm="clr-namespace:Microsoft.SqlServer.Graph.Model;assembly=Microsoft.SqlServer.Graph">
         <NodeLayout
           Size="156,41.6"
-          Id="Package\Foreach Loop Container\Load Leave\Data Conversion"
+          Id="Package\Load Leave\Data Conversion"
           TopLeft="287.999995708466,144.999997839332" />
+        <NodeLayout
+          Size="140,41.6"
+          Id="Package\Load Leave\Excel Source"
+          TopLeft="347.999994814396,36.999999448657" />
+        <NodeLayout
+          Size="171.2,41.6"
+          Id="Package\Load Leave\OLE DB Destination"
+          TopLeft="294.999995604157,266.99999602139" />
         <EdgeLayout
-          Id="Package\Foreach Loop Container\Load Leave.Paths[Excel Source Output]"
+          Id="Package\Load Leave.Paths[Excel Source Output]"
           TopLeft="417.999994814396,78.599999448657">
           <EdgeLayout.Curve>
             <mssgle:Curve
@@ -3083,15 +3036,13 @@ AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</BinaryItem>
             </mssgle:Curve>
           </EdgeLayout.Curve>
           <EdgeLayout.Labels>
-            <EdgeLabelCollection />
+            <mssgm:EdgeLabel
+              BoundingBox="0,0,0,0"
+              RelativePosition="Any" />
           </EdgeLayout.Labels>
         </EdgeLayout>
-        <NodeLayout
-          Size="171.2,41.6"
-          Id="Package\Foreach Loop Container\Load Leave\OLE DB Destination"
-          TopLeft="294.999995604157,266.99999602139" />
         <EdgeLayout
-          Id="Package\Foreach Loop Container\Load Leave.Paths[Data Conversion Output]"
+          Id="Package\Load Leave.Paths[Data Conversion Output]"
           TopLeft="365.999995708466,186.599997839332">
           <EdgeLayout.Curve>
             <mssgle:Curve
@@ -3121,37 +3072,13 @@ AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</BinaryItem>
             </mssgle:Curve>
           </EdgeLayout.Curve>
           <EdgeLayout.Labels>
-            <EdgeLabelCollection />
+            <mssgm:EdgeLabel
+              BoundingBox="0,0,0,0"
+              RelativePosition="Any" />
           </EdgeLayout.Labels>
         </EdgeLayout>
       </GraphLayout>
     </LayoutInfo>
   </TaskHost>
-  <PipelineComponentMetadata
-    design-time-name="Package\Foreach Loop Container\Load Leave\Excel Source">
-    <Properties>
-      <Property>
-        <Name>DataSourceViewID</Name>
-      </Property>
-      <Property>
-        <Name>TableInfoObjectType</Name>
-        <Value
-          type="q2:string">Table</Value>
-      </Property>
-    </Properties>
-  </PipelineComponentMetadata>
-  <PipelineComponentMetadata
-    design-time-name="Package\Foreach Loop Container\Load Leave\OLE DB Destination">
-    <Properties>
-      <Property>
-        <Name>DataSourceViewID</Name>
-      </Property>
-      <Property>
-        <Name>TableInfoObjectType</Name>
-        <Value
-          type="q2:string">Table</Value>
-      </Property>
-    </Properties>
-  </PipelineComponentMetadata>
 </Objects>]]></DTS:DesignTimeProperties>
 </DTS:Executable>
