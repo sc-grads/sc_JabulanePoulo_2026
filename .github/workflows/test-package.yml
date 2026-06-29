@@ -5,7 +5,7 @@ on:
     branches: [develop]
     paths:
       - 'SSIS/**'
-      - 'Database/**'
+      
   workflow_dispatch:
 
 jobs:
