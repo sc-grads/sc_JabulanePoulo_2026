@@ -1,0 +1,54 @@
+<?xml version="1.0"?>
+<DTS:Executable xmlns:DTS="www.microsoft.com/SqlServer/Dts"
+  DTS:refId="Package"
+  DTS:CreationDate="6/17/2026 10:08:21 AM"
+  DTS:CreationName="Microsoft.Package"
+  DTS:CreatorComputerName="LAPTOP-7LSAQSR0"
+  DTS:CreatorName="LAPTOP-7LSAQSR0\Jabulane Poulo"
+  DTS:DTSID="{5E0A20F9-5DC6-44C6-B3D2-91D318FFA148}"
+  DTS:ExecutableType="Microsoft.Package"
+  DTS:LastModifiedProductVersion="17.0.1016.0"
+  DTS:LocaleID="7177"
+  DTS:ObjectName="Package1"
+  DTS:PackageType="5"
+  DTS:VersionBuild="1"
+  DTS:VersionGUID="{4B67CF6D-1B15-444F-8A3C-32E57FF67FFD}">
+  <DTS:Property
+    DTS:Name="PackageFormatVersion">8</DTS:Property>
+  <DTS:Variables />
+  <DTS:Executables>
+    <DTS:Executable
+      DTS:refId="Package\WMI Event Watcher Task"
+      DTS:CreationName="Microsoft.WmiEventWatcherTask"
+      DTS:Description="WMI Event Watcher Task"
+      DTS:DTSID="{954CD3AD-4089-4080-9AFA-AAD5C870F605}"
+      DTS:ExecutableType="Microsoft.WmiEventWatcherTask"
+      DTS:LocaleID="-1"
+      DTS:ObjectName="WMI Event Watcher Task"
+      DTS:TaskContact="WMI Event Watcher Task; Microsoft Corporation; SQL Server 2025; © 2025 Microsoft Corporation; All Rights Reserved;http://www.microsoft.com/sql/support/default.asp;1"
+      DTS:ThreadHint="0">
+      <DTS:Variables />
+      <DTS:ObjectData />
+    </DTS:Executable>
+  </DTS:Executables>
+  <DTS:DesignTimeProperties><![CDATA[<?xml version="1.0"?>
+<!--This CDATA section contains the layout information of the package. The section includes information such as (x,y) coordinates, width, and height.-->
+<!--If you manually edit this section and make a mistake, you can delete it. -->
+<!--The package will still be able to load normally but the previous layout information will be lost and the designer will automatically re-arrange the elements on the design surface.-->
+<Objects
+  Version="8">
+  <!--Each node below will contain properties that do not affect runtime behavior.-->
+  <Package
+    design-time-name="Package">
+    <LayoutInfo>
+      <GraphLayout
+        Capacity="4" xmlns="clr-namespace:Microsoft.SqlServer.IntegrationServices.Designer.Model.Serialization;assembly=Microsoft.SqlServer.IntegrationServices.Graph">
+        <NodeLayout
+          Size="196,41.6"
+          Id="Package\WMI Event Watcher Task"
+          TopLeft="303.333316759931,94.4666660097573" />
+      </GraphLayout>
+    </LayoutInfo>
+  </Package>
+</Objects>]]></DTS:DesignTimeProperties>
+</DTS:Executable>

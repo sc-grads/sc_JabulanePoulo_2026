@@ -1,0 +1,54 @@
+﻿<?xml version="1.0"?>
+<DTS:Executable xmlns:DTS="www.microsoft.com/SqlServer/Dts"
+  DTS:refId="Package"
+  DTS:CreationDate="6/17/2026 8:42:06 AM"
+  DTS:CreationName="Microsoft.Package"
+  DTS:CreatorComputerName="LAPTOP-7LSAQSR0"
+  DTS:CreatorName="LAPTOP-7LSAQSR0\Jabulane Poulo"
+  DTS:DTSID="{2E62593E-646A-4597-AC5C-ED58ABBD6973}"
+  DTS:ExecutableType="Microsoft.Package"
+  DTS:LastModifiedProductVersion="17.0.1016.0"
+  DTS:LocaleID="7177"
+  DTS:ObjectName="Package1"
+  DTS:PackageType="5"
+  DTS:VersionBuild="1"
+  DTS:VersionGUID="{CC905197-9A47-40E7-8AE1-4C425F91EC19}">
+  <DTS:Property
+    DTS:Name="PackageFormatVersion">8</DTS:Property>
+  <DTS:Variables />
+  <DTS:Executables>
+    <DTS:Executable
+      DTS:refId="Package\Transfer SQL Server Objects Task"
+      DTS:CreationName="Microsoft.TransferSqlServerObjectsTask"
+      DTS:Description="Transfer SQL Server Objects Task"
+      DTS:DTSID="{7B7A89C3-B1EB-4A80-B025-481585D57801}"
+      DTS:ExecutableType="Microsoft.TransferSqlServerObjectsTask"
+      DTS:LocaleID="-1"
+      DTS:ObjectName="Transfer SQL Server Objects Task"
+      DTS:TaskContact="Transfer Objects Task; Microsoft Corporation; SQL Server 2025; (c) Microsoft Corporation; All Rights Reserved;http://www.microsoft.com/sql/support/default.asp;1"
+      DTS:ThreadHint="0">
+      <DTS:Variables />
+      <DTS:ObjectData />
+    </DTS:Executable>
+  </DTS:Executables>
+  <DTS:DesignTimeProperties><![CDATA[<?xml version="1.0"?>
+<!--This CDATA section contains the layout information of the package. The section includes information such as (x,y) coordinates, width, and height.-->
+<!--If you manually edit this section and make a mistake, you can delete it. -->
+<!--The package will still be able to load normally but the previous layout information will be lost and the designer will automatically re-arrange the elements on the design surface.-->
+<Objects
+  Version="8">
+  <!--Each node below will contain properties that do not affect runtime behavior.-->
+  <Package
+    design-time-name="Package">
+    <LayoutInfo>
+      <GraphLayout
+        Capacity="4" xmlns="clr-namespace:Microsoft.SqlServer.IntegrationServices.Designer.Model.Serialization;assembly=Microsoft.SqlServer.IntegrationServices.Graph">
+        <NodeLayout
+          Size="237.6,41.6"
+          Id="Package\Transfer SQL Server Objects Task"
+          TopLeft="309.166649774546,91.8666660278374" />
+      </GraphLayout>
+    </LayoutInfo>
+  </Package>
+</Objects>]]></DTS:DesignTimeProperties>
+</DTS:Executable>
