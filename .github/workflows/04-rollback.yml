@@ -1,0 +1,74 @@
+name: 04 - Rollback
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to rollback'
+        required: true
+        default: 'Production'
+        type: choice
+        options:
+          - Development
+          - Staging
+          - Production
+      version:
+        description: 'Version to rollback to (e.g., v1.0.0)'
+        required: true
+        default: 'previous'
+
+jobs:
+  rollback:
+    runs-on: windows-latest
+    environment: ${{ github.event.inputs.environment }}
+    
+    steps:
+      - name: Download Previous Version
+        uses: actions/download-artifact@v4
+        with:
+          name: ssis-package-${{ github.event.inputs.version }}
+          path: .\
+        continue-on-error: true
+      
+      - name: Deploy Previous Version
+        env:
+          SQL_SERVER: ${{ secrets.SQL_SERVER }}
+          SQL_USERNAME: ${{ secrets.SQL_USERNAME }}
+          SQL_PASSWORD: ${{ secrets.SQL_PASSWORD }}
+          ENVIRONMENT: ${{ github.event.inputs.environment }}
+        run: |
+          $ispac = Get-ChildItem -Path .\ -Filter "*.ispac" | Select-Object -First 1
+          
+          if ($ispac) {
+            Write-Host " Rolling back to ${{ github.event.inputs.version }}..."
+            & "C:\Program Files\Microsoft SQL Server\150\DTS\Binn\ISDeploymentWizard.exe" `
+              /Silent `
+              /SourcePath:$ispac.FullName `
+              /DestinationServer:$env:SQL_SERVER `
+              /DestinationPath:"/TimesheetMigration/$env:ENVIRONMENT"
+            
+            if ($LASTEXITCODE -eq 0) {
+              Write-Host " Rollback completed!"
+            } else {
+              Write-Host " Rollback failed!"
+              exit 1
+            }
+          } else {
+            Write-Host " No previous version found!"
+            exit 1
+          }
+      
+      - name: Send Rollback Notification
+        run: |
+          curl -H "Content-Type: application/json" \
+          -d '{
+            "title": " ROLLBACK COMPLETED",
+            "text": "**Rollback completed for ${{ github.event.inputs.environment }}**",
+            "facts": [
+              {"name": "Environment", "value": "${{ github.event.inputs.environment }}"},
+              {"name": "Rollback by", "value": "${{ github.actor }}"},
+              {"name": "Version", "value": "${{ github.event.inputs.version }}"}
+            ],
+            "themeColor": "FFA500"
+          }' \
+          ${{ secrets.TEAMS_WEBHOOK_URL }}

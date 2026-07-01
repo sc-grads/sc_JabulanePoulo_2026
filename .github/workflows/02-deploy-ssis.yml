@@ -1,0 +1,78 @@
+name: 02 - Deploy SSIS Package
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deployment Environment'
+        required: true
+        default: 'Development'
+        type: choice
+        options:
+          - Development
+          - Staging
+          - Production
+      version:
+        description: 'Version to deploy (e.g., v1.0.0)'
+        required: false
+        default: 'latest'
+
+jobs:
+  deploy-ssis:
+    runs-on: windows-latest
+    environment: ${{ github.event.inputs.environment }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Download SSIS Package
+        uses: actions/download-artifact@v4
+        with:
+          name: ssis-package-${{ github.event.inputs.version == '' && github.run_number || github.event.inputs.version }}
+          path: .\
+        continue-on-error: true
+      
+      - name: Deploy to SSIS Catalog
+        env:
+          SQL_SERVER: ${{ secrets.SQL_SERVER }}
+          SQL_USERNAME: ${{ secrets.SQL_USERNAME }}
+          SQL_PASSWORD: ${{ secrets.SQL_PASSWORD }}
+          ENVIRONMENT: ${{ github.event.inputs.environment }}
+        run: |
+          $ispac = Get-ChildItem -Path .\ -Filter "*.ispac" | Select-Object -First 1
+          
+          if (-not $ispac) {
+            Write-Host " No SSIS package found!"
+            exit 1
+          }
+          
+          Write-Host "📦 Deploying to $env:ENVIRONMENT..."
+          & "C:\Program Files\Microsoft SQL Server\150\DTS\Binn\ISDeploymentWizard.exe" `
+            /Silent `
+            /SourcePath:$ispac.FullName `
+            /DestinationServer:$env:SQL_SERVER `
+            /DestinationPath:"/TimesheetMigration/$env:ENVIRONMENT"
+          
+          if ($LASTEXITCODE -eq 0) {
+            Write-Host " Package deployed to $env:ENVIRONMENT"
+          } else {
+            Write-Host "❌ Deployment failed!"
+            exit 1
+          }
+      
+      - name: Send Teams Notification
+        if: success()
+        run: |
+          curl -H "Content-Type: application/json" \
+          -d '{
+            "title": " SSIS DEPLOYMENT SUCCESS",
+            "text": "**SSIS Package deployed to ${{ github.event.inputs.environment }}**",
+            "facts": [
+              {"name": "Environment", "value": "${{ github.event.inputs.environment }}"},
+              {"name": "Package Path", "value": "TimesheetMigration1/TimesheetMigration.dtsx"},
+              {"name": "Deployed by", "value": "${{ github.actor }}"}
+            ],
+            "themeColor": "00FF00"
+          }' \
+          ${{ secrets.TEAMS_WEBHOOK_URL }}

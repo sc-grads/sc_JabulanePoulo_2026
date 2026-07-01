@@ -1,0 +1,125 @@
+name: 03 - Execute SSIS Package
+
+on:
+  schedule:
+    - cron: '0 8 * * 1'  # Every Monday at 8 AM
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment'
+        required: true
+        default: 'Development'
+        type: choice
+        options:
+          - Development
+          - Staging
+          - Production
+      package_path:
+        description: 'Package Path'
+        required: false
+        default: 'TimesheetMigration1/TimesheetMigration.dtsx'
+
+jobs:
+  execute-ssis:
+    runs-on: windows-latest
+    environment: ${{ github.event.inputs.environment || 'Development' }}
+    
+    steps:
+      - name: Execute SSIS Package
+        env:
+          SQL_SERVER: ${{ secrets.SQL_SERVER }}
+          SQL_USERNAME: ${{ secrets.SQL_USERNAME }}
+          SQL_PASSWORD: ${{ secrets.SQL_PASSWORD }}
+          ENVIRONMENT: ${{ github.event.inputs.environment || 'Development' }}
+          PACKAGE_PATH: ${{ github.event.inputs.package_path || 'TimesheetMigration1/TimesheetMigration.dtsx' }}
+        run: |
+          Write-Host " Executing SSIS Package: $env:PACKAGE_PATH"
+          Write-Host " Environment: $env:ENVIRONMENT"
+          
+          $query = @"
+          DECLARE @execution_id BIGINT
+          
+          EXEC [SSISDB].[catalog].[create_execution] 
+            @folder_name=N'TimesheetMigration',
+            @project_name=N'TimesheetMigration',
+            @package_name=N'TimesheetMigration.dtsx',
+            @execution_id=@execution_id OUTPUT
+          
+          EXEC [SSISDB].[catalog].[set_execution_parameter_value] 
+            @execution_id, 30, N'Environment', '$env:ENVIRONMENT'
+          
+          EXEC [SSISDB].[catalog].[start_execution] @execution_id
+          
+          SELECT @execution_id AS ExecutionID"@
+          
+          $result = sqlcmd -S $env:SQL_SERVER -U $env:SQL_USERNAME -P $env:SQL_PASSWORD -Q $query
+          $executionId = ($result -split ' ')[0]
+          
+          Write-Host "✅ Package started - Execution ID: $executionId"
+          
+          # Wait for completion
+          $maxAttempts = 60
+          $attempt = 0
+          $completed = $false
+          
+          while ($attempt -lt $maxAttempts -and -not $completed) {
+            $statusQuery = @"
+          SELECT 
+            CASE status
+              WHEN 1 THEN 'Created'
+              WHEN 2 THEN 'Running'
+              WHEN 3 THEN 'Cancelled'
+              WHEN 4 THEN 'Failed'
+              WHEN 5 THEN 'Pending'
+              WHEN 7 THEN 'Succeeded'
+              ELSE 'Unknown'
+            END AS Status
+          FROM [SSISDB].[catalog].[executions]
+          WHERE execution_id = $executionId"@
+            
+            $status = sqlcmd -S $env:SQL_SERVER -U $env:SQL_USERNAME -P $env:SQL_PASSWORD -Q $statusQuery -h -1
+            Write-Host " Status: $status"
+            
+            if ($status -eq 'Succeeded') {
+              $completed = $true
+              Write-Host " Package completed successfully!"
+            } elseif ($status -eq 'Failed' -or $status -eq 'Cancelled') {
+              Write-Host " Package failed!"
+              exit 1
+            } else {
+              Start-Sleep -Seconds 10
+              $attempt++
+            }
+          }
+      
+      - name: Send Success Notification
+        if: success()
+        run: |
+          curl -H "Content-Type: application/json" \
+          -d '{
+            "title": " SSIS EXECUTION SUCCESS",
+            "text": "**Timesheet ETL executed successfully**",
+            "facts": [
+              {"name": "Environment", "value": "${{ github.event.inputs.environment || 'Development' }}"},
+              {"name": "Package", "value": "TimesheetMigration1/TimesheetMigration.dtsx"},
+              {"name": "Triggered by", "value": "${{ github.actor }}"}
+            ],
+            "themeColor": "00FF00"
+          }' \
+          ${{ secrets.TEAMS_WEBHOOK_URL }}
+      
+      - name: Send Failure Notification
+        if: failure()
+        run: |
+          curl -H "Content-Type: application/json" \
+          -d '{
+            "title": " SSIS EXECUTION FAILED",
+            "text": "**Timesheet ETL execution failed!**",
+            "facts": [
+              {"name": "Environment", "value": "${{ github.event.inputs.environment || 'Development' }}"},
+              {"name": "Package", "value": "TimesheetMigration1/TimesheetMigration.dtsx"},
+              {"name": "Triggered by", "value": "${{ github.actor }}"}
+            ],
+            "themeColor": "FF0000"
+          }' \
+          ${{ secrets.TEAMS_WEBHOOK_URL }}
