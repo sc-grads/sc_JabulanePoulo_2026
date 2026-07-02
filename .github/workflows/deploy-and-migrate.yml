@@ -1,126 +1,249 @@
-# .github/workflows/deploy-and-migrate.yml
 name: Deploy Database and Run Migration
 
 on:
   push:
-    branches: [ main, develop ]
-  workflow_dispatch:  # Allows manual triggering
-
-env:
-  SQL_SERVER: ${{ secrets.SQL_SERVER }}
-  SQL_USERNAME: ${{ secrets.SQL_USERNAME }}
-  SQL_PASSWORD: ${{ secrets.SQL_PASSWORD }}
-  DATABASE_NAME: TimesheetsDB
+    branches:
+      - main
+      - develop
+  workflow_dispatch:
 
 jobs:
-  deploy-and-migrate:
+  # Deploy to DevTest Environment
+  DevTest:
+    uses: ./.github/workflows/reusable-deploy.yml
+    with:
+      environment-name: local-sql
+      sql-script-path: scripts/create_database.sql
+    secrets: inherit
+
+  # Request approval for Partner environment
+  request-approval-partner:
+    needs: DevTest
     runs-on: ubuntu-latest
+    environment: partner-sql
+
+    steps:
+      - name: Send Partner approval request to Teams
+        run: |
+          curl -H "Content-Type: application/json" \
+          -d '{
+            "title": "🚨 PARTNER SQL DEPLOYMENT APPROVAL REQUIRED",
+            "text": "**A production deployment is waiting for your approval**\n\n",
+            "facts": [
+              {
+                "name": "🌍 Environment",
+                "value": "Partner SQL (Production)"
+              },
+              {
+                "name": "👤 Requested by",
+                "value": "${{ github.actor }}"
+              },
+              {
+                "name": "🔀 Branch",
+                "value": "${{ github.ref_name }}"
+              },
+              {
+                "name": "🔄 Run ID",
+                "value": "${{ github.run_id }}"
+              },
+              {
+                "name": "✅ DevTest Status",
+                "value": "Completed Successfully"
+              },
+              {
+                "name": "⏰ Timestamp",
+                "value": "${{ github.event.head_commit.timestamp }}"
+              }
+            ],
+            "potentialAction": "[View Workflow Run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})",
+            "themeColor": "FFA500"
+          }' \
+          ${{ secrets.TEAMS_WEBHOOK_URL }}
+
+      - name: Waiting for partner approval
+        run: echo "⏳ Waiting for partner-sql approval..."
+
+  # Deploy to Partner/Production Environment
+  Production:
+    needs: request-approval-partner
+    uses: ./.github/workflows/reusable-deploy.yml
+    with:
+      environment-name: partner-sql
+      sql-script-path: Database/create_database.sql
+    secrets: inherit
+
+  # Run TimesheetMigration Job after Partner deployment
+  RunMigrationJob:
+    needs: Production
+    runs-on: ubuntu-latest
+    environment: partner-sql
+    if: success()
     
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-    
-    - name: Install SQLCMD and Tools
-      run: |
-        # Install SQLCMD
-        curl https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -
-        curl https://packages.microsoft.com/config/ubuntu/20.04/prod.list | sudo tee /etc/apt/sources.list.d/msprod.list
-        sudo apt-get update
-        sudo apt-get install -y mssql-tools unixodbc-dev
-        echo 'export PATH="$PATH:/opt/mssql-tools/bin"' >> ~/.bashrc
-        source ~/.bashrc
-    
-    - name: Deploy Database Schema and Seed Data
-      run: |
-        echo "Creating database and tables..."
-        /opt/mssql-tools/bin/sqlcmd -S $SQL_SERVER -U $SQL_USERNAME -P $SQL_PASSWORD -i scripts/create_database.sql -b
-      env:
-        SQL_SERVER: ${{ secrets.SQL_SERVER }}
-        SQL_USERNAME: ${{ secrets.SQL_USERNAME }}
-        SQL_PASSWORD: ${{ secrets.SQL_PASSWORD }}
-    
-    - name: Verify Database Creation
-      run: |
-        echo "Verifying database deployment..."
-        /opt/mssql-tools/bin/sqlcmd -S $SQL_SERVER -U $SQL_USERNAME -P $SQL_PASSWORD -d TimesheetsDB -Q "
-        SELECT 'Database: TimesheetsDB' as Status;
-        SELECT COUNT(*) as EmployeeCount FROM timesheet.Employee;
-        SELECT COUNT(*) as ClientCount FROM timesheet.Client;
-        "
-      env:
-        SQL_SERVER: ${{ secrets.SQL_SERVER }}
-        SQL_USERNAME: ${{ secrets.SQL_USERNAME }}
-        SQL_PASSWORD: ${{ secrets.SQL_PASSWORD }}
-    
-    - name: Check if TimesheetMigration Job Exists
-      id: check_job
-      run: |
-        JOB_EXISTS=$(/opt/mssql-tools/bin/sqlcmd -S $SQL_SERVER -U $SQL_USERNAME -P $SQL_PASSWORD -d msdb -Q "SET NOCOUNT ON; SELECT COUNT(*) FROM sysjobs WHERE name = 'TimesheetMigration'" -h-1)
-        echo "Job exists: $JOB_EXISTS"
-        echo "job_exists=$JOB_EXISTS" >> $GITHUB_OUTPUT
-      env:
-        SQL_SERVER: ${{ secrets.SQL_SERVER }}
-        SQL_USERNAME: ${{ secrets.SQL_USERNAME }}
-        SQL_PASSWORD: ${{ secrets.SQL_PASSWORD }}
-    
-    - name: Run TimesheetMigration Job
-      if: steps.check_job.outputs.job_exists == '1'
-      run: |
-        echo "Starting TimesheetMigration job..."
-        /opt/mssql-tools/bin/sqlcmd -S $SQL_SERVER -U $SQL_USERNAME -P $SQL_PASSWORD -d msdb -Q "EXEC dbo.sp_start_job N'TimesheetMigration';"
-        echo "Job started successfully."
-      env:
-        SQL_SERVER: ${{ secrets.SQL_SERVER }}
-        SQL_USERNAME: ${{ secrets.SQL_USERNAME }}
-        SQL_PASSWORD: ${{ secrets.SQL_PASSWORD }}
-    
-    - name: Wait for Job to Complete and Check Status
-      if: steps.check_job.outputs.job_exists == '1'
-      run: |
-        echo "Waiting for job to complete..."
-        # Wait up to 60 seconds for job to start
-        sleep 5
-        
-        # Check job status
-        JOB_STATUS=$(/opt/mssql-tools/bin/sqlcmd -S $SQL_SERVER -U $SQL_USERNAME -P $SQL_PASSWORD -d msdb -Q "
-        SET NOCOUNT ON;
-        SELECT TOP 1 
-            CASE 
-                WHEN run_status = 0 THEN 'Failed'
-                WHEN run_status = 1 THEN 'Succeeded'
-                WHEN run_status = 2 THEN 'Retry'
-                WHEN run_status = 3 THEN 'Canceled'
-                ELSE 'Unknown'
-            END as Status
-        FROM sysjobhistory h
-        JOIN sysjobs j ON h.job_id = j.job_id
-        WHERE j.name = 'TimesheetMigration'
-        ORDER BY h.instance_id DESC
-        " -h-1)
-        
-        echo "Job Status: $JOB_STATUS"
-        
-        if [ "$JOB_STATUS" == "Failed" ] || [ "$JOB_STATUS" == "Canceled" ]; then
-          echo "Job failed or was cancelled. Check SQL Server logs for details."
-          exit 1
-        elif [ "$JOB_STATUS" == "Succeeded" ]; then
-          echo "Job completed successfully!"
-        else
-          echo "Job status: $JOB_STATUS. Please check manually if this is expected."
-        fi
-      env:
-        SQL_SERVER: ${{ secrets.SQL_SERVER }}
-        SQL_USERNAME: ${{ secrets.SQL_USERNAME }}
-        SQL_PASSWORD: ${{ secrets.SQL_PASSWORD }}
-    
-    - name: Final Verification
-      run: |
-        echo "Final database verification..."
-        /opt/mssql-tools/bin/sqlcmd -S $SQL_SERVER -U $SQL_USERNAME -P $SQL_PASSWORD -d TimesheetsDB -Q "
-        SELECT 'Migration completed successfully!' as Status;
-        SELECT GETDATE() as CompletionTime;
-        "
-      env:
-        SQL_SERVER: ${{ secrets.SQL_SERVER }}
-        SQL_USERNAME: ${{ secrets.SQL_USERNAME }}
-        SQL_PASSWORD: ${{ secrets.SQL_PASSWORD }}
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install SQLCMD
+        run: |
+          curl https://packages.microsoft.com/keys/microsoft.asc | sudo tee /etc/apt/trusted.gpg.d/microsoft.asc
+          curl https://packages.microsoft.com/config/ubuntu/22.04/prod.list | sudo tee /etc/apt/sources.list.d/mssql-release.list
+          sudo apt-get update
+          sudo ACCEPT_EULA=Y apt-get install -y mssql-tools18
+
+      - name: Check and Run TimesheetMigration Job
+        env:
+          SERVER: ${{ secrets.SQL_SERVER }}
+          PORT: ${{ secrets.SQL_PORT }}
+          USERNAME: ${{ secrets.SQL_USERNAME }}
+          PASSWORD: ${{ secrets.SQL_PASSWORD }}
+        run: |
+          echo "Checking if TimesheetMigration job exists..."
+          
+          # Check if job exists
+          JOB_EXISTS=$(/opt/mssql-tools18/bin/sqlcmd \
+            -S "${SERVER},${PORT}" \
+            -U "$USERNAME" \
+            -P "$PASSWORD" \
+            -d "msdb" \
+            -Q "SET NOCOUNT ON; SELECT COUNT(*) FROM sysjobs WHERE name = 'TimesheetMigration'" \
+            -h-1 \
+            -C)
+          
+          echo "Job exists: $JOB_EXISTS"
+          
+          if [ "$JOB_EXISTS" -eq "1" ]; then
+            echo "Starting TimesheetMigration job..."
+            /opt/mssql-tools18/bin/sqlcmd \
+              -S "${SERVER},${PORT}" \
+              -U "$USERNAME" \
+              -P "$PASSWORD" \
+              -d "msdb" \
+              -Q "EXEC dbo.sp_start_job N'TimesheetMigration';" \
+              -C
+            
+            echo "✅ Job started successfully."
+            
+            # Wait and check job status
+            sleep 10
+            
+            JOB_STATUS=$(/opt/mssql-tools18/bin/sqlcmd \
+              -S "${SERVER},${PORT}" \
+              -U "$USERNAME" \
+              -P "$PASSWORD" \
+              -d "msdb" \
+              -Q "SET NOCOUNT ON; SELECT TOP 1 CASE WHEN run_status = 0 THEN 'Failed' WHEN run_status = 1 THEN 'Succeeded' WHEN run_status = 2 THEN 'Retry' WHEN run_status = 3 THEN 'Canceled' ELSE 'Unknown' END as Status FROM sysjobhistory h JOIN sysjobs j ON h.job_id = j.job_id WHERE j.name = 'TimesheetMigration' ORDER BY h.instance_id DESC" \
+              -h-1 \
+              -C)
+            
+            echo "Job Status: $JOB_STATUS"
+          else
+            echo "⚠️ WARNING: TimesheetMigration job not found in this environment."
+          fi
+
+  # Notifications
+  notify-success:
+    needs:
+      - DevTest
+      - Production
+      - RunMigrationJob
+    if: success()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Success Notification to Teams
+        run: |
+          curl -H "Content-Type: application/json" \
+          -d '{
+            "title": "✅ SQL DEPLOYMENT SUCCESS",
+            "text": "**All deployments completed successfully!**\n\n",
+            "facts": [
+              {
+                "name": "🟢 DevTest Environment",
+                "value": "Deployed Successfully"
+              },
+              {
+                "name": "🟢 Partner Environment",
+                "value": "Deployed Successfully"
+              },
+              {
+                "name": "🔄 TimesheetMigration Job",
+                "value": "Executed Successfully"
+              },
+              {
+                "name": "🗄️ Database",
+                "value": "TimesheetDB"
+              },
+              {
+                "name": "👤 Deployed by",
+                "value": "${{ github.actor }}"
+              },
+              {
+                "name": "🔀 Branch",
+                "value": "${{ github.ref_name }}"
+              },
+              {
+                "name": "🔄 Run ID",
+                "value": "${{ github.run_id }}"
+              },
+              {
+                "name": "📝 Commit",
+                "value": "${{ github.sha }}"
+              }
+            ],
+            "themeColor": "00FF00"
+          }' \
+          ${{ secrets.TEAMS_WEBHOOK_URL }}
+
+  notify-failure:
+    needs:
+      - DevTest
+      - Production
+      - RunMigrationJob
+    if: failure()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Failure Notification to Teams
+        run: |
+          ERROR_TYPE="${{ contains(needs.*.result, 'failure') && 'One or more deployments failed' || 'Unknown error' }}"
+          
+          curl -H "Content-Type: application/json" \
+          -d '{
+            "title": "❌ SQL DEPLOYMENT FAILED",
+            "text": "**Deployment failure detected - immediate action required**\n\n",
+            "facts": [
+              {
+                "name": "⚠️ Status",
+                "value": "Deployment Failed"
+              },
+              {
+                "name": "🗄️ Database",
+                "value": "TimesheetDB"
+              },
+              {
+                "name": "🔴 Failed Environment",
+                "value": "${{ contains(needs.DevTest.result, 'failure') && 'DevTest' || '' }}${{ contains(needs.Production.result, 'failure') && 'Partner' || '' }}${{ contains(needs.RunMigrationJob.result, 'failure') && 'Job Execution' || '' }}"
+              },
+              {
+                "name": "👤 Triggered by",
+                "value": "${{ github.actor }}"
+              },
+              {
+                "name": "🔀 Branch",
+                "value": "${{ github.ref_name }}"
+              },
+              {
+                "name": "🔄 Run ID",
+                "value": "${{ github.run_id }}"
+              },
+              {
+                "name": "📝 Commit",
+                "value": "${{ github.sha }}"
+              },
+              {
+                "name": "⏰ Time",
+                "value": "${{ github.event.head_commit.timestamp }}"
+              }
+            ],
+            "potentialAction": "[View Logs](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})",
+            "themeColor": "FF0000"
+          }' \
+          ${{ secrets.TEAMS_WEBHOOK_URL }}

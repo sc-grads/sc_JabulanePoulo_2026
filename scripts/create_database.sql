@@ -3,7 +3,7 @@
 -- Description: Complete database creation script with job execution
 -- =============================================
 
--- Drop database if it exists (use with caution)
+-- Check if database exists and drop it
 IF EXISTS (SELECT name FROM sys.databases WHERE name = N'TimesheetsDB')
 BEGIN
     ALTER DATABASE TimesheetsDB SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
@@ -219,26 +219,6 @@ INSERT INTO [timesheet].[Client] (ClientName)
 VALUES 
     ('Internal Sambe'),
     ('Discovery');
-
--- =============================================
--- Execute TimesheetMigration Job
--- =============================================
-
--- Check if the job exists and run it
-DECLARE @JobExists INT;
-SELECT @JobExists = COUNT(*) FROM msdb.dbo.sysjobs WHERE name = 'TimesheetMigration';
-
-IF @JobExists > 0
-BEGIN
-    PRINT 'Starting TimesheetMigration job...';
-    EXEC msdb.dbo.sp_start_job @job_name = 'TimesheetMigration';
-    PRINT 'TimesheetMigration job started successfully.';
-END
-ELSE
-BEGIN
-    PRINT 'WARNING: TimesheetMigration job not found. Please create the job manually.';
-END
-GO
 
 -- =============================================
 -- Verification Queries
