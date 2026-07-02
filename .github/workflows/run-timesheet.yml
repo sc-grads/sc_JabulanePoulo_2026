@@ -8,11 +8,9 @@ on:
 
 jobs:
   run-job:
-
     runs-on: self-hosted
 
     steps:
-
       - name: Checkout Repository
         uses: actions/checkout@v4
 
@@ -25,11 +23,48 @@ jobs:
             -Recurse `
             -Force
 
-      - name: Start SQL Server Agent Job
+      - name: Start SQL Server Agent Job and Wait for Completion
         shell: powershell
         run: |
-          sqlcmd `
-            -S LAPTOP-7LSAQSR0 `
-            -d msdb `
-            -E `
-            -Q "EXEC msdb.dbo.sp_start_job @job_name='TimesheetMigration';"
+          # Start the job
+          sqlcmd -S LAPTOP-7LSAQSR0 -d msdb -E -Q "EXEC msdb.dbo.sp_start_job @job_name='TimesheetMigration';"
+          
+          # Wait for job to complete
+          $maxWaitSeconds = 600
+          $waitIntervalSeconds = 5
+          $elapsedSeconds = 0
+          
+          while ($elapsedSeconds -lt $maxWaitSeconds) {
+            $result = sqlcmd -S LAPTOP-7LSAQSR0 -d msdb -E -h-1 -Q "
+              SET NOCOUNT ON;
+              SELECT 
+                CASE 
+                  WHEN current_execution_status = 4 THEN 'COMPLETED'
+                  WHEN current_execution_status = 3 THEN 'RUNNING'
+                  ELSE 'PENDING'
+                END AS Status
+              FROM msdb.dbo.sysjobs j
+              INNER JOIN msdb.dbo.sysjobactivity a ON j.job_id = a.job_id
+              WHERE j.name = 'TimesheetMigration'
+                AND a.run_requested_date IS NOT NULL
+                AND a.stop_execution_date IS NULL;
+            " -W | % { $_.Trim() }
+            
+            if ($result -eq 'COMPLETED') {
+              Write-Host "Job completed successfully!"
+              break
+            } elseif ($result -eq 'RUNNING') {
+              Write-Host "Job is still running... ($elapsedSeconds seconds elapsed)"
+              Start-Sleep -Seconds $waitIntervalSeconds
+              $elapsedSeconds += $waitIntervalSeconds
+            } else {
+              Write-Host "Job status: $result"
+              Start-Sleep -Seconds $waitIntervalSeconds
+              $elapsedSeconds += $waitIntervalSeconds
+            }
+          }
+          
+          if ($elapsedSeconds -ge $maxWaitSeconds) {
+            Write-Error "Job timed out after $maxWaitSeconds seconds"
+            exit 1
+          }
