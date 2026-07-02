@@ -11,8 +11,8 @@
   DTS:LocaleID="7177"
   DTS:ObjectName="TimesheetMigration"
   DTS:PackageType="5"
-  DTS:VersionBuild="241"
-  DTS:VersionGUID="{8C3292BD-F9C6-4EC1-848E-A3182832294D}">
+  DTS:VersionBuild="248"
+  DTS:VersionGUID="{F743468A-FD3A-4F8E-9DB4-538B91020A15}">
   <DTS:Property
     DTS:Name="PackageFormatVersion">8</DTS:Property>
   <DTS:ConnectionManagers>
@@ -821,7 +821,7 @@ AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</BinaryItem>
       <DTS:ObjectData>
         <SQLTask:SqlTaskData
           SQLTask:Connection="{12C26D31-71E3-4084-85A3-C3363301A0C8}"
-          SQLTask:SqlStatementSource="INSERT INTO audit.AuditLog&#xA;(&#xA;    LogDateTime,&#xA;    RunNumber,&#xA;    LogSource,&#xA;    TaskName,&#xA;    LogStatus,&#xA;    ExecutedBy,&#xA;    TargetTable&#xA;)&#xA;VALUES&#xA;(&#xA;    GETDATE(),&#xA;    ?,&#xA;    'SSIS Package',&#xA;    'Timesheet Migration',&#xA;    'STAGED',&#xA;    SYSTEM_USER,&#xA;    'staging.Timesheet'&#xA;)" xmlns:SQLTask="www.microsoft.com/sqlserver/dts/tasks/sqltask">
+          SQLTask:SqlStatementSource="INSERT INTO audit.AuditLog&#xA;(&#xA;    LogDateTime,&#xA;    RunNumber,&#xA;    LogSource,&#xA;    TaskName,&#xA;    LogStatus,&#xA;    ExecutedBy,&#xA;    TargetTable&#xA;)&#xA;VALUES&#xA;(&#xA;    GETDATE(),&#xA;    ?,&#xA;    'SSIS package',&#xA;    'Timesheet Migration',&#xA;    'STAGED',&#xA;    SYSTEM_USER,&#xA;    'staging.Timesheet'&#xA;)" xmlns:SQLTask="www.microsoft.com/sqlserver/dts/tasks/sqltask">
           <SQLTask:ParameterBinding
             SQLTask:ParameterName="NewParameterName"
             SQLTask:DtsVariableName="User::RunNumber"
