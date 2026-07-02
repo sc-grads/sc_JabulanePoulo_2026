@@ -156,6 +156,26 @@ PRIMARY KEY CLUSTERED
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
+-- =============================================
+-- Table: timesheet.EMployeeLeave
+-- =============================================
+CREATE TABLE [timesheet].[EmployeeLeave](
+	[LeaveID] [int] IDENTITY(1,1) NOT NULL,
+	[EmployeeID] [int] NOT NULL,
+	[LeaveType] [varchar](100) NULL,
+	[StartDate] [date] NULL,
+	[EndDate] [date] NULL,
+	[NumberOfDays] [decimal](5, 2) NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[LeaveID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+ALTER TABLE [timesheet].[EmployeeLeave]  WITH CHECK ADD FOREIGN KEY([EmployeeID])
+REFERENCES [timesheet].[Employee] ([EmployeeID])
+GO
 
 -- =============================================
 -- Table: timesheet.Timesheet

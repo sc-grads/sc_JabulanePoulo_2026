@@ -11,8 +11,8 @@
   DTS:LocaleID="7177"
   DTS:ObjectName="TimesheetMigration"
   DTS:PackageType="5"
-  DTS:VersionBuild="261"
-  DTS:VersionGUID="{F7807DBD-8C25-40FF-8FDB-98130DDCA1D4}">
+  DTS:VersionBuild="262"
+  DTS:VersionGUID="{D8E36DF6-8180-41F0-94DA-70DE7BC0356B}">
   <DTS:Property
     DTS:Name="PackageFormatVersion">8</DTS:Property>
   <DTS:ConnectionManagers>
@@ -1549,6 +1549,7 @@ AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==</BinaryItem>
           DTS:CreationName="Microsoft.Pipeline"
           DTS:DelayValidation="True"
           DTS:Description="Data Flow Task"
+          DTS:Disabled="True"
           DTS:DTSID="{30C9952F-CECE-4D82-9FD9-73A6B94CA7C3}"
           DTS:ExecutableType="Microsoft.Pipeline"
           DTS:LocaleID="-1"
