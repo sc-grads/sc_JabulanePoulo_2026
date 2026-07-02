@@ -1,0 +1,35 @@
+name: Run SSIS Timesheet Migration
+
+on:
+  push:
+    paths:
+      - 'ExcelFiles/**/*.xlsx'
+      - 'ExcelFiles/**/*.xls'
+
+jobs:
+  run-job:
+
+    runs-on: windows-latest
+
+    steps:
+
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Copy Excel files to SQL Server
+        shell: powershell
+        run: |
+          Copy-Item `
+            -Path ".\ExcelFiles\*" `
+            -Destination "\\"C:\sc_JabulanePoulo_2026\Projects\Timesheet\Jabulane_Poulo"\" `
+            -Recurse `
+            -Force
+
+      - name: Execute SQL Server Agent Job
+        shell: powershell
+        run: |
+          sqlcmd `
+            -S LAPTOP-7LSAQSR0 `
+            -d msdb `
+            -E `
+            -Q "EXEC msdb.dbo.sp_start_job @job_name='TimesheetMigration';"
