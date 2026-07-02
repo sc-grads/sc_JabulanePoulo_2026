@@ -11,8 +11,8 @@
   DTS:LocaleID="7177"
   DTS:ObjectName="TimesheetMigration"
   DTS:PackageType="5"
-  DTS:VersionBuild="248"
-  DTS:VersionGUID="{F743468A-FD3A-4F8E-9DB4-538B91020A15}">
+  DTS:VersionBuild="261"
+  DTS:VersionGUID="{F7807DBD-8C25-40FF-8FDB-98130DDCA1D4}">
   <DTS:Property
     DTS:Name="PackageFormatVersion">8</DTS:Property>
   <DTS:ConnectionManagers>
@@ -183,7 +183,7 @@
       DTS:ExecutableType="Microsoft.ScriptTask"
       DTS:LocaleID="-1"
       DTS:ObjectName="Increment Counter"
-      DTS:ThreadHint="0">
+      DTS:ThreadHint="1">
       <DTS:Variables />
       <DTS:ObjectData>
         <ScriptProject
@@ -845,7 +845,7 @@ AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</BinaryItem>
       <DTS:ObjectData>
         <SQLTask:SqlTaskData
           SQLTask:Connection="{12C26D31-71E3-4084-85A3-C3363301A0C8}"
-          SQLTask:SqlStatementSource="-- Delete all existing records&#xA;DELETE FROM timesheet.EmployeeLeave;&#xA;&#xA;-- Insert new records&#xA;INSERT INTO timesheet.EmployeeLeave&#xA;(&#xA;    EmployeeID,&#xA;    LeaveType,&#xA;    StartDate,&#xA;    EndDate,&#xA;    NumberOfDays&#xA;)&#xA;VALUES&#xA;(1, 'Annual Leave', '2026-05-13', '2026-05-15', 3.00),&#xA;(2, 'Annual Leave', '2026-05-13', '2026-05-15', 3.00),&#xA;(3, 'Annual Leave', '2026-05-19', '2026-05-20', 1.00),&#xA;(4, 'Annual Leave', '2026-05-20', '2026-05-21', 1.00),&#xA;(8, 'Annual Leave', '2026-05-13', '2026-05-14', 1.00);" xmlns:SQLTask="www.microsoft.com/sqlserver/dts/tasks/sqltask" />
+          SQLTask:SqlStatementSource="-- Delete all existing records&#xA;DELETE FROM timesheet.EmployeeLeave;&#xA;&#xA;-- Insert new records&#xA;INSERT INTO timesheet.EmployeeLeave&#xA;(&#xA;    EmployeeID,&#xA;    LeaveType,&#xA;    StartDate,&#xA;    EndDate,&#xA;    NumberOfDays&#xA;)&#xA;VALUES&#xA;(1, 'Annual Leave', '2026-05-13', '2026-05-15', 3),&#xA;(2, 'Annual Leave', '2026-05-13', '2026-05-15', 3),&#xA;(3, 'Annual Leave', '2026-05-19', '2026-05-20', 1),&#xA;(4, 'Annual Leave', '2026-05-20', '2026-05-21', 1),&#xA;(8, 'Annual Leave', '2026-05-13', '2026-05-14', 1),&#xA;(8, 'Sick Leave - half day' , '2026-05-26', '2026-05-26', 0.5);" xmlns:SQLTask="www.microsoft.com/sqlserver/dts/tasks/sqltask" />
       </DTS:ObjectData>
     </DTS:Executable>
     <DTS:Executable
@@ -2934,6 +2934,13 @@ where [refTable].[EmployeeID] = ?</property>
                           cachedDataType="text"
                           cachedName="Copy of Comments"
                           lineageId="Package\Loop Through Excel Files\Load Timesheet\Data Conversion.Outputs[Data Conversion Output].Columns[Copy of Comments]" />
+                        <inputColumn
+                          refId="Package\Loop Through Excel Files\Load Timesheet\Derived Column.Inputs[Derived Column Input].Columns[TotalHours]"
+                          cachedDataType="numeric"
+                          cachedName="TotalHours"
+                          cachedPrecision="5"
+                          cachedScale="2"
+                          lineageId="Package\Loop Through Excel Files\Load Timesheet\Data Conversion.Outputs[Data Conversion Output].Columns[TotalHours]" />
                       </inputColumns>
                       <externalMetadataColumns />
                     </input>
@@ -3012,6 +3019,30 @@ where [refTable].[EmployeeID] = ?</property>
                               description="Derived Column Friendly Expression"
                               expressionType="Notify"
                               name="FriendlyExpression">ISNULL([Copy of Comments])</property>
+                          </properties>
+                        </outputColumn>
+                        <outputColumn
+                          refId="Package\Loop Through Excel Files\Load Timesheet\Derived Column.Outputs[Derived Column Output].Columns[HoursWorked]"
+                          dataType="numeric"
+                          errorOrTruncationOperation="Computation"
+                          errorRowDisposition="FailComponent"
+                          lineageId="Package\Loop Through Excel Files\Load Timesheet\Derived Column.Outputs[Derived Column Output].Columns[HoursWorked]"
+                          name="HoursWorked"
+                          precision="16"
+                          scale="2"
+                          truncationRowDisposition="FailComponent">
+                          <properties>
+                            <property
+                              containsID="true"
+                              dataType="System.String"
+                              description="Derived Column Expression"
+                              name="Expression">(DT_NUMERIC,5,2)(#{Package\Loop Through Excel Files\Load Timesheet\Data Conversion.Outputs[Data Conversion Output].Columns[TotalHours]}) * 24</property>
+                            <property
+                              containsID="true"
+                              dataType="System.String"
+                              description="Derived Column Friendly Expression"
+                              expressionType="Notify"
+                              name="FriendlyExpression">(DT_NUMERIC,5,2)(TotalHours) * 24</property>
                           </properties>
                         </outputColumn>
                       </outputColumns>
@@ -3475,13 +3506,13 @@ where [refTable].[EmployeeID] = ?</property>
                           externalMetadataColumnId="Package\Loop Through Excel Files\Load Timesheet\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[Comments]"
                           lineageId="Package\Loop Through Excel Files\Load Timesheet\Data Conversion.Outputs[Data Conversion Output].Columns[Copy of Comments]" />
                         <inputColumn
-                          refId="Package\Loop Through Excel Files\Load Timesheet\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[TotalHours]"
+                          refId="Package\Loop Through Excel Files\Load Timesheet\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[HoursWorked]"
                           cachedDataType="numeric"
-                          cachedName="TotalHours"
-                          cachedPrecision="5"
+                          cachedName="HoursWorked"
+                          cachedPrecision="16"
                           cachedScale="2"
                           externalMetadataColumnId="Package\Loop Through Excel Files\Load Timesheet\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[HoursWorked]"
-                          lineageId="Package\Loop Through Excel Files\Load Timesheet\Data Conversion.Outputs[Data Conversion Output].Columns[TotalHours]" />
+                          lineageId="Package\Loop Through Excel Files\Load Timesheet\Derived Column.Outputs[Derived Column Output].Columns[HoursWorked]" />
                       </inputColumns>
                       <externalMetadataColumns
                         isUsed="True">
@@ -3694,7 +3725,7 @@ where [refTable].[EmployeeID] = ?</property>
       <DTS:ObjectData>
         <SQLTask:SqlTaskData
           SQLTask:Connection="{12C26D31-71E3-4084-85A3-C3363301A0C8}"
-          SQLTask:SqlStatementSource="-- =============================================&#xA;-- 1. CLEAN NULL HoursWorked&#xA;-- =============================================&#xA;UPDATE staging.Timesheet&#xA;SET HoursWorked = 0&#xA;WHERE HoursWorked IS NULL&#xA;  AND Processed = 0;&#xA;&#xA;-- =============================================&#xA;-- 2. UPDATE EmployeeID FROM SourceFile&#xA;-- =============================================&#xA;UPDATE s&#xA;SET s.EmployeeID = e.EmployeeID&#xA;FROM staging.Timesheet s&#xA;INNER JOIN timesheet.Employee e&#xA;    ON CONCAT(e.FirstName, ' ', e.LastName) =&#xA;        CASE&#xA;            WHEN s.SourceFile LIKE '%Buhle_Mkubha%' THEN 'Buhle Mkubha'&#xA;            WHEN s.SourceFile LIKE '%Charmane_Mchunu%' THEN 'Charmane Mchunu'&#xA;            WHEN s.SourceFile LIKE '%Jabulane_Poulo%' THEN 'Jabulane Poulo'&#xA;            WHEN s.SourceFile LIKE '%Kayden_Padayachee%' THEN 'Kayden Padayachee'&#xA;            WHEN s.SourceFile LIKE '%Lwazisile_Mhlambi%' THEN 'Lwazisile Mhlambi'&#xA;            WHEN s.SourceFile LIKE '%Rushil_Jivan%' THEN 'Rushil Jivan'&#xA;            WHEN s.SourceFile LIKE '%Shriya_Hariparsad%' THEN 'Shriya Hariparsad'&#xA;            WHEN s.SourceFile LIKE '%Teolan_Govender%' THEN 'Teolan Govender'&#xA;            ELSE NULL&#xA;        END&#xA;WHERE s.Processed = 0;&#xA;&#xA;-- =============================================&#xA;-- 3. INSERT INTO FINAL TABLE (FILTERED)&#xA;-- =============================================&#xA;INSERT INTO timesheet.Timesheet&#xA;(&#xA;    EmployeeID,&#xA;    WorkDate,&#xA;    DayOfWeek,&#xA;    WorkDescription,&#xA;    Comments,&#xA;    HoursWorked,&#xA;    StartTime,&#xA;    EndTime,&#xA;    ClientID,          -- Added ClientID to the INSERT list&#xA;    BillableStatus&#xA;)&#xA;SELECT&#xA;    s.EmployeeID,&#xA;    CAST(s.WorkDate AS DATE),&#xA;    s.DayOfWeek,&#xA;    s.WorkDescription,&#xA;    s.Comments,&#xA;    ISNULL(s.HoursWorked, 0),&#xA;    s.StartTime,&#xA;    s.EndTime,&#xA;    -- =================================================================&#xA;    -- 🟢 MAPPING CLIENT NAME TO CLIENT ID HERE&#xA;    -- =================================================================&#xA;    CASE &#xA;        WHEN LTRIM(RTRIM(s.ClientName)) = 'Internal Sambe' THEN 1&#xA;        WHEN LTRIM(RTRIM(s.ClientName)) = 'Discovery' THEN 2&#xA;        ELSE NULL -- This will throw an error if there are unknown clients, preventing bad data&#xA;    END AS ClientID,&#xA;    s.BillableStatus&#xA;FROM staging.Timesheet s&#xA;WHERE s.Processed = 0&#xA;  AND s.EmployeeID IN (SELECT EmployeeID FROM timesheet.Employee)&#xA;  AND s.Comments IS NOT NULL&#xA;  AND s.WorkDate IS NOT NULL&#xA;&#xA;  -- Exclude rows where WorkDescription is '.NET code'&#xA;  AND LTRIM(RTRIM(s.WorkDescription)) != '.NET code'&#xA;&#xA;  -- Remove weekends&#xA;  AND DATENAME(WEEKDAY, CAST(s.WorkDate AS DATE)) NOT IN ('Saturday', 'Sunday')&#xA;&#xA;  -- Remove public holidays (hard-coded)&#xA;  AND CAST(s.WorkDate AS DATE) NOT IN&#xA;  (&#xA;      '2026-01-01',&#xA;      '2026-03-21',&#xA;      '2026-04-03',&#xA;      '2026-04-06',&#xA;      '2026-04-27',&#xA;      '2026-05-01',&#xA;      '2026-06-16',&#xA;      '2026-08-09',&#xA;      '2026-09-24',&#xA;      '2026-12-16',&#xA;      '2026-12-25',&#xA;      '2026-12-26'&#xA;  );&#xA;&#xA;-- =============================================&#xA;-- 4. CAPTURE ROWS INSERTED&#xA;-- =============================================&#xA;DECLARE @RowsInserted INT = @@ROWCOUNT;&#xA;&#xA;-- =============================================&#xA;-- 5. MARK PROCESSED&#xA;-- =============================================&#xA;UPDATE staging.Timesheet&#xA;SET Processed = 1,&#xA;    ProcessedAt = GETDATE()&#xA;WHERE Processed = 0&#xA;  AND EmployeeID IN (SELECT EmployeeID FROM timesheet.Employee);&#xA;&#xA;-- =============================================&#xA;-- 6. UPDATE AUDIT LOG&#xA;-- =============================================&#xA;UPDATE audit.AuditLog&#xA;SET&#xA;    RowsInserted = @RowsInserted,&#xA;    LogStatus = 'SUCCESS',&#xA;    Message = CONCAT('Timesheet migration completed. Rows inserted: ', @RowsInserted, &#xA;                     '. Excluded .NET code rows. SourceFile column skipped.'),&#xA;    ExecutionDurationMs = DATEDIFF(MILLISECOND, LogDateTime, GETDATE())&#xA;WHERE TaskName = 'Timesheet Migration';&#xA;&#xA;-- =============================================&#xA;-- 7. RETURN ROW COUNT TO SSIS&#xA;-- =============================================&#xA;SELECT @RowsInserted AS RowsInserted;" xmlns:SQLTask="www.microsoft.com/sqlserver/dts/tasks/sqltask" />
+          SQLTask:SqlStatementSource="-- =============================================&#xA;-- 1. CLEAN NULL HoursWorked&#xA;-- =============================================&#xA;UPDATE staging.Timesheet&#xA;SET HoursWorked = 0&#xA;WHERE HoursWorked IS NULL&#xA;  AND Processed = 0;&#xA;&#xA;-- =============================================&#xA;-- 2. UPDATE EmployeeID FROM SourceFile&#xA;-- =============================================&#xA;UPDATE s&#xA;SET s.EmployeeID = e.EmployeeID&#xA;FROM staging.Timesheet s&#xA;INNER JOIN timesheet.Employee e&#xA;ON CONCAT(e.FirstName,' ',e.LastName)=&#xA;CASE&#xA;    WHEN s.SourceFile LIKE '%Buhle_Mkubha%' THEN 'Buhle Mkubha'&#xA;    WHEN s.SourceFile LIKE '%Charmane_Mchunu%' THEN 'Charmane Mchunu'&#xA;    WHEN s.SourceFile LIKE '%Jabulane_Poulo%' THEN 'Jabulane Poulo'&#xA;    WHEN s.SourceFile LIKE '%Kayden_Padayachee%' THEN 'Kayden Padayachee'&#xA;    WHEN s.SourceFile LIKE '%Lwazisile_Mhlambi%' THEN 'Lwazisile Mhlambi'&#xA;    WHEN s.SourceFile LIKE '%Rushil_Jivan%' THEN 'Rushil Jivan'&#xA;    WHEN s.SourceFile LIKE '%Shriya_Hariparsad%' THEN 'Shriya Hariparsad'&#xA;    WHEN s.SourceFile LIKE '%Teolan_Govender%' THEN 'Teolan Govender'&#xA;END&#xA;WHERE s.Processed = 0;&#xA;&#xA;-- =============================================&#xA;-- 3. INSERT INTO FINAL TABLE&#xA;-- =============================================&#xA;INSERT INTO timesheet.Timesheet&#xA;(&#xA;    EmployeeID,&#xA;    WorkDate,&#xA;    DayOfWeek,&#xA;    WorkDescription,&#xA;    Comments,&#xA;    HoursWorked,&#xA;    StartTime,&#xA;    EndTime,&#xA;    ClientID,&#xA;    BillableStatus&#xA;)&#xA;SELECT&#xA;    s.EmployeeID,&#xA;    CAST(s.WorkDate AS DATE),&#xA;    s.DayOfWeek,&#xA;    s.WorkDescription,&#xA;    s.Comments,&#xA;&#xA;    -- Use the value imported from Excel&#xA;    CAST(ISNULL(s.HoursWorked,0) AS DECIMAL(5,2)) AS HoursWorked,&#xA;&#xA;    s.StartTime,&#xA;    s.EndTime,&#xA;&#xA;    CASE&#xA;        WHEN LTRIM(RTRIM(s.ClientName)) = 'Internal Sambe' THEN 1&#xA;        WHEN LTRIM(RTRIM(s.ClientName)) = 'Discovery' THEN 2&#xA;        ELSE NULL&#xA;    END AS ClientID,&#xA;&#xA;    s.BillableStatus&#xA;&#xA;FROM staging.Timesheet s&#xA;&#xA;WHERE s.Processed = 0&#xA;  AND s.EmployeeID IS NOT NULL&#xA;  AND s.WorkDate IS NOT NULL&#xA;  AND s.Comments IS NOT NULL&#xA;  AND LTRIM(RTRIM(s.WorkDescription)) &lt;&gt; '.NET code'&#xA;&#xA;  -- Exclude weekends&#xA;  AND DATENAME(WEEKDAY, CAST(s.WorkDate AS DATE))&#xA;      NOT IN ('Saturday','Sunday')&#xA;&#xA;  -- Exclude public holidays&#xA;  AND CAST(s.WorkDate AS DATE) NOT IN&#xA;  (&#xA;      '2026-01-01',&#xA;      '2026-03-21',&#xA;      '2026-04-03',&#xA;      '2026-04-06',&#xA;      '2026-04-27',&#xA;      '2026-05-01',&#xA;      '2026-06-16',&#xA;      '2026-08-09',&#xA;      '2026-09-24',&#xA;      '2026-12-16',&#xA;      '2026-12-25',&#xA;      '2026-12-26'&#xA;  )&#xA;&#xA;  -- Prevent duplicate records&#xA;  AND NOT EXISTS&#xA;  (&#xA;      SELECT 1&#xA;      FROM timesheet.Timesheet t&#xA;      WHERE t.EmployeeID = s.EmployeeID&#xA;        AND t.WorkDate = CAST(s.WorkDate AS DATE)&#xA;        AND t.WorkDescription = s.WorkDescription&#xA;        AND ISNULL(t.Comments,'') = ISNULL(s.Comments,'')&#xA;  );&#xA;&#xA;-- =============================================&#xA;-- 4. CAPTURE ROWS INSERTED&#xA;-- =============================================&#xA;DECLARE @RowsInserted INT = @@ROWCOUNT;&#xA;&#xA;-- =============================================&#xA;-- 5. MARK STAGING RECORDS AS PROCESSED&#xA;-- =============================================&#xA;UPDATE staging.Timesheet&#xA;SET&#xA;    Processed = 1,&#xA;    ProcessedAt = GETDATE()&#xA;WHERE Processed = 0&#xA;  AND EmployeeID IS NOT NULL;&#xA;&#xA;-- =============================================&#xA;-- 6. UPDATE AUDIT LOG&#xA;-- =============================================&#xA;UPDATE audit.AuditLog&#xA;SET&#xA;    RowsInserted = @RowsInserted,&#xA;    LogStatus = 'SUCCESS',&#xA;    Message = CONCAT(&#xA;        'Timesheet migration completed successfully. ',&#xA;        @RowsInserted,&#xA;        ' rows inserted.'&#xA;    ),&#xA;    ExecutionDurationMs = DATEDIFF(MILLISECOND, LogDateTime, GETDATE())&#xA;WHERE TaskName = 'Timesheet Migration';&#xA;&#xA;-- =============================================&#xA;-- 7. RETURN ROW COUNT TO SSIS&#xA;-- =============================================&#xA;SELECT @RowsInserted AS RowsInserted;" xmlns:SQLTask="www.microsoft.com/sqlserver/dts/tasks/sqltask" />
       </DTS:ObjectData>
     </DTS:Executable>
     <DTS:Executable
@@ -3764,18 +3795,10 @@ where [refTable].[EmployeeID] = ?</property>
     <DTS:PrecedenceConstraint
       DTS:refId="Package.PrecedenceConstraints[Constraint 4]"
       DTS:CreationName=""
-      DTS:DTSID="{31C26F56-B6AC-40FF-972C-16942DA4802C}"
+      DTS:DTSID="{CC1D8AFD-430D-4925-8742-03F11C755F63}"
       DTS:From="Package\Update Audit Log"
       DTS:LogicalAnd="True"
       DTS:ObjectName="Constraint 4"
-      DTS:To="Package\Increment Counter" />
-    <DTS:PrecedenceConstraint
-      DTS:refId="Package.PrecedenceConstraints[Constraint 5]"
-      DTS:CreationName=""
-      DTS:DTSID="{598AFFEA-542D-46B1-8C74-087039C12B3C}"
-      DTS:From="Package\Increment Counter"
-      DTS:LogicalAnd="True"
-      DTS:ObjectName="Constraint 5"
       DTS:To="Package\Leave" />
   </DTS:PrecedenceConstraints>
   <DTS:DesignTimeProperties><![CDATA[<?xml version="1.0"?>
@@ -3797,7 +3820,7 @@ where [refTable].[EmployeeID] = ?</property>
         <NodeLayout
           Size="164,41.6"
           Id="Package\Increment Counter"
-          TopLeft="357.499980467062,737.199997360309" />
+          TopLeft="64.1666631607546,679.999997758071" />
         <NodeLayout
           Size="163.2,41.6"
           Id="Package\Initialise Audit Log"
@@ -3805,7 +3828,7 @@ where [refTable].[EmployeeID] = ?</property>
         <NodeLayout
           Size="171.2,41.6"
           Id="Package\Leave"
-          TopLeft="345.833314437834,813.399997414549" />
+          TopLeft="347.499981013438,760.133332381115" />
         <NodeLayout
           Size="200.8,41.6"
           Id="Package\Loop Through Excel Files\Extract Employee &amp; Month"
@@ -3979,52 +4002,18 @@ where [refTable].[EmployeeID] = ?</property>
         </EdgeLayout>
         <EdgeLayout
           Id="Package.PrecedenceConstraints[Constraint 4]"
-          TopLeft="438.516647110963,694.333330735829">
+          TopLeft="435.316647384151,694.333330735829">
           <EdgeLayout.Curve>
             <mssgle:Curve
               StartConnector="{assembly:Null}"
-              EndConnector="0,42.8666666244798"
+              EndConnector="0,65.8000016452863"
               Start="0,0"
-              End="0,35.3666666244798">
+              End="0,58.3000016452863">
               <mssgle:Curve.Segments>
                 <mssgle:SegmentCollection
                   Capacity="5">
                   <mssgle:LineSegment
-                    End="0,35.3666666244798" />
-                </mssgle:SegmentCollection>
-              </mssgle:Curve.Segments>
-            </mssgle:Curve>
-          </EdgeLayout.Curve>
-          <EdgeLayout.Labels>
-            <EdgeLabelCollection />
-          </EdgeLayout.Labels>
-        </EdgeLayout>
-        <EdgeLayout
-          Id="Package.PrecedenceConstraints[Constraint 5]"
-          TopLeft="439.499980467062,778.799997360309">
-          <EdgeLayout.Curve>
-            <mssgle:Curve
-              StartConnector="{assembly:Null}"
-              EndConnector="-8.06666602922797,34.6000000542401"
-              Start="0,0"
-              End="-8.06666602922797,27.1000000542401">
-              <mssgle:Curve.Segments>
-                <mssgle:SegmentCollection
-                  Capacity="5">
-                  <mssgle:LineSegment
-                    End="0,13.3000000271201" />
-                  <mssgle:CubicBezierSegment
-                    Point1="0,13.3000000271201"
-                    Point2="0,17.3000000271201"
-                    Point3="-4,17.3000000271201" />
-                  <mssgle:LineSegment
-                    End="-4.06666602922797,17.3000000271201" />
-                  <mssgle:CubicBezierSegment
-                    Point1="-4.06666602922797,17.3000000271201"
-                    Point2="-8.06666602922797,17.3000000271201"
-                    Point3="-8.06666602922797,21.3000000271201" />
-                  <mssgle:LineSegment
-                    End="-8.06666602922797,27.1000000542401" />
+                    End="0,58.3000016452863" />
                 </mssgle:SegmentCollection>
               </mssgle:Curve.Segments>
             </mssgle:Curve>
