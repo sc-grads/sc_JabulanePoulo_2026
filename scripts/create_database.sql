@@ -165,7 +165,6 @@ GO
 SET QUOTED_IDENTIFIER ON
 GO
 
-
 CREATE TABLE [timesheet].[Timesheet](
 	[TimesheetID] [bigint] IDENTITY(1,1) NOT NULL,
 	[EmployeeID] [int] NOT NULL,
