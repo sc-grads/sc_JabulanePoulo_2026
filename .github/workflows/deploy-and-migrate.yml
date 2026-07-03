@@ -16,67 +16,11 @@ jobs:
       sql-script-path: scripts/create_database.sql
     secrets: inherit
 
-  # Request approval for Partner environment
-  request-approval-partner:
+  # Run TimesheetMigration Job after DevTest deployment
+  RunMigrationJob:
     needs: DevTest
     runs-on: ubuntu-latest
-    environment: partner-sql
-
-    steps:
-      - name: Send Partner approval request to Teams
-        run: |
-          curl -H "Content-Type: application/json" \
-          -d '{
-            "title": "🚨 PARTNER SQL DEPLOYMENT APPROVAL REQUIRED",
-            "text": "**A production deployment is waiting for your approval**\n\n",
-            "facts": [
-              {
-                "name": "🌍 Environment",
-                "value": "Partner SQL (Production)"
-              },
-              {
-                "name": "👤 Requested by",
-                "value": "${{ github.actor }}"
-              },
-              {
-                "name": "🔀 Branch",
-                "value": "${{ github.ref_name }}"
-              },
-              {
-                "name": "🔄 Run ID",
-                "value": "${{ github.run_id }}"
-              },
-              {
-                "name": "✅ DevTest Status",
-                "value": "Completed Successfully"
-              },
-              {
-                "name": "⏰ Timestamp",
-                "value": "${{ github.event.head_commit.timestamp }}"
-              }
-            ],
-            "potentialAction": "[View Workflow Run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})",
-            "themeColor": "FFA500"
-          }' \
-          ${{ secrets.TEAMS_WEBHOOK_URL }}
-
-      - name: Waiting for partner approval
-        run: echo "⏳ Waiting for partner-sql approval..."
-
-  # Deploy to Partner/Production Environment
-  Production:
-    needs: request-approval-partner
-    uses: ./.github/workflows/reusable-deploy.yml
-    with:
-      environment-name: partner-sql
-      sql-script-path: Database/create_database.sql
-    secrets: inherit
-
-  # Run TimesheetMigration Job after Partner deployment
-  RunMigrationJob:
-    needs: Production
-    runs-on: ubuntu-latest
-    environment: partner-sql
+    environment: local-sql
     if: success()
     
     steps:
@@ -136,15 +80,24 @@ jobs:
               -C)
             
             echo "Job Status: $JOB_STATUS"
+            
+            if [ "$JOB_STATUS" == "Failed" ] || [ "$JOB_STATUS" == "Canceled" ]; then
+              echo "❌ Job failed or was cancelled. Check SQL Server logs for details."
+              exit 1
+            elif [ "$JOB_STATUS" == "Succeeded" ]; then
+              echo "✅ Job completed successfully!"
+            else
+              echo "⚠️ Job status: $JOB_STATUS. Please check manually if this is expected."
+            fi
           else
             echo "⚠️ WARNING: TimesheetMigration job not found in this environment."
+            exit 1
           fi
 
   # Notifications
   notify-success:
     needs:
       - DevTest
-      - Production
       - RunMigrationJob
     if: success()
     runs-on: ubuntu-latest
@@ -154,14 +107,10 @@ jobs:
           curl -H "Content-Type: application/json" \
           -d '{
             "title": "✅ SQL DEPLOYMENT SUCCESS",
-            "text": "**All deployments completed successfully!**\n\n",
+            "text": "**Deployment completed successfully!**\n\n",
             "facts": [
               {
                 "name": "🟢 DevTest Environment",
-                "value": "Deployed Successfully"
-              },
-              {
-                "name": "🟢 Partner Environment",
                 "value": "Deployed Successfully"
               },
               {
@@ -196,15 +145,12 @@ jobs:
   notify-failure:
     needs:
       - DevTest
-      - Production
       - RunMigrationJob
     if: failure()
     runs-on: ubuntu-latest
     steps:
       - name: Send Failure Notification to Teams
         run: |
-          ERROR_TYPE="${{ contains(needs.*.result, 'failure') && 'One or more deployments failed' || 'Unknown error' }}"
-          
           curl -H "Content-Type: application/json" \
           -d '{
             "title": "❌ SQL DEPLOYMENT FAILED",
@@ -219,8 +165,8 @@ jobs:
                 "value": "TimesheetDB"
               },
               {
-                "name": "🔴 Failed Environment",
-                "value": "${{ contains(needs.DevTest.result, 'failure') && 'DevTest' || '' }}${{ contains(needs.Production.result, 'failure') && 'Partner' || '' }}${{ contains(needs.RunMigrationJob.result, 'failure') && 'Job Execution' || '' }}"
+                "name": "🔴 Failed Stage",
+                "value": "${{ contains(needs.DevTest.result, 'failure') && 'Database Deployment' || '' }}${{ contains(needs.RunMigrationJob.result, 'failure') && 'Job Execution' || '' }}"
               },
               {
                 "name": "👤 Triggered by",
