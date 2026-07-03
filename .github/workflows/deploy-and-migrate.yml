@@ -8,227 +8,144 @@ on:
   workflow_dispatch:
 
 jobs:
-  # Deploy to DevTest Environment using self-hosted runner
+
   DevTest:
     uses: ./.github/workflows/reusable-deploy.yml
     with:
       environment-name: local-sql
+      runner-label: LAPTOP-7LSAQSR0
       sql-script-path: scripts/create_database.sql
-      runner-label: LAPTOP-7LSAQSR0  # Use your specific runner
     secrets: inherit
 
-  # Request approval for Partner environment
-  request-approval-partner:
+  request_approval_partner:
+    name: Request Partner Approval
     needs: DevTest
-    runs-on: ubuntu-latest  # This can stay on GitHub-hosted for the approval step
+    runs-on: ubuntu-latest
     environment: partner-sql
 
     steps:
-      - name: Send Partner approval request to Teams
-        run: |
-          curl -H "Content-Type: application/json" \
-          -d '{
-            "title": " PARTNER SQL DEPLOYMENT APPROVAL REQUIRED",
-            "text": "**A production deployment is waiting for your approval**\n\n",
-            "facts": [
-              {
-                "name": " Environment",
-                "value": "Partner SQL (Production)"
-              },
-              {
-                "name": " Requested by",
-                "value": "${{ github.actor }}"
-              },
-              {
-                "name": " Branch",
-                "value": "${{ github.ref_name }}"
-              },
-              {
-                "name": " Run ID",
-                "value": "${{ github.run_id }}"
-              },
-              {
-                "name": " DevTest Status",
-                "value": "Completed Successfully"
-              },
-              {
-                "name": " Timestamp",
-                "value": "${{ github.event.head_commit.timestamp }}"
-              }
-            ],
-            "potentialAction": "[View Workflow Run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})",
-            "themeColor": "FFA500"
-          }' \
-          ${{ secrets.TEAMS_WEBHOOK_URL }}
+      - name: Waiting for approval
+        run: echo "Waiting for partner approval..."
 
-      - name: Waiting for partner approval
-        run: echo " Waiting for partner-sql approval..."
-
-  # Deploy to Partner/Production Environment using self-hosted runner
   Production:
-    needs: request-approval-partner
     uses: ./.github/workflows/reusable-deploy.yml
+    needs: request_approval_partner
     with:
       environment-name: partner-sql
-      sql-script-path: Database/create_database.sql
-      runner-label: DESKTOP-DBA1BPB  # Use your other runner for production
+      runner-label: DESKTOP-DBA1BPB
+      sql-script-path: scripts/create_database.sql
     secrets: inherit
 
-  # Run TimesheetMigration Job after Partner deployment
   RunMigrationJob:
+    name: Run SQL Agent Job
     needs: Production
-    runs-on: [self-hosted, DESKTOP-DBA1BPB]  # Run on production runner
+    runs-on:
+      - self-hosted
+      - DESKTOP-DBA1BPB
+
     environment: partner-sql
-    if: success()
-    
+
     steps:
-      - name: Checkout code
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Check and Run TimesheetMigration Job
+      - name: Run TimesheetMigration SQL Agent Job
+        shell: pwsh
         env:
           SERVER: ${{ secrets.SQL_SERVER }}
-          DATABASE: TimesheetDB
+
         run: |
-          echo "Checking if TimesheetMigration job exists..."
-          
-          # Check if job exists using Windows Authentication (since it's a Windows runner)
-          JOB_EXISTS=$(sqlcmd -S "$env:SERVER" -d "msdb" -Q "SET NOCOUNT ON; SELECT COUNT(*) FROM sysjobs WHERE name = 'TimesheetMigration'" -h-1)
-          
-          echo "Job exists: $JOB_EXISTS"
-          
-          if ($JOB_EXISTS -eq "1") {
-            Write-Host "Starting TimesheetMigration job..."
-            sqlcmd -S "$env:SERVER" -d "msdb" -Q "EXEC dbo.sp_start_job N'TimesheetMigration';"
-            
-            Write-Host " Job started successfully."
-            
-            # Wait and check job status
-            Start-Sleep -Seconds 10
-            
-            $JOB_STATUS = sqlcmd -S "$env:SERVER" -d "msdb" -Q "SET NOCOUNT ON; SELECT TOP 1 CASE WHEN run_status = 0 THEN 'Failed' WHEN run_status = 1 THEN 'Succeeded' WHEN run_status = 2 THEN 'Retry' WHEN run_status = 3 THEN 'Canceled' ELSE 'Unknown' END as Status FROM sysjobhistory h JOIN sysjobs j ON h.job_id = j.job_id WHERE j.name = 'TimesheetMigration' ORDER BY h.instance_id DESC" -h-1
-            
-            Write-Host "Job Status: $JOB_STATUS"
-            
-            if ($JOB_STATUS -eq "Failed" -or $JOB_STATUS -eq "Canceled") {
-              Write-Host " Job failed or was cancelled. Check SQL Server logs for details."
+
+          Write-Host "Checking for SQL Agent Job..."
+
+          $JobExists = (
+            sqlcmd `
+              -S $env:SERVER `
+              -d msdb `
+              -Q "SET NOCOUNT ON;
+                  SELECT COUNT(*) FROM dbo.sysjobs
+                  WHERE name='TimesheetMigration';" `
+              -h -1
+          ).Trim()
+
+          if ($JobExists -ne "1")
+          {
+              Write-Host "TimesheetMigration job not found."
               exit 1
-            }
-            elseif ($JOB_STATUS -eq "Succeeded") {
-              Write-Host " Job completed successfully!"
-            }
-            else {
-              Write-Host " Job status: $JOB_STATUS. Please check manually if this is expected."
-            }
           }
-          else {
-            Write-Host " WARNING: TimesheetMigration job not found in this environment."
-            exit 1
-          }
-        shell: pwsh  # Use PowerShell on Windows runner
 
-  # Notifications
-  notify-success:
+          Write-Host "Starting SQL Agent Job..."
+
+          sqlcmd `
+            -S $env:SERVER `
+            -d msdb `
+            -Q "EXEC dbo.sp_start_job @job_name='TimesheetMigration';"
+
+          Start-Sleep -Seconds 15
+
+          $Status = (
+            sqlcmd `
+              -S $env:SERVER `
+              -d msdb `
+              -Q "
+              SET NOCOUNT ON;
+
+              SELECT TOP (1)
+
+              CASE run_status
+                  WHEN 0 THEN 'Failed'
+                  WHEN 1 THEN 'Succeeded'
+                  WHEN 2 THEN 'Retry'
+                  WHEN 3 THEN 'Cancelled'
+                  ELSE 'Unknown'
+              END
+
+              FROM dbo.sysjobhistory h
+              JOIN dbo.sysjobs j
+                ON h.job_id = j.job_id
+
+              WHERE j.name='TimesheetMigration'
+
+              ORDER BY instance_id DESC;
+              " `
+              -h -1
+          ).Trim()
+
+          Write-Host "Job Status: $Status"
+
+          if ($Status -eq "Failed" -or $Status -eq "Cancelled")
+          {
+              exit 1
+          }
+
+          Write-Host "Migration completed successfully."
+
+  notify_success:
+    name: Notify Success
     needs:
       - DevTest
       - Production
       - RunMigrationJob
+
     if: success()
-    runs-on: ubuntu-latest
-    steps:
-      - name: Send Success Notification to Teams
-        run: |
-          curl -H "Content-Type: application/json" \
-          -d '{
-            "title": " SQL DEPLOYMENT SUCCESS",
-            "text": "**All deployments completed successfully!**\n\n",
-            "facts": [
-              {
-                "name": " DevTest Environment",
-                "value": "Deployed Successfully on LAPTOP-7LSAQSR0"
-              },
-              {
-                "name": " Partner Environment",
-                "value": "Deployed Successfully on DESKTOP-DBA1BPB"
-              },
-              {
-                "name": " TimesheetMigration Job",
-                "value": "Executed Successfully"
-              },
-              {
-                "name": " Database",
-                "value": "TimesheetDB"
-              },
-              {
-                "name": " Deployed by",
-                "value": "${{ github.actor }}"
-              },
-              {
-                "name": " Branch",
-                "value": "${{ github.ref_name }}"
-              },
-              {
-                "name": " Run ID",
-                "value": "${{ github.run_id }}"
-              },
-              {
-                "name": " Commit",
-                "value": "${{ github.sha }}"
-              }
-            ],
-            "themeColor": "00FF00"
-          }' \
-          ${{ secrets.TEAMS_WEBHOOK_URL }}
 
-  notify-failure:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Success
+        run: echo "Deployment completed successfully."
+
+  notify_failure:
+    name: Notify Failure
     needs:
       - DevTest
       - Production
       - RunMigrationJob
+
     if: failure()
+
     runs-on: ubuntu-latest
+
     steps:
-      - name: Send Failure Notification to Teams
-        run: |
-          curl -H "Content-Type: application/json" \
-          -d '{
-            "title": " SQL DEPLOYMENT FAILED",
-            "text": "**Deployment failure detected - immediate action required**\n\n",
-            "facts": [
-              {
-                "name": " Status",
-                "value": "Deployment Failed"
-              },
-              {
-                "name": " Database",
-                "value": "TimesheetDB"
-              },
-              {
-                "name": " Failed Environment",
-                "value": "${{ contains(needs.DevTest.result, 'failure') && 'DevTest (LAPTOP-7LSAQSR0)' || '' }}${{ contains(needs.Production.result, 'failure') && 'Partner (DESKTOP-DBA1BPB)' || '' }}${{ contains(needs.RunMigrationJob.result, 'failure') && 'Job Execution' || '' }}"
-              },
-              {
-                "name": " Triggered by",
-                "value": "${{ github.actor }}"
-              },
-              {
-                "name": " Branch",
-                "value": "${{ github.ref_name }}"
-              },
-              {
-                "name": " Run ID",
-                "value": "${{ github.run_id }}"
-              },
-              {
-                "name": " Commit",
-                "value": "${{ github.sha }}"
-              },
-              {
-                "name": " Time",
-                "value": "${{ github.event.head_commit.timestamp }}"
-              }
-            ],
-            "potentialAction": "[View Logs](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})",
-            "themeColor": "FF0000"
-          }' \
-          ${{ secrets.TEAMS_WEBHOOK_URL }}
+      - name: Failure
+        run: echo "Deployment failed."

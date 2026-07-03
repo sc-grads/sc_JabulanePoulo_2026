@@ -6,68 +6,91 @@ on:
       environment-name:
         required: true
         type: string
-      sql-script-path:
-        required: false
-        type: string
-        default: "scripts/create_database.sql"
+
       runner-label:
-        required: false
+        required: true
         type: string
-        default: "self-hosted"
+
+      sql-script-path:
+        required: true
+        type: string
 
 jobs:
+
   deploy:
-    runs-on: [self-hosted, ${{ inputs.runner-label }}]
-    
+
+    runs-on:
+      - self-hosted
+      - ${{ inputs.runner-label }}
+
     environment: ${{ inputs.environment-name }}
 
     steps:
-      - name: Checkout code
+
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Debug Connection Details
-        run: |
-          echo "Server: ${{ secrets.SQL_SERVER }}"
-          echo "Database: TimesheetDB"
-          echo "Script Path: ${{ inputs.sql-script-path }}"
-          echo "Runner: ${{ inputs.runner-label }}"
+      - name: Show Deployment Details
         shell: pwsh
+        run: |
+          Write-Host "Server : ${{ secrets.SQL_SERVER }}"
+          Write-Host "Runner : ${{ inputs.runner-label }}"
+          Write-Host "Script : ${{ inputs.sql-script-path }}"
 
       - name: Execute SQL Script
+        shell: pwsh
         env:
           SERVER: ${{ secrets.SQL_SERVER }}
-          DATABASE: TimesheetDB
+
         run: |
-          Write-Host "Creating database and tables on $env:SERVER..."
-          
-          # Using sqlcmd with Windows Authentication
-          sqlcmd -S "$env:SERVER" -d "master" -i "${{ inputs.sql-script-path }}" -b
-          
-          if ($LASTEXITCODE -ne 0) {
-            Write-Host " SQL script execution failed with exit code: $LASTEXITCODE"
-            exit $LASTEXITCODE
+
+          sqlcmd `
+            -S $env:SERVER `
+            -d master `
+            -b `
+            -i "${{ inputs.sql-script-path }}"
+
+          if ($LASTEXITCODE -ne 0)
+          {
+              throw "SQL deployment failed."
           }
-          
-          Write-Host " SQL script executed successfully."
-        shell: pwsh
+
+          Write-Host "Deployment completed."
 
       - name: Verify Deployment
+        shell: pwsh
         env:
           SERVER: ${{ secrets.SQL_SERVER }}
-          DATABASE: TimesheetDB
+
         run: |
-          Write-Host "Verifying database deployment..."
-          
-          $EmployeeCount = sqlcmd -S "$env:SERVER" -d "TimesheetDB" -Q "SET NOCOUNT ON; SELECT COUNT(*) FROM timesheet.Employee" -h-1
-          $ClientCount = sqlcmd -S "$env:SERVER" -d "TimesheetDB" -Q "SET NOCOUNT ON; SELECT COUNT(*) FROM timesheet.Client" -h-1
-          
-          Write-Host "Employee Count: $EmployeeCount"
-          Write-Host "Client Count: $ClientCount"
-          
-          if ($EmployeeCount -gt 0 -and $ClientCount -gt 0) {
-            Write-Host " Database verification successful!"
+
+          $Employees = (
+            sqlcmd `
+              -S $env:SERVER `
+              -d TimesheetDB `
+              -Q "SET NOCOUNT ON; SELECT COUNT(*) FROM timesheet.Employee;" `
+              -h -1
+          ).Trim()
+
+          $Clients = (
+            sqlcmd `
+              -S $env:SERVER `
+              -d TimesheetDB `
+              -Q "SET NOCOUNT ON; SELECT COUNT(*) FROM timesheet.Client;" `
+              -h -1
+          ).Trim()
+
+          Write-Host "Employees: $Employees"
+          Write-Host "Clients: $Clients"
+
+          if ([int]$Employees -lt 1)
+          {
+              throw "Employee table is empty."
           }
-          else {
-            Write-Host " Database verification completed with warnings."
+
+          if ([int]$Clients -lt 1)
+          {
+              throw "Client table is empty."
           }
-        shell: pwsh
+
+          Write-Host "Database verification successful."
