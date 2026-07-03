@@ -10,58 +10,64 @@ on:
         required: false
         type: string
         default: "scripts/create_database.sql"
+      runner-label:
+        required: false
+        type: string
+        default: "self-hosted"
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest
-
+    runs-on: [self-hosted, ${{ inputs.runner-label }}]
+    
     environment: ${{ inputs.environment-name }}
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install SQLCMD
-        run: |
-          curl https://packages.microsoft.com/keys/microsoft.asc | sudo tee /etc/apt/trusted.gpg.d/microsoft.asc
-          curl https://packages.microsoft.com/config/ubuntu/22.04/prod.list | sudo tee /etc/apt/sources.list.d/mssql-release.list
-          sudo apt-get update
-          sudo ACCEPT_EULA=Y apt-get install -y mssql-tools18
-
       - name: Debug Connection Details
         run: |
           echo "Server: ${{ secrets.SQL_SERVER }}"
-          echo "Port: ${{ secrets.SQL_PORT }}"
-          echo "Username: ${{ secrets.SQL_USERNAME }}"
+          echo "Database: TimesheetDB"
           echo "Script Path: ${{ inputs.sql-script-path }}"
+          echo "Runner: ${{ inputs.runner-label }}"
+        shell: pwsh
 
       - name: Execute SQL Script
         env:
           SERVER: ${{ secrets.SQL_SERVER }}
-          PORT: ${{ secrets.SQL_PORT }}
-          USERNAME: ${{ secrets.SQL_USERNAME }}
-          PASSWORD: ${{ secrets.SQL_PASSWORD }}
+          DATABASE: TimesheetDB
         run: |
-          /opt/mssql-tools18/bin/sqlcmd \
-            -S "${SERVER},${PORT}" \
-            -U "$USERNAME" \
-            -P "$PASSWORD" \
-            -d "master" \
-            -i "${{ inputs.sql-script-path }}" \
-            -C
+          Write-Host "Creating database and tables on $env:SERVER..."
+          
+          # Using sqlcmd with Windows Authentication
+          sqlcmd -S "$env:SERVER" -d "master" -i "${{ inputs.sql-script-path }}" -b
+          
+          if ($LASTEXITCODE -ne 0) {
+            Write-Host " SQL script execution failed with exit code: $LASTEXITCODE"
+            exit $LASTEXITCODE
+          }
+          
+          Write-Host " SQL script executed successfully."
+        shell: pwsh
 
       - name: Verify Deployment
         env:
           SERVER: ${{ secrets.SQL_SERVER }}
-          PORT: ${{ secrets.SQL_PORT }}
-          USERNAME: ${{ secrets.SQL_USERNAME }}
-          PASSWORD: ${{ secrets.SQL_PASSWORD }}
+          DATABASE: TimesheetDB
         run: |
-          echo "Verifying database deployment..."
-          /opt/mssql-tools18/bin/sqlcmd \
-            -S "${SERVER},${PORT}" \
-            -U "$USERNAME" \
-            -P "$PASSWORD" \
-            -d "TimesheetDB" \
-            -Q "SELECT 'Database: TimesheetDB' as Status; SELECT COUNT(*) as EmployeeCount FROM timesheet.Employee; SELECT COUNT(*) as ClientCount FROM timesheet.Client;" \
-            -C || echo "Verification queries may fail if tables are empty or database doesn't exist yet"
+          Write-Host "Verifying database deployment..."
+          
+          $EmployeeCount = sqlcmd -S "$env:SERVER" -d "TimesheetDB" -Q "SET NOCOUNT ON; SELECT COUNT(*) FROM timesheet.Employee" -h-1
+          $ClientCount = sqlcmd -S "$env:SERVER" -d "TimesheetDB" -Q "SET NOCOUNT ON; SELECT COUNT(*) FROM timesheet.Client" -h-1
+          
+          Write-Host "Employee Count: $EmployeeCount"
+          Write-Host "Client Count: $ClientCount"
+          
+          if ($EmployeeCount -gt 0 -and $ClientCount -gt 0) {
+            Write-Host " Database verification successful!"
+          }
+          else {
+            Write-Host " Database verification completed with warnings."
+          }
+        shell: pwsh
