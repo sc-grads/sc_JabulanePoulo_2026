@@ -11,8 +11,8 @@
   DTS:LocaleID="7177"
   DTS:ObjectName="TimesheetMigration"
   DTS:PackageType="5"
-  DTS:VersionBuild="263"
-  DTS:VersionGUID="{FCD90A87-4DD5-475E-AA8D-86983E7E3DE6}">
+  DTS:VersionBuild="265"
+  DTS:VersionGUID="{9C481E80-383E-4AC4-8754-A9AF9846B6E8}">
   <DTS:Property
     DTS:Name="PackageFormatVersion">8</DTS:Property>
   <DTS:ConnectionManagers>
@@ -864,7 +864,7 @@ AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</BinaryItem>
         <DTS:ObjectData>
           <ForEachFileEnumeratorProperties>
             <FEFEProperty
-              Folder="C:\sc_JabulanePoulo_2026\Projects\Timesheet\" />
+              Folder="C:\Timesheets" />
             <FEFEProperty
               FileSpec="*.xlsx" />
             <FEFEProperty
@@ -3706,8 +3706,8 @@ where [refTable].[EmployeeID] = ?</property>
       <DTS:ForEachVariableMappings>
         <DTS:ForEachVariableMapping
           DTS:CreationName=""
-          DTS:DTSID="{6EE10645-09CB-4661-A3FB-2D65E20CA3F9}"
-          DTS:ObjectName="{6EE10645-09CB-4661-A3FB-2D65E20CA3F9}"
+          DTS:DTSID="{CD0C7BD9-461A-4C09-BA5B-D9614AB72559}"
+          DTS:ObjectName="{CD0C7BD9-461A-4C09-BA5B-D9614AB72559}"
           DTS:ValueIndex="0"
           DTS:VariableName="User::CurrentFile" />
       </DTS:ForEachVariableMappings>
@@ -4383,9 +4383,7 @@ where [refTable].[EmployeeID] = ?</property>
             </mssgle:Curve>
           </EdgeLayout.Curve>
           <EdgeLayout.Labels>
-            <mssgm:EdgeLabel
-              BoundingBox="0,0,0,0"
-              RelativePosition="Any" />
+            <EdgeLabelCollection />
           </EdgeLayout.Labels>
         </EdgeLayout>
         <EdgeLayout
@@ -4407,9 +4405,7 @@ where [refTable].[EmployeeID] = ?</property>
             </mssgle:Curve>
           </EdgeLayout.Curve>
           <EdgeLayout.Labels>
-            <mssgm:EdgeLabel
-              BoundingBox="0,0,0,0"
-              RelativePosition="Any" />
+            <EdgeLabelCollection />
           </EdgeLayout.Labels>
         </EdgeLayout>
         <EdgeLayout
@@ -4443,9 +4439,7 @@ where [refTable].[EmployeeID] = ?</property>
             </mssgle:Curve>
           </EdgeLayout.Curve>
           <EdgeLayout.Labels>
-            <mssgm:EdgeLabel
-              BoundingBox="0,0,0,0"
-              RelativePosition="Any" />
+            <EdgeLabelCollection />
           </EdgeLayout.Labels>
         </EdgeLayout>
       </GraphLayout>
