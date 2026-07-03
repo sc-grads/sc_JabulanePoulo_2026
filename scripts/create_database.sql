@@ -221,7 +221,6 @@ GO
 -- =============================================
 -- Populate Data
 -- =============================================
-
 -- Insert Employee data
 INSERT INTO [timesheet].[Employee] (FirstName, LastName) 
 VALUES 

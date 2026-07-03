@@ -11,8 +11,8 @@
   DTS:LocaleID="7177"
   DTS:ObjectName="Package"
   DTS:PackageType="5"
-  DTS:VersionBuild="202"
-  DTS:VersionGUID="{22D4DE4C-0ABD-4CFF-9614-AAE01B8A8B20}">
+  DTS:VersionBuild="203"
+  DTS:VersionGUID="{DDD0D48F-A6C8-4339-8CC7-318615738EDB}">
   <DTS:Property
     DTS:Name="PackageFormatVersion">8</DTS:Property>
   <DTS:ConnectionManagers>
@@ -878,6 +878,7 @@ AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</BinaryItem>
           DTS:CreationName="Microsoft.Pipeline"
           DTS:DelayValidation="True"
           DTS:Description="Data Flow Task"
+          DTS:Disabled="True"
           DTS:DTSID="{7BE030DD-EC5A-4DFC-81D7-53A6A31A9169}"
           DTS:ExecutableType="Microsoft.Pipeline"
           DTS:LocaleID="-1"
