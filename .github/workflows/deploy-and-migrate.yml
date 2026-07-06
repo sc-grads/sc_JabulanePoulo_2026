@@ -13,7 +13,7 @@ jobs:
     uses: ./.github/workflows/reusable-deploy.yml
     with:
       environment-name: local-sql
-      runner-label: LAPTOP-7LSAQSR0
+      runner-label: Jabulane
       sql-script-path: scripts/create_database.sql
     secrets: inherit
 
@@ -32,7 +32,7 @@ jobs:
     needs: request_approval_partner
     with:
       environment-name: partner-sql
-      runner-label: DESKTOP-DBA1BPB
+      runner-label: Kayden
       sql-script-path: scripts/create_database.sql
     secrets: inherit
 
@@ -41,7 +41,7 @@ jobs:
     needs: Production
     runs-on:
       - self-hosted
-      - DESKTOP-DBA1BPB
+      - Kayden
 
     environment: partner-sql
 
