@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - develop
+
   workflow_dispatch:
 
 jobs:
@@ -28,8 +29,8 @@ jobs:
         run: echo "Waiting for partner approval..."
 
   Production:
-    uses: ./.github/workflows/reusable-deploy.yml
     needs: request_approval_partner
+    uses: ./.github/workflows/reusable-deploy.yml
     with:
       environment-name: partner-sql
       runner-label: Kayden
@@ -39,6 +40,7 @@ jobs:
   RunMigrationJob:
     name: Run SQL Agent Job
     needs: Production
+
     runs-on:
       - self-hosted
       - Kayden
@@ -46,11 +48,12 @@ jobs:
     environment: partner-sql
 
     steps:
+
       - name: Checkout Repository
         uses: actions/checkout@v4
 
       - name: Run TimesheetMigration SQL Agent Job
-        shell: pwsh
+        shell: powershell
         env:
           SERVER: ${{ secrets.SQL_SERVER }}
 
@@ -63,7 +66,8 @@ jobs:
               -S $env:SERVER `
               -d msdb `
               -Q "SET NOCOUNT ON;
-                  SELECT COUNT(*) FROM dbo.sysjobs
+                  SELECT COUNT(*)
+                  FROM dbo.sysjobs
                   WHERE name='TimesheetMigration';" `
               -h -1
           ).Trim()
@@ -91,21 +95,17 @@ jobs:
               SET NOCOUNT ON;
 
               SELECT TOP (1)
-
-              CASE run_status
-                  WHEN 0 THEN 'Failed'
-                  WHEN 1 THEN 'Succeeded'
-                  WHEN 2 THEN 'Retry'
-                  WHEN 3 THEN 'Cancelled'
-                  ELSE 'Unknown'
-              END
-
+                CASE run_status
+                    WHEN 0 THEN 'Failed'
+                    WHEN 1 THEN 'Succeeded'
+                    WHEN 2 THEN 'Retry'
+                    WHEN 3 THEN 'Cancelled'
+                    ELSE 'Unknown'
+                END
               FROM dbo.sysjobhistory h
               JOIN dbo.sysjobs j
                 ON h.job_id = j.job_id
-
               WHERE j.name='TimesheetMigration'
-
               ORDER BY instance_id DESC;
               " `
               -h -1
@@ -115,7 +115,7 @@ jobs:
 
           if ($Status -eq "Failed" -or $Status -eq "Cancelled")
           {
-              exit 1
+              throw "Migration job failed."
           }
 
           Write-Host "Migration completed successfully."
@@ -132,8 +132,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Success
-        run: echo "Deployment completed successfully."
+      - run: echo "Deployment completed successfully."
 
   notify_failure:
     name: Notify Failure
@@ -147,5 +146,4 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Failure
-        run: echo "Deployment failed."
+      - run: echo "Deployment failed."
