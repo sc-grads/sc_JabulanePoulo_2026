@@ -32,7 +32,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Show Deployment Details
-        shell: pwsh
+        shell: powershell
         env:
           SERVER: ${{ secrets.SQL_SERVER }}
           DB_NAME: ${{ inputs.database-name }}
@@ -48,7 +48,7 @@ jobs:
           Write-Host ""
 
       - name: Test SQL Connection
-        shell: pwsh
+        shell: powershell
         env:
           SERVER: ${{ secrets.SQL_SERVER }}
         run: |
@@ -59,7 +59,7 @@ jobs:
               if ($LASTEXITCODE -ne 0) {
                   throw "Failed to connect to SQL Server."
               }
-              Write-Host "Connection successful."
+              Write-Host " Connection successful."
           }
           catch {
               Write-Host " Connection failed: $_"
@@ -73,7 +73,7 @@ jobs:
           }
 
       - name: Execute SQL Script
-        shell: pwsh
+        shell: powershell
         env:
           SERVER: ${{ secrets.SQL_SERVER }}
           DB_NAME: ${{ inputs.database-name }}
@@ -107,7 +107,7 @@ jobs:
           Write-Host " Deployment completed."
 
       - name: Verify Deployment
-        shell: pwsh
+        shell: powershell
         env:
           SERVER: ${{ secrets.SQL_SERVER }}
           DB_NAME: ${{ inputs.database-name }}
