@@ -52,7 +52,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Run TimesheetMigration SQL Agent Job
-        shell: pwsh
+        shell: powershell
         env:
           SERVER: ${{ secrets.SQL_SERVER }}
         run: |
