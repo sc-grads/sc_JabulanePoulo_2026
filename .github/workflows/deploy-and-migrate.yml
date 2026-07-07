@@ -48,15 +48,13 @@ jobs:
     environment: partner-sql
 
     steps:
-
       - name: Checkout Repository
         uses: actions/checkout@v4
 
       - name: Run TimesheetMigration SQL Agent Job
-        shell: powershell
+        shell: pwsh
         env:
           SERVER: ${{ secrets.SQL_SERVER }}
-
         run: |
 
           Write-Host "Checking for SQL Agent Job..."
@@ -72,10 +70,8 @@ jobs:
               -h -1
           ).Trim()
 
-          if ($JobExists -ne "1")
-          {
-              Write-Host "TimesheetMigration job not found."
-              exit 1
+          if ($JobExists -ne "1") {
+            throw "TimesheetMigration job not found."
           }
 
           Write-Host "Starting SQL Agent Job..."
@@ -96,14 +92,14 @@ jobs:
 
               SELECT TOP (1)
                 CASE run_status
-                    WHEN 0 THEN 'Failed'
-                    WHEN 1 THEN 'Succeeded'
-                    WHEN 2 THEN 'Retry'
-                    WHEN 3 THEN 'Cancelled'
-                    ELSE 'Unknown'
+                  WHEN 0 THEN 'Failed'
+                  WHEN 1 THEN 'Succeeded'
+                  WHEN 2 THEN 'Retry'
+                  WHEN 3 THEN 'Cancelled'
+                  ELSE 'Unknown'
                 END
               FROM dbo.sysjobhistory h
-              JOIN dbo.sysjobs j
+              INNER JOIN dbo.sysjobs j
                 ON h.job_id = j.job_id
               WHERE j.name='TimesheetMigration'
               ORDER BY instance_id DESC;
@@ -113,9 +109,8 @@ jobs:
 
           Write-Host "Job Status: $Status"
 
-          if ($Status -eq "Failed" -or $Status -eq "Cancelled")
-          {
-              throw "Migration job failed."
+          if ($Status -eq "Failed" -or $Status -eq "Cancelled") {
+            throw "Migration job failed."
           }
 
           Write-Host "Migration completed successfully."
@@ -132,7 +127,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - run: echo "Deployment completed successfully."
+      - name: Success
+        run: echo "Deployment completed successfully."
 
   notify_failure:
     name: Notify Failure
@@ -146,4 +142,5 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - run: echo "Deployment failed."
+      - name: Failure
+        run: echo "Deployment failed."

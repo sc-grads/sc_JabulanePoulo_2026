@@ -6,9 +6,11 @@ on:
       environment-name:
         required: true
         type: string
+
       runner-label:
         required: true
         type: string
+
       sql-script-path:
         required: true
         type: string
@@ -26,7 +28,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Show Deployment Details
-        shell: powershell
+        shell: pwsh
         env:
           SERVER: ${{ secrets.SQL_SERVER }}
         run: |
@@ -39,7 +41,7 @@ jobs:
           Write-Host ""
 
       - name: Execute SQL Script
-        shell: powershell
+        shell: pwsh
         env:
           SERVER: ${{ secrets.SQL_SERVER }}
         run: |
@@ -50,13 +52,14 @@ jobs:
             -i "${{ inputs.sql-script-path }}"
 
           if ($LASTEXITCODE -ne 0) {
-              throw "SQL deployment failed."
+            throw "SQL deployment failed."
           }
 
-          Write-Host "Deployment completed."
+          Write-Host ""
+          Write-Host "SQL deployment completed successfully."
 
       - name: Verify Deployment
-        shell: powershell
+        shell: pwsh
         env:
           SERVER: ${{ secrets.SQL_SERVER }}
         run: |
@@ -64,9 +67,7 @@ jobs:
             sqlcmd `
               -S $env:SERVER `
               -d TimesheetDB `
-              -Q "SET NOCOUNT ON;
-                  SELECT COUNT(*)
-                  FROM timesheet.Employee;" `
+              -Q "SET NOCOUNT ON; SELECT COUNT(*) FROM timesheet.Employee;" `
               -h -1
           ).Trim()
 
@@ -74,9 +75,7 @@ jobs:
             sqlcmd `
               -S $env:SERVER `
               -d TimesheetDB `
-              -Q "SET NOCOUNT ON;
-                  SELECT COUNT(*)
-                  FROM timesheet.Client;" `
+              -Q "SET NOCOUNT ON; SELECT COUNT(*) FROM timesheet.Client;" `
               -h -1
           ).Trim()
 
@@ -84,11 +83,12 @@ jobs:
           Write-Host "Clients   : $Clients"
 
           if ([int]$Employees -lt 1) {
-              throw "Employee table is empty."
+            throw "Employee table is empty."
           }
 
           if ([int]$Clients -lt 1) {
-              throw "Client table is empty."
+            throw "Client table is empty."
           }
 
+          Write-Host ""
           Write-Host "Database verification successful."
