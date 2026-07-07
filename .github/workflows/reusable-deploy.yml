@@ -45,7 +45,7 @@ jobs:
           Write-Host ""
 
       - name: Execute SQL Script
-        shell: cmd
+        shell: powershell
         env:
           SERVER: ${{ secrets.SQL_SERVER }}
 
@@ -65,7 +65,7 @@ jobs:
           Write-Host "Deployment completed."
 
       - name: Verify Deployment
-        shell: cmd
+        shell: powershell
         env:
           SERVER: ${{ secrets.SQL_SERVER }}
 
