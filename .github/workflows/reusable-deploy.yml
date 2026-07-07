@@ -26,7 +26,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Show Deployment Details
-        shell: pwsh
+        shell: cmd
         env:
           SERVER: ${{ secrets.SQL_SERVER }}
         run: |
@@ -39,7 +39,7 @@ jobs:
           Write-Host ""
 
       - name: Execute SQL Script
-        shell: pwsh
+        shell: cmd
         env:
           SERVER: ${{ secrets.SQL_SERVER }}
         run: |
@@ -56,7 +56,7 @@ jobs:
           Write-Host "Deployment completed."
 
       - name: Verify Deployment
-        shell: pwsh
+        shell: cmd
         env:
           SERVER: ${{ secrets.SQL_SERVER }}
         run: |
