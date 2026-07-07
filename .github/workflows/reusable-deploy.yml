@@ -6,19 +6,15 @@ on:
       environment-name:
         required: true
         type: string
-
       runner-label:
         required: true
         type: string
-
       sql-script-path:
         required: true
         type: string
 
 jobs:
-
   deploy:
-
     runs-on:
       - self-hosted
       - ${{ inputs.runner-label }}
@@ -26,15 +22,13 @@ jobs:
     environment: ${{ inputs.environment-name }}
 
     steps:
-
       - name: Checkout Repository
         uses: actions/checkout@v4
 
       - name: Show Deployment Details
-
+        shell: pwsh
         env:
           SERVER: ${{ secrets.SQL_SERVER }}
-
         run: |
           Write-Host "======================================="
           Write-Host "SQL Deployment"
@@ -45,32 +39,27 @@ jobs:
           Write-Host ""
 
       - name: Execute SQL Script
-        shell: powershell
+        shell: pwsh
         env:
           SERVER: ${{ secrets.SQL_SERVER }}
-
         run: |
-
           sqlcmd `
             -S $env:SERVER `
             -d master `
             -b `
             -i "${{ inputs.sql-script-path }}"
 
-          if ($LASTEXITCODE -ne 0)
-          {
+          if ($LASTEXITCODE -ne 0) {
               throw "SQL deployment failed."
           }
 
           Write-Host "Deployment completed."
 
       - name: Verify Deployment
-        shell: powershell
+        shell: pwsh
         env:
           SERVER: ${{ secrets.SQL_SERVER }}
-
         run: |
-
           $Employees = (
             sqlcmd `
               -S $env:SERVER `
@@ -94,13 +83,11 @@ jobs:
           Write-Host "Employees : $Employees"
           Write-Host "Clients   : $Clients"
 
-          if ([int]$Employees -lt 1)
-          {
+          if ([int]$Employees -lt 1) {
               throw "Employee table is empty."
           }
 
-          if ([int]$Clients -lt 1)
-          {
+          if ([int]$Clients -lt 1) {
               throw "Client table is empty."
           }
 
