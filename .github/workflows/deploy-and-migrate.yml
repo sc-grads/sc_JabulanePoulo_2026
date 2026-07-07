@@ -50,108 +50,70 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Run TimesheetMigration SQL Agent Job
-        shell: powershell
+        shell: cmd
         env:
           SERVER: ${{ secrets.SQL_SERVER }}
         run: |
-          Write-Host "======================================="
-          Write-Host "Running TimesheetMigration Job"
-          Write-Host "======================================="
-          Write-Host "Server: $env:SERVER"
-          Write-Host ""
-
-          # Check if job exists
-          Write-Host "Checking for SQL Agent Job..."
-          $JobExists = (
-            sqlcmd `
-              -S $env:SERVER `
-              -E `
-              -d msdb `
-              -Q "SET NOCOUNT ON;
-                  SELECT COUNT(*)
-                  FROM dbo.sysjobs
-                  WHERE name='TimesheetMigration';" `
-              -h -1
-          ).Trim()
-
-          if ($JobExists -ne "1") {
-              Write-Host "ERROR: TimesheetMigration job not found."
-              exit 1
-          }
-          Write-Host " Job found."
-
-          # Start the job
-          Write-Host "Starting SQL Agent Job..."
-          sqlcmd `
-            -S $env:SERVER `
-            -E `
-            -d msdb `
-            -Q "EXEC dbo.sp_start_job @job_name='TimesheetMigration';"
-
-          if ($LASTEXITCODE -ne 0) {
-              throw "Failed to start SQL Agent job."
-          }
-          Write-Host " Job started."
-
-          # Monitor job progress
-          Write-Host "Monitoring job progress..."
-          $Timeout = 300
-          $Elapsed = 0
-          $Status = "In Progress"
-          $LastStatus = ""
-
-          while ($Status -eq "In Progress" -and $Elapsed -lt $Timeout) {
-              Start-Sleep -Seconds 10
-              $Elapsed += 10
-              
-              $Result = sqlcmd `
-                -S $env:SERVER `
-                -E `
-                -d msdb `
-                -Q "SET NOCOUNT ON;
-                    SELECT TOP (1)
-                      run_status AS StatusCode,
-                      CASE run_status
-                        WHEN 0 THEN 'Failed'
-                        WHEN 1 THEN 'Succeeded'
-                        WHEN 2 THEN 'Retry'
-                        WHEN 3 THEN 'Cancelled'
-                        WHEN 4 THEN 'In Progress'
-                        ELSE 'Unknown'
-                      END AS StatusText
-                    FROM dbo.sysjobhistory h
-                    JOIN dbo.sysjobs j ON h.job_id = j.job_id
-                    WHERE j.name='TimesheetMigration'
-                    ORDER BY instance_id DESC;" `
-                -h -1 `
-                -W
-
-              $StatusLine = $Result.Trim() -split "`t"
-              $Status = $StatusLine[1]
-              
-              if ($Status -ne $LastStatus) {
-                  Write-Host "Job Status: $Status (Elapsed: ${Elapsed}s)"
-                  $LastStatus = $Status
-              }
-
-              if ($Status -ne "In Progress") {
-                  break
-              }
-          }
-
-          if ($Elapsed -ge $Timeout) {
-              throw "Migration job timed out after $Timeout seconds."
-          }
-
-          if ($Status -eq "Failed" -or $Status -eq "Cancelled") {
-              throw "Migration job failed with status: $Status"
-          }
-
-          if ($Status -eq "Succeeded") {
-              Write-Host " Migration completed successfully."
-          } else {
-              throw "Migration job ended with unexpected status: $Status"
-          }
+          C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -Command "
+            Write-Host '=======================================';
+            Write-Host 'Running TimesheetMigration Job';
+            Write-Host '=======================================';
+            Write-Host 'Server: %SERVER%';
+            Write-Host '';
+            
+            Write-Host 'Checking for SQL Agent Job...';
+            $JobExists = (sqlcmd -S %SERVER% -E -d msdb -Q 'SET NOCOUNT ON; SELECT COUNT(*) FROM dbo.sysjobs WHERE name=''TimesheetMigration''' -h -1).Trim();
+            if ($JobExists -ne '1') {
+                Write-Host 'ERROR: TimesheetMigration job not found.';
+                exit 1;
+            }
+            Write-Host 'Job found.';
+            
+            Write-Host 'Starting SQL Agent Job...';
+            sqlcmd -S %SERVER% -E -d msdb -Q 'EXEC dbo.sp_start_job @job_name=''TimesheetMigration''';
+            if ($LASTEXITCODE -ne 0) {
+                throw 'Failed to start SQL Agent job.';
+            }
+            Write-Host 'Job started.';
+            
+            Write-Host 'Monitoring job progress...';
+            $Timeout = 300;
+            $Elapsed = 0;
+            $Status = 'In Progress';
+            $LastStatus = '';
+            
+            while ($Status -eq 'In Progress' -and $Elapsed -lt $Timeout) {
+                Start-Sleep -Seconds 10;
+                $Elapsed += 10;
+                
+                $Result = sqlcmd -S %SERVER% -E -d msdb -Q 'SET NOCOUNT ON; SELECT TOP (1) run_status AS StatusCode, CASE run_status WHEN 0 THEN ''Failed'' WHEN 1 THEN ''Succeeded'' WHEN 2 THEN ''Retry'' WHEN 3 THEN ''Cancelled'' WHEN 4 THEN ''In Progress'' ELSE ''Unknown'' END AS StatusText FROM dbo.sysjobhistory h JOIN dbo.sysjobs j ON h.job_id = j.job_id WHERE j.name=''TimesheetMigration'' ORDER BY instance_id DESC;' -h -1 -W;
+                $StatusLine = $Result.Trim() -split '`t';
+                $Status = $StatusLine[1];
+                
+                if ($Status -ne $LastStatus) {
+                    Write-Host 'Job Status: ' $Status ' (Elapsed: ' $Elapsed 's)';
+                    $LastStatus = $Status;
+                }
+                
+                if ($Status -ne 'In Progress') {
+                    break;
+                }
+            }
+            
+            if ($Elapsed -ge $Timeout) {
+                throw 'Migration job timed out after $Timeout seconds.';
+            }
+            
+            if ($Status -eq 'Failed' -or $Status -eq 'Cancelled') {
+                throw 'Migration job failed with status: $Status';
+            }
+            
+            if ($Status -eq 'Succeeded') {
+                Write-Host 'Migration completed successfully.';
+            } else {
+                throw 'Migration job ended with unexpected status: $Status';
+            }
+          "
 
   notify_success:
     name: Notify Success
@@ -164,7 +126,7 @@ jobs:
     steps:
       - name: Success Notification
         run: |
-          echo " Deployment completed successfully."
+          echo "✅ Deployment completed successfully."
           echo "Environment: Production"
           echo "Database: TimesheetDB"
 
@@ -179,5 +141,5 @@ jobs:
     steps:
       - name: Failure Notification
         run: |
-          echo "❌ Deployment failed."
+          echo "Deployment failed."
           echo "Please check the workflow logs for details."
