@@ -5,25 +5,24 @@ on:
     branches:
       - main
       - develop
-
   workflow_dispatch:
 
 jobs:
-
   DevTest:
     uses: ./.github/workflows/reusable-deploy.yml
     with:
       environment-name: local-sql
       runner-label: Jabulane
       sql-script-path: scripts/create_database.sql
-    secrets: inherit
+      database-name: TimesheetDB
+    secrets:
+      SQL_SERVER: ${{ secrets.SQL_SERVER }}
 
   request_approval_partner:
     name: Request Partner Approval
     needs: DevTest
     runs-on: ubuntu-latest
     environment: partner-sql
-
     steps:
       - name: Waiting for approval
         run: echo "Waiting for partner approval..."
@@ -35,35 +34,38 @@ jobs:
       environment-name: partner-sql
       runner-label: Kayden
       sql-script-path: scripts/create_database.sql
-    secrets: inherit
+      database-name: TimesheetDB
+    secrets:
+      SQL_SERVER: ${{ secrets.SQL_SERVER }}
 
   RunMigrationJob:
     name: Run SQL Agent Job
     needs: Production
-
     runs-on:
       - self-hosted
       - Kayden
-
     environment: partner-sql
-
     steps:
-
       - name: Checkout Repository
         uses: actions/checkout@v4
 
       - name: Run TimesheetMigration SQL Agent Job
-        shell: cmd
+        shell: pwsh
         env:
           SERVER: ${{ secrets.SQL_SERVER }}
-
         run: |
+          Write-Host "======================================="
+          Write-Host "Running TimesheetMigration Job"
+          Write-Host "======================================="
+          Write-Host "Server: $env:SERVER"
+          Write-Host ""
 
+          # Check if job exists
           Write-Host "Checking for SQL Agent Job..."
-
           $JobExists = (
             sqlcmd `
               -S $env:SERVER `
+              -E `
               -d msdb `
               -Q "SET NOCOUNT ON;
                   SELECT COUNT(*)
@@ -72,53 +74,84 @@ jobs:
               -h -1
           ).Trim()
 
-          if ($JobExists -ne "1")
-          {
-              Write-Host "TimesheetMigration job not found."
+          if ($JobExists -ne "1") {
+              Write-Host "ERROR: TimesheetMigration job not found."
               exit 1
           }
+          Write-Host " Job found."
 
+          # Start the job
           Write-Host "Starting SQL Agent Job..."
-
           sqlcmd `
             -S $env:SERVER `
+            -E `
             -d msdb `
             -Q "EXEC dbo.sp_start_job @job_name='TimesheetMigration';"
 
-          Start-Sleep -Seconds 15
+          if ($LASTEXITCODE -ne 0) {
+              throw "Failed to start SQL Agent job."
+          }
+          Write-Host " Job started."
 
-          $Status = (
-            sqlcmd `
-              -S $env:SERVER `
-              -d msdb `
-              -Q "
-              SET NOCOUNT ON;
+          # Monitor job progress
+          Write-Host "Monitoring job progress..."
+          $Timeout = 300
+          $Elapsed = 0
+          $Status = "In Progress"
+          $LastStatus = ""
 
-              SELECT TOP (1)
-                CASE run_status
-                    WHEN 0 THEN 'Failed'
-                    WHEN 1 THEN 'Succeeded'
-                    WHEN 2 THEN 'Retry'
-                    WHEN 3 THEN 'Cancelled'
-                    ELSE 'Unknown'
-                END
-              FROM dbo.sysjobhistory h
-              JOIN dbo.sysjobs j
-                ON h.job_id = j.job_id
-              WHERE j.name='TimesheetMigration'
-              ORDER BY instance_id DESC;
-              " `
-              -h -1
-          ).Trim()
+          while ($Status -eq "In Progress" -and $Elapsed -lt $Timeout) {
+              Start-Sleep -Seconds 10
+              $Elapsed += 10
+              
+              $Result = sqlcmd `
+                -S $env:SERVER `
+                -E `
+                -d msdb `
+                -Q "SET NOCOUNT ON;
+                    SELECT TOP (1)
+                      run_status AS StatusCode,
+                      CASE run_status
+                        WHEN 0 THEN 'Failed'
+                        WHEN 1 THEN 'Succeeded'
+                        WHEN 2 THEN 'Retry'
+                        WHEN 3 THEN 'Cancelled'
+                        WHEN 4 THEN 'In Progress'
+                        ELSE 'Unknown'
+                      END AS StatusText
+                    FROM dbo.sysjobhistory h
+                    JOIN dbo.sysjobs j ON h.job_id = j.job_id
+                    WHERE j.name='TimesheetMigration'
+                    ORDER BY instance_id DESC;" `
+                -h -1 `
+                -W
 
-          Write-Host "Job Status: $Status"
+              $StatusLine = $Result.Trim() -split "`t"
+              $Status = $StatusLine[1]
+              
+              if ($Status -ne $LastStatus) {
+                  Write-Host "Job Status: $Status (Elapsed: ${Elapsed}s)"
+                  $LastStatus = $Status
+              }
 
-          if ($Status -eq "Failed" -or $Status -eq "Cancelled")
-          {
-              throw "Migration job failed."
+              if ($Status -ne "In Progress") {
+                  break
+              }
           }
 
-          Write-Host "Migration completed successfully."
+          if ($Elapsed -ge $Timeout) {
+              throw "Migration job timed out after $Timeout seconds."
+          }
+
+          if ($Status -eq "Failed" -or $Status -eq "Cancelled") {
+              throw "Migration job failed with status: $Status"
+          }
+
+          if ($Status -eq "Succeeded") {
+              Write-Host " Migration completed successfully."
+          } else {
+              throw "Migration job ended with unexpected status: $Status"
+          }
 
   notify_success:
     name: Notify Success
@@ -126,13 +159,14 @@ jobs:
       - DevTest
       - Production
       - RunMigrationJob
-
     if: success()
-
     runs-on: ubuntu-latest
-
     steps:
-      - run: echo "Deployment completed successfully."
+      - name: Success Notification
+        run: |
+          echo " Deployment completed successfully."
+          echo "Environment: Production"
+          echo "Database: TimesheetDB"
 
   notify_failure:
     name: Notify Failure
@@ -140,10 +174,10 @@ jobs:
       - DevTest
       - Production
       - RunMigrationJob
-
     if: failure()
-
     runs-on: ubuntu-latest
-
     steps:
-      - run: echo "Deployment failed."
+      - name: Failure Notification
+        run: |
+          echo " Deployment failed."
+          echo "Please check the workflow logs for details."

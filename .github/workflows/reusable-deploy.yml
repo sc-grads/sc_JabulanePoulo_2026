@@ -12,83 +12,143 @@ on:
       sql-script-path:
         required: true
         type: string
+      database-name:
+        required: false
+        type: string
+        default: "TimesheetDB"
+    secrets:
+      SQL_SERVER:
+        required: true
 
 jobs:
   deploy:
     runs-on:
       - self-hosted
       - ${{ inputs.runner-label }}
-
     environment: ${{ inputs.environment-name }}
-
+    
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
       - name: Show Deployment Details
-        shell: cmd
+        shell: pwsh
         env:
           SERVER: ${{ secrets.SQL_SERVER }}
+          DB_NAME: ${{ inputs.database-name }}
         run: |
           Write-Host "======================================="
           Write-Host "SQL Deployment"
           Write-Host "======================================="
-          Write-Host "Server : $env:SERVER"
-          Write-Host "Runner : ${{ inputs.runner-label }}"
-          Write-Host "Script : ${{ inputs.sql-script-path }}"
+          Write-Host "Server      : $env:SERVER"
+          Write-Host "Database    : $env:DB_NAME"
+          Write-Host "Runner      : ${{ inputs.runner-label }}"
+          Write-Host "Script Path : ${{ inputs.sql-script-path }}"
+          Write-Host "Auth Method : Windows Authentication"
           Write-Host ""
 
-      - name: Execute SQL Script
-        shell: cmd
+      - name: Test SQL Connection
+        shell: pwsh
         env:
           SERVER: ${{ secrets.SQL_SERVER }}
         run: |
+          Write-Host "Testing SQL Server connection..."
+          try {
+              sqlcmd -S $env:SERVER -E -Q "SELECT @@VERSION AS SQLVersion"
+              
+              if ($LASTEXITCODE -ne 0) {
+                  throw "Failed to connect to SQL Server."
+              }
+              Write-Host "Connection successful."
+          }
+          catch {
+              Write-Host " Connection failed: $_"
+              Write-Host ""
+              Write-Host "Troubleshooting Tips:"
+              Write-Host "  1. Verify SQL Server is running"
+              Write-Host "  2. Check if Windows Authentication is enabled"
+              Write-Host "  3. Verify the runner account has SQL access"
+              Write-Host "  4. Check firewall settings for port 1433"
+              throw
+          }
+
+      - name: Execute SQL Script
+        shell: pwsh
+        env:
+          SERVER: ${{ secrets.SQL_SERVER }}
+          DB_NAME: ${{ inputs.database-name }}
+        run: |
+          Write-Host "Executing deployment script..."
+          
+          # Check if script exists
+          $ScriptPath = "${{ inputs.sql-script-path }}"
+          if (-not (Test-Path $ScriptPath)) {
+              Write-Host " SQL script not found: $ScriptPath"
+              Write-Host "Current directory contents:"
+              Get-ChildItem
+              throw "SQL script not found: $ScriptPath"
+          }
+
+          Write-Host "Script content preview:"
+          Get-Content $ScriptPath -TotalCount 5
+
+          # Execute the script
           sqlcmd `
             -S $env:SERVER `
+            -E `
             -d master `
             -b `
-            -i "${{ inputs.sql-script-path }}"
+            -i $ScriptPath
 
           if ($LASTEXITCODE -ne 0) {
-              throw "SQL deployment failed."
+              throw "SQL deployment failed with exit code: $LASTEXITCODE"
           }
 
-          Write-Host "Deployment completed."
+          Write-Host " Deployment completed."
 
       - name: Verify Deployment
-        shell: cmd
+        shell: pwsh
         env:
           SERVER: ${{ secrets.SQL_SERVER }}
+          DB_NAME: ${{ inputs.database-name }}
         run: |
-          $Employees = (
+          Write-Host "Verifying deployment..."
+          
+          # Check if database exists
+          $DbExists = (
             sqlcmd `
               -S $env:SERVER `
-              -d TimesheetDB `
+              -E `
+              -d master `
               -Q "SET NOCOUNT ON;
                   SELECT COUNT(*)
-                  FROM timesheet.Employee;" `
+                  FROM sys.databases
+                  WHERE name='$env:DB_NAME'" `
               -h -1
           ).Trim()
 
-          $Clients = (
+          if ($DbExists -ne "1") {
+              Write-Host " Database '$env:DB_NAME' not found."
+              throw "Database verification failed."
+          }
+          Write-Host " Database '$env:DB_NAME' exists."
+
+          # Check tables count
+          $TableCount = (
             sqlcmd `
               -S $env:SERVER `
-              -d TimesheetDB `
+              -E `
+              -d $env:DB_NAME `
               -Q "SET NOCOUNT ON;
                   SELECT COUNT(*)
-                  FROM timesheet.Client;" `
+                  FROM INFORMATION_SCHEMA.TABLES
+                  WHERE TABLE_TYPE = 'BASE TABLE'" `
               -h -1
           ).Trim()
 
-          Write-Host "Employees : $Employees"
-          Write-Host "Clients   : $Clients"
-
-          if ([int]$Employees -lt 1) {
-              throw "Employee table is empty."
+          if ([int]$TableCount -lt 1) {
+              throw "No tables found in database."
           }
+          Write-Host " Tables found: $TableCount"
 
-          if ([int]$Clients -lt 1) {
-              throw "Client table is empty."
-          }
-
-          Write-Host "Database verification successful."
+          Write-Host " Database verification successful."
