@@ -209,6 +209,7 @@ ALTER TABLE [timesheet].[Timesheet] WITH CHECK ADD CONSTRAINT [FK_Timesheet_Clie
 REFERENCES [timesheet].[Client] ([ClientID])
 GO
 
+
 ALTER TABLE [timesheet].[Timesheet] CHECK CONSTRAINT [FK_Timesheet_Client]
 GO
 
