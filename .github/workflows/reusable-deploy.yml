@@ -94,7 +94,7 @@ jobs:
               -U "$USERNAME" \
               -P "$PASSWORD" \
               -d master \
-              -Q "SET NOCOUNT ON; SELECT COUNT(*) FROM sys.databases WHERE name='TimesheetDB';" \
+              -Q "SET NOCOUNT ON; SELECT COUNT(*) FROM sys.databases WHERE name='TimesheetsDB';" \
               -h -1 \
               -C | tr -d '[:space:]'
           )
