@@ -11,7 +11,6 @@ BEGIN
 END
 GO
 
-
 -- Create the database
 CREATE DATABASE TimesheetsDB;
 GO
