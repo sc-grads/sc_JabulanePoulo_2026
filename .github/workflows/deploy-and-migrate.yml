@@ -22,7 +22,7 @@ jobs:
     uses: ./.github/workflows/reusable-deploy.yml
     with:
       environment-name: partner-sql
-      sql-script-path: scripts/create_database_partner.sql  # You might want a separate script for partner
+      sql-script-path: scripts/create_database_partner.sql
     secrets: inherit
 
   # Run TimesheetMigration Job after DevTest deployment
@@ -107,7 +107,6 @@ jobs:
   RunPartnerMigrationJob:
     needs: Partner
     runs-on: ubuntu-latest
-    environment: partner-sql
     if: success()
     
     steps:
@@ -179,146 +178,4 @@ jobs:
           else
             echo " WARNING: Partner TimesheetMigration job not found in this environment."
             exit 1
-          fi
-
-  # Notifications
-  notify-success:
-    needs:
-      - DevTest
-      - Partner
-      - RunMigrationJob
-      - RunPartnerMigrationJob
-    if: always() && !failure() && !cancelled()
-    runs-on: ubuntu-latest
-    steps:
-      - name: Send Success Notification to Teams
-        env:
-          TEAMS_WEBHOOK_URL: ${{ secrets.TEAMS_WEBHOOK_URL }}
-        run: |
-          if [ -n "$TEAMS_WEBHOOK_URL" ]; then
-            curl -H "Content-Type: application/json" \
-            -d '{
-              "title": " SQL DEPLOYMENT SUCCESS",
-              "text": "**Deployment completed successfully for all environments!**\n\n",
-              "facts": [
-                {
-                  "name": " DevTest Environment",
-                  "value": "Deployed Successfully"
-                },
-                {
-                  "name": " Partner Environment",
-                  "value": "Deployed Successfully"
-                },
-                {
-                  "name": " DevTest Migration Job",
-                  "value": "Executed Successfully"
-                },
-                {
-                  "name": " Partner Migration Job",
-                  "value": "Executed Successfully"
-                },
-                {
-                  "name": " Database",
-                  "value": "TimesheetDB"
-                },
-                {
-                  "name": " Deployed by",
-                  "value": "${{ github.actor }}"
-                },
-                {
-                  "name": " Branch",
-                  "value": "${{ github.ref_name }}"
-                },
-                {
-                  "name": " Run ID",
-                  "value": "${{ github.run_id }}"
-                },
-                {
-                  "name": " Commit",
-                  "value": "${{ github.sha }}"
-                }
-              ],
-              "themeColor": "00FF00"
-            }' \
-            $TEAMS_WEBHOOK_URL
-          else
-            echo " TEAMS_WEBHOOK_URL not set, skipping notification"
-          fi
-
-  notify-failure:
-    needs:
-      - DevTest
-      - Partner
-      - RunMigrationJob
-      - RunPartnerMigrationJob
-    if: always() && (failure() || cancelled())
-    runs-on: ubuntu-latest
-    steps:
-      - name: Send Failure Notification to Teams
-        env:
-          TEAMS_WEBHOOK_URL: ${{ secrets.TEAMS_WEBHOOK_URL }}
-        run: |
-          if [ -n "$TEAMS_WEBHOOK_URL" ]; then
-            # Determine which stage failed
-            FAILED_STAGE=""
-            if [ "${{ needs.DevTest.result }}" == "failure" ]; then
-              FAILED_STAGE="Database Deployment (DevTest)"
-            elif [ "${{ needs.Partner.result }}" == "failure" ]; then
-              FAILED_STAGE="Database Deployment (Partner)"
-            elif [ "${{ needs.RunMigrationJob.result }}" == "failure" ]; then
-              FAILED_STAGE="Job Execution (DevTest)"
-            elif [ "${{ needs.RunPartnerMigrationJob.result }}" == "failure" ]; then
-              FAILED_STAGE="Job Execution (Partner)"
-            elif [ "${{ needs.RunMigrationJob.result }}" == "cancelled" ]; then
-              FAILED_STAGE="Job Cancelled (DevTest)"
-            elif [ "${{ needs.RunPartnerMigrationJob.result }}" == "cancelled" ]; then
-              FAILED_STAGE="Job Cancelled (Partner)"
-            else
-              FAILED_STAGE="Unknown Stage"
-            fi
-            
-            curl -H "Content-Type: application/json" \
-            -d '{
-              "title": " SQL DEPLOYMENT FAILED",
-              "text": "**Deployment failure detected - immediate action required**\n\n",
-              "facts": [
-                {
-                  "name": " Status",
-                  "value": "Deployment Failed"
-                },
-                {
-                  "name": " Database",
-                  "value": "TimesheetDB"
-                },
-                {
-                  "name": " Failed Stage",
-                  "value": "'"$FAILED_STAGE"'"
-                },
-                {
-                  "name": " Triggered by",
-                  "value": "${{ github.actor }}"
-                },
-                {
-                  "name": " Branch",
-                  "value": "${{ github.ref_name }}"
-                },
-                {
-                  "name": " Run ID",
-                  "value": "${{ github.run_id }}"
-                },
-                {
-                  "name": " Commit",
-                  "value": "${{ github.sha }}"
-                },
-                {
-                  "name": " Time",
-                  "value": "${{ github.event.head_commit.timestamp }}"
-                }
-              ],
-              "potentialAction": "[View Logs](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})",
-              "themeColor": "FF0000"
-            }' \
-            $TEAMS_WEBHOOK_URL
-          else
-            echo " TEAMS_WEBHOOK_URL not set, skipping notification"
           fi
