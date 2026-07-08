@@ -15,7 +15,6 @@ GO
 CREATE DATABASE TimesheetsDB;
 GO
 
-
 -- Use the database
 USE TimesheetsDB;
 GO
