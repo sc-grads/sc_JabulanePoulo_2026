@@ -21,24 +21,17 @@ jobs:
   Partner:
     uses: ./.github/workflows/reusable-deploy.yml
     with:
-      environment-name: partner-sql  # You'll need to create this environment in GitHub
-      sql-script-path: scripts/create_database.sql
+      environment-name: partner-sql
+      sql-script-path: scripts/create_database_partner.sql  # You might want a separate script for partner
     secrets: inherit
 
   # Run TimesheetMigration Job after DevTest deployment
   RunMigrationJob:
-    needs: DevTest  # Keep this as is, or change to Partner if needed
+    needs: DevTest
     runs-on: ubuntu-latest
     environment: local-sql
     if: success()
-    # ... rest of RunMigrationJob steps ...
-
-  # Run TimesheetMigration for Partner
-  RunMigrationJobPartner:
-    needs: Partner
-    runs-on: ubuntu-latest
-    environment: partner-sql
-    if: success()
+    
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -57,17 +50,144 @@ jobs:
           USERNAME: ${{ secrets.SQL_USERNAME }}
           PASSWORD: ${{ secrets.SQL_PASSWORD }}
         run: |
-          echo "Checking if TimesheetMigration job exists in Partner environment..."
-          # Same logic as DevTest but for partner
-          # ... rest of the job execution logic ...
+          echo "Checking if TimesheetMigration job exists..."
+          
+          # Check if job exists
+          JOB_EXISTS=$(/opt/mssql-tools18/bin/sqlcmd \
+            -S "${SERVER},${PORT}" \
+            -U "$USERNAME" \
+            -P "$PASSWORD" \
+            -d "msdb" \
+            -Q "SET NOCOUNT ON; SELECT COUNT(*) FROM sysjobs WHERE name = 'TimesheetMigration'" \
+            -h-1 \
+            -C)
+          
+          echo "Job exists: $JOB_EXISTS"
+          
+          if [ "$JOB_EXISTS" -eq "1" ]; then
+            echo "Starting TimesheetMigration job..."
+            /opt/mssql-tools18/bin/sqlcmd \
+              -S "${SERVER},${PORT}" \
+              -U "$USERNAME" \
+              -P "$PASSWORD" \
+              -d "msdb" \
+              -Q "EXEC dbo.sp_start_job N'TimesheetMigration';" \
+              -C
+            
+            echo "Job started successfully."
+            
+            # Wait and check job status
+            sleep 10
+            
+            JOB_STATUS=$(/opt/mssql-tools18/bin/sqlcmd \
+              -S "${SERVER},${PORT}" \
+              -U "$USERNAME" \
+              -P "$PASSWORD" \
+              -d "msdb" \
+              -Q "SET NOCOUNT ON; SELECT TOP 1 CASE WHEN run_status = 0 THEN 'Failed' WHEN run_status = 1 THEN 'Succeeded' WHEN run_status = 2 THEN 'Retry' WHEN run_status = 3 THEN 'Canceled' ELSE 'Unknown' END as Status FROM sysjobhistory h JOIN sysjobs j ON h.job_id = j.job_id WHERE j.name = 'TimesheetMigration' ORDER BY h.instance_id DESC" \
+              -h-1 \
+              -C)
+            
+            echo "Job Status: $JOB_STATUS"
+            
+            if [ "$JOB_STATUS" == "Failed" ] || [ "$JOB_STATUS" == "Canceled" ]; then
+              echo " Job failed or was cancelled. Check SQL Server logs for details."
+              exit 1
+            elif [ "$JOB_STATUS" == "Succeeded" ]; then
+              echo " Job completed successfully!"
+            else
+              echo " Job status: $JOB_STATUS. Please check manually if this is expected."
+            fi
+          else
+            echo " WARNING: TimesheetMigration job not found in this environment."
+            exit 1
+          fi
 
-  # Notifications (update to include Partner)
+  # Run Partner TimesheetMigration Job after Partner deployment
+  RunPartnerMigrationJob:
+    needs: Partner
+    runs-on: ubuntu-latest
+    environment: partner-sql
+    if: success()
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install SQLCMD
+        run: |
+          curl https://packages.microsoft.com/keys/microsoft.asc | sudo tee /etc/apt/trusted.gpg.d/microsoft.asc
+          curl https://packages.microsoft.com/config/ubuntu/22.04/prod.list | sudo tee /etc/apt/sources.list.d/mssql-release.list
+          sudo apt-get update
+          sudo ACCEPT_EULA=Y apt-get install -y mssql-tools18
+
+      - name: Check and Run Partner TimesheetMigration Job
+        env:
+          SERVER: ${{ secrets.PARTNER_SQL_SERVER }}
+          PORT: ${{ secrets.PARTNER_SQL_PORT }}
+          USERNAME: ${{ secrets.PARTNER_SQL_USERNAME }}
+          PASSWORD: ${{ secrets.PARTNER_SQL_PASSWORD }}
+        run: |
+          echo "Checking if Partner TimesheetMigration job exists..."
+          
+          # Check if job exists
+          JOB_EXISTS=$(/opt/mssql-tools18/bin/sqlcmd \
+            -S "${SERVER},${PORT}" \
+            -U "$USERNAME" \
+            -P "$PASSWORD" \
+            -d "msdb" \
+            -Q "SET NOCOUNT ON; SELECT COUNT(*) FROM sysjobs WHERE name = 'TimesheetMigration'" \
+            -h-1 \
+            -C)
+          
+          echo "Job exists: $JOB_EXISTS"
+          
+          if [ "$JOB_EXISTS" -eq "1" ]; then
+            echo "Starting Partner TimesheetMigration job..."
+            /opt/mssql-tools18/bin/sqlcmd \
+              -S "${SERVER},${PORT}" \
+              -U "$USERNAME" \
+              -P "$PASSWORD" \
+              -d "msdb" \
+              -Q "EXEC dbo.sp_start_job N'TimesheetMigration';" \
+              -C
+            
+            echo "Job started successfully."
+            
+            # Wait and check job status
+            sleep 10
+            
+            JOB_STATUS=$(/opt/mssql-tools18/bin/sqlcmd \
+              -S "${SERVER},${PORT}" \
+              -U "$USERNAME" \
+              -P "$PASSWORD" \
+              -d "msdb" \
+              -Q "SET NOCOUNT ON; SELECT TOP 1 CASE WHEN run_status = 0 THEN 'Failed' WHEN run_status = 1 THEN 'Succeeded' WHEN run_status = 2 THEN 'Retry' WHEN run_status = 3 THEN 'Canceled' ELSE 'Unknown' END as Status FROM sysjobhistory h JOIN sysjobs j ON h.job_id = j.job_id WHERE j.name = 'TimesheetMigration' ORDER BY h.instance_id DESC" \
+              -h-1 \
+              -C)
+            
+            echo "Job Status: $JOB_STATUS"
+            
+            if [ "$JOB_STATUS" == "Failed" ] || [ "$JOB_STATUS" == "Canceled" ]; then
+              echo " Partner job failed or was cancelled. Check SQL Server logs for details."
+              exit 1
+            elif [ "$JOB_STATUS" == "Succeeded" ]; then
+              echo " Partner job completed successfully!"
+            else
+              echo " Job status: $JOB_STATUS. Please check manually if this is expected."
+            fi
+          else
+            echo " WARNING: Partner TimesheetMigration job not found in this environment."
+            exit 1
+          fi
+
+  # Notifications
   notify-success:
     needs:
       - DevTest
       - Partner
       - RunMigrationJob
-      - RunMigrationJobPartner
+      - RunPartnerMigrationJob
     if: always() && !failure() && !cancelled()
     runs-on: ubuntu-latest
     steps:
@@ -79,15 +199,23 @@ jobs:
             curl -H "Content-Type: application/json" \
             -d '{
               "title": " SQL DEPLOYMENT SUCCESS",
-              "text": "**Deployment completed successfully!**\n\n",
+              "text": "**Deployment completed successfully for all environments!**\n\n",
               "facts": [
                 {
                   "name": " DevTest Environment",
-                  "value": " Deployed Successfully"
+                  "value": "Deployed Successfully"
                 },
                 {
                   "name": " Partner Environment",
-                  "value": " Deployed Successfully"
+                  "value": "Deployed Successfully"
+                },
+                {
+                  "name": " DevTest Migration Job",
+                  "value": "Executed Successfully"
+                },
+                {
+                  "name": " Partner Migration Job",
+                  "value": "Executed Successfully"
                 },
                 {
                   "name": " Database",
@@ -111,6 +239,84 @@ jobs:
                 }
               ],
               "themeColor": "00FF00"
+            }' \
+            $TEAMS_WEBHOOK_URL
+          else
+            echo " TEAMS_WEBHOOK_URL not set, skipping notification"
+          fi
+
+  notify-failure:
+    needs:
+      - DevTest
+      - Partner
+      - RunMigrationJob
+      - RunPartnerMigrationJob
+    if: always() && (failure() || cancelled())
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Failure Notification to Teams
+        env:
+          TEAMS_WEBHOOK_URL: ${{ secrets.TEAMS_WEBHOOK_URL }}
+        run: |
+          if [ -n "$TEAMS_WEBHOOK_URL" ]; then
+            # Determine which stage failed
+            FAILED_STAGE=""
+            if [ "${{ needs.DevTest.result }}" == "failure" ]; then
+              FAILED_STAGE="Database Deployment (DevTest)"
+            elif [ "${{ needs.Partner.result }}" == "failure" ]; then
+              FAILED_STAGE="Database Deployment (Partner)"
+            elif [ "${{ needs.RunMigrationJob.result }}" == "failure" ]; then
+              FAILED_STAGE="Job Execution (DevTest)"
+            elif [ "${{ needs.RunPartnerMigrationJob.result }}" == "failure" ]; then
+              FAILED_STAGE="Job Execution (Partner)"
+            elif [ "${{ needs.RunMigrationJob.result }}" == "cancelled" ]; then
+              FAILED_STAGE="Job Cancelled (DevTest)"
+            elif [ "${{ needs.RunPartnerMigrationJob.result }}" == "cancelled" ]; then
+              FAILED_STAGE="Job Cancelled (Partner)"
+            else
+              FAILED_STAGE="Unknown Stage"
+            fi
+            
+            curl -H "Content-Type: application/json" \
+            -d '{
+              "title": " SQL DEPLOYMENT FAILED",
+              "text": "**Deployment failure detected - immediate action required**\n\n",
+              "facts": [
+                {
+                  "name": " Status",
+                  "value": "Deployment Failed"
+                },
+                {
+                  "name": " Database",
+                  "value": "TimesheetDB"
+                },
+                {
+                  "name": " Failed Stage",
+                  "value": "'"$FAILED_STAGE"'"
+                },
+                {
+                  "name": " Triggered by",
+                  "value": "${{ github.actor }}"
+                },
+                {
+                  "name": " Branch",
+                  "value": "${{ github.ref_name }}"
+                },
+                {
+                  "name": " Run ID",
+                  "value": "${{ github.run_id }}"
+                },
+                {
+                  "name": " Commit",
+                  "value": "${{ github.sha }}"
+                },
+                {
+                  "name": " Time",
+                  "value": "${{ github.event.head_commit.timestamp }}"
+                }
+              ],
+              "potentialAction": "[View Logs](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})",
+              "themeColor": "FF0000"
             }' \
             $TEAMS_WEBHOOK_URL
           else
