@@ -216,5 +216,5 @@ jobs:
             }' \
             $TEAMS_WEBHOOK_URL
           else
-            echo "⚠️ TEAMS_WEBHOOK_URL not set, skipping notification"
+            echo " TEAMS_WEBHOOK_URL not set, skipping notification"
           fi
