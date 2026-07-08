@@ -86,7 +86,7 @@ jobs:
           PASSWORD: ${{ secrets.SQL_PASSWORD }}
 
         run: |
-          echo "Checking TimesheetDB..."
+          echo "Checking TimesheetsDB..."
 
           DB_EXISTS=$(
             /opt/mssql-tools18/bin/sqlcmd \
