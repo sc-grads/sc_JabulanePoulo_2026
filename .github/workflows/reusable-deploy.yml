@@ -6,89 +6,110 @@ on:
       environment-name:
         required: true
         type: string
-
-      runner-label:
-        required: true
-        type: string
-
       sql-script-path:
         required: true
         type: string
+    secrets:
+      SQL_SERVER:
+        required: true
+      SQL_PORT:
+        required: false
+      SQL_USERNAME:
+        required: false
+      SQL_PASSWORD:
+        required: false
 
 jobs:
   deploy:
-    runs-on:
-      - self-hosted
-      - ${{ inputs.runner-label }}
-
+    runs-on: ubuntu-latest
     environment: ${{ inputs.environment-name }}
-
+    
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
+      - name: Install SQLCMD
+        run: |
+          curl https://packages.microsoft.com/keys/microsoft.asc | sudo tee /etc/apt/trusted.gpg.d/microsoft.asc
+          curl https://packages.microsoft.com/config/ubuntu/22.04/prod.list | sudo tee /etc/apt/sources.list.d/mssql-release.list
+          sudo apt-get update
+          sudo ACCEPT_EULA=Y apt-get install -y mssql-tools18
+
       - name: Show Deployment Details
-        shell: powershell
         env:
           SERVER: ${{ secrets.SQL_SERVER }}
         run: |
-          Write-Host "======================================="
-          Write-Host "SQL Deployment"
-          Write-Host "======================================="
-          Write-Host "Server : $env:SERVER"
-          Write-Host "Runner : ${{ inputs.runner-label }}"
-          Write-Host "Script : ${{ inputs.sql-script-path }}"
-          Write-Host ""
+          echo "======================================="
+          echo "SQL Deployment"
+          echo "======================================="
+          echo "Server : $SERVER"
+          echo "Environment : ${{ inputs.environment-name }}"
+          echo "Script : ${{ inputs.sql-script-path }}"
+          echo ""
 
       - name: Execute SQL Script
-        shell: pwsh
         env:
           SERVER: ${{ secrets.SQL_SERVER }}
+          PORT: ${{ secrets.SQL_PORT }}
+          USERNAME: ${{ secrets.SQL_USERNAME }}
+          PASSWORD: ${{ secrets.SQL_PASSWORD }}
         run: |
-          sqlcmd `
-            -S $env:SERVER `
-            -d master `
-            -b `
-            -i "${{ inputs.sql-script-path }}"
-
-          if ($LASTEXITCODE -ne 0) {
-            throw "SQL deployment failed."
-          }
-
-          Write-Host ""
-          Write-Host "SQL deployment completed successfully."
+          echo "Executing SQL script..."
+          
+          /opt/mssql-tools18/bin/sqlcmd \
+            -S "${SERVER},${PORT:-1433}" \
+            -U "${USERNAME}" \
+            -P "${PASSWORD}" \
+            -d master \
+            -b \
+            -i "${{ inputs.sql-script-path }}" \
+            -C
+          
+          if [ $? -ne 0 ]; then
+            echo " SQL deployment failed."
+            exit 1
+          fi
+          
+          echo " SQL deployment completed successfully."
 
       - name: Verify Deployment
-        shell: powershell
         env:
           SERVER: ${{ secrets.SQL_SERVER }}
+          PORT: ${{ secrets.SQL_PORT }}
+          USERNAME: ${{ secrets.SQL_USERNAME }}
+          PASSWORD: ${{ secrets.SQL_PASSWORD }}
         run: |
-          $Employees = (
-            sqlcmd `
-              -S $env:SERVER `
-              -d TimesheetDB `
-              -Q "SET NOCOUNT ON; SELECT COUNT(*) FROM timesheet.Employee;" `
-              -h -1
-          ).Trim()
-
-          $Clients = (
-            sqlcmd `
-              -S $env:SERVER `
-              -d TimesheetDB `
-              -Q "SET NOCOUNT ON; SELECT COUNT(*) FROM timesheet.Client;" `
-              -h -1
-          ).Trim()
-
-          Write-Host "Employees : $Employees"
-          Write-Host "Clients   : $Clients"
-
-          if ([int]$Employees -lt 1) {
-            throw "Employee table is empty."
-          }
-
-          if ([int]$Clients -lt 1) {
-            throw "Client table is empty."
-          }
-
-          Write-Host ""
-          Write-Host "Database verification successful."
+          echo "Verifying deployment..."
+          
+          EMPLOYEES=$(/opt/mssql-tools18/bin/sqlcmd \
+            -S "${SERVER},${PORT:-1433}" \
+            -U "${USERNAME}" \
+            -P "${PASSWORD}" \
+            -d TimesheetDB \
+            -Q "SET NOCOUNT ON; SELECT COUNT(*) FROM timesheet.Employee;" \
+            -h -1 \
+            -C | tr -d '[:space:]')
+          
+          CLIENTS=$(/opt/mssql-tools18/bin/sqlcmd \
+            -S "${SERVER},${PORT:-1433}" \
+            -U "${USERNAME}" \
+            -P "${PASSWORD}" \
+            -d TimesheetDB \
+            -Q "SET NOCOUNT ON; SELECT COUNT(*) FROM timesheet.Client;" \
+            -h -1 \
+            -C | tr -d '[:space:]')
+          
+          echo "Employees : $EMPLOYEES"
+          echo "Clients   : $CLIENTS"
+          
+          if [ "$EMPLOYEES" -lt 1 ]; then
+            echo " Employee table is empty."
+            exit 1
+          fi
+          
+          if [ "$CLIENTS" -lt 1 ]; then
+            echo " Client table is empty."
+            exit 1
+          fi
+          
+          echo " Database verification successful."
