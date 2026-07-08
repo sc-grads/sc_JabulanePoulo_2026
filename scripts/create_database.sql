@@ -176,7 +176,16 @@ GO
 ALTER TABLE [timesheet].[EmployeeLeave]  WITH CHECK ADD FOREIGN KEY([EmployeeID])
 REFERENCES [timesheet].[Employee] ([EmployeeID])
 GO
-
+INSERT INTO timesheet.EmployeeLeave
+(
+    EmployeeID,
+    LeaveType,
+    StartDate,
+    EndDate,
+    NumberOfDays
+)
+VALUES
+(8, 'Sick Leave - half day' , '2026-05-26', '2026-05-26', 0.5);
 -- =============================================
 -- Table: timesheet.Timesheet
 -- =============================================
