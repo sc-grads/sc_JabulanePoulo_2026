@@ -9,10 +9,6 @@ on:
       sql-script-path:
         required: true
         type: string
-      deployment-name:
-        required: false
-        type: string
-        default: "Deployment"
     secrets:
       SQL_SERVER:
         required: true
@@ -43,12 +39,12 @@ jobs:
         env:
           SERVER: ${{ secrets.SQL_SERVER }}
         run: |
-          echo "========================================="
-          echo "🚀 SQL Deployment: ${{ inputs.deployment-name }}"
-          echo "========================================="
-          echo "📡 Server      : $SERVER"
-          echo "🏷️ Environment : ${{ inputs.environment-name }}"
-          echo "📄 Script      : ${{ inputs.sql-script-path }}"
+          echo "======================================="
+          echo "SQL Deployment"
+          echo "======================================="
+          echo "Server : $SERVER"
+          echo "Environment : ${{ inputs.environment-name }}"
+          echo "Script : ${{ inputs.sql-script-path }}"
           echo ""
 
       - name: Execute SQL Script
@@ -70,11 +66,11 @@ jobs:
             -C
           
           if [ $? -ne 0 ]; then
-            echo "❌ SQL deployment failed."
+            echo " SQL deployment failed."
             exit 1
           fi
           
-          echo "✅ SQL deployment completed successfully."
+          echo " SQL deployment completed successfully."
 
       - name: Verify Deployment
         env:
@@ -103,17 +99,17 @@ jobs:
             -h -1 \
             -C | tr -d '[:space:]')
           
-          echo "👥 Employees : $EMPLOYEES"
-          echo "🏢 Clients   : $CLIENTS"
+          echo "Employees : $EMPLOYEES"
+          echo "Clients   : $CLIENTS"
           
           if [ "$EMPLOYEES" -lt 1 ]; then
-            echo "❌ Employee table is empty."
+            echo " Employee table is empty."
             exit 1
           fi
           
           if [ "$CLIENTS" -lt 1 ]; then
-            echo "❌ Client table is empty."
+            echo " Client table is empty."
             exit 1
           fi
           
-          echo "✅ Database verification successful for ${{ inputs.deployment-name }}."
+          echo " Database verification successful."
