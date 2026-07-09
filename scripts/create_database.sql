@@ -82,6 +82,7 @@ GO
 ALTER TABLE [audit].[AuditLog] ADD  DEFAULT ((0)) FOR [RowsDeleted]
 GO
 
+
 -- =============================================
 -- Table: staging.Timesheet
 -- =============================================
