@@ -106,7 +106,6 @@ jobs:
           HOSTNAME: ${{ secrets.SQL_HOSTNAME }}
         run: |
           PACKAGE_PATH="ssis-packages/TimesheetMigration1.ispac"
-          FOLDER_NAME="ETL"
           PROJECT_NAME="TimesheetMigration1"
           
           if [ ! -f "$PACKAGE_PATH" ]; then
