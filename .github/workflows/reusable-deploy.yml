@@ -25,18 +25,6 @@ on:
         required: false
         type: string
         default: "TimesheetMigration1"
-      database-name:
-        required: false
-        type: string
-        default: "TimesheetsDB"
-      max-retries:
-        required: false
-        type: number
-        default: 5
-      retry-delay:
-        required: false
-        type: number
-        default: 15
     secrets:
       SQL_SERVER:
         required: true
@@ -56,153 +44,43 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Install SQLCMD and Tools
+      - name: Install SQLCMD
         run: |
-          # Install SQLCMD
           curl https://packages.microsoft.com/keys/microsoft.asc | sudo tee /etc/apt/trusted.gpg.d/microsoft.asc
           curl https://packages.microsoft.com/config/ubuntu/22.04/prod.list | sudo tee /etc/apt/sources.list.d/mssql-release.list
           sudo apt-get update
           sudo ACCEPT_EULA=Y apt-get install -y mssql-tools18
-          
-          # Install network tools for diagnostics
-          sudo apt-get install -y netcat-openbsd telnet dnsutils
 
       - name: Display Deployment Information
         run: |
-          echo "╔═══════════════════════════════════════════════════════════════════╗"
-          echo "║                                                                   ║"
-          echo "║                    🚀 SQL DEPLOYMENT                               ║"
-          echo "║                                                                   ║"
-          echo "╠═══════════════════════════════════════════════════════════════════╣"
-          echo "║                                                                   ║"
-          echo "║  Environment    : ${{ inputs.environment-name }}"
-          echo "║  Server         : ${{ secrets.SQL_SERVER }}"
-          echo "║  Port           : ${{ secrets.SQL_PORT || '1433' }}"
-          echo "║  Database       : ${{ inputs.database-name }}"
-          echo "║  Script Path    : ${{ inputs.sql-script-path }}"
-          echo "║  Deploy SSIS    : ${{ inputs.deploy-ssis }}"
-          echo "║  SSIS Package   : ${{ inputs.ssis-package-path }}"
-          echo "║  SSIS Folder    : ${{ inputs.ssis-folder-name }}"
-          echo "║  SSIS Project   : ${{ inputs.ssis-project-name }}"
-          echo "║  Max Retries    : ${{ inputs.max-retries }}"
-          echo "║                                                                   ║"
-          echo "╚═══════════════════════════════════════════════════════════════════╝"
+          echo "==============================================="
+          echo "SQL Deployment"
+          echo "==============================================="
+          echo "Environment : ${{ inputs.environment-name }}"
+          echo "Server      : ${{ secrets.SQL_SERVER }}"
+          echo "Script      : ${{ inputs.sql-script-path }}"
+          echo "Deploy SSIS : ${{ inputs.deploy-ssis }}"
+          echo "SSIS Package: ${{ inputs.ssis-package-path }}"
+          echo "SSIS Folder : ${{ inputs.ssis-folder-name }}"
+          echo "==============================================="
 
-      - name: Diagnostic - Check SQL Server Connectivity
-        run: |
-          echo "╔═══════════════════════════════════════════════════════════════════╗"
-          echo "║                    🔍 CONNECTIVITY DIAGNOSTICS                   ║"
-          echo "╚═══════════════════════════════════════════════════════════════════╝"
-          
-          SERVER="${{ secrets.SQL_SERVER }}"
-          PORT="${{ secrets.SQL_PORT || '1433' }}"
-          
-          echo "► DNS Resolution:"
-          nslookup "$SERVER" 2>&1 | head -5 || echo "  ✗ DNS lookup failed"
-          
-          echo ""
-          echo "► Port Connectivity (nc):"
-          nc -zv "$SERVER" "$PORT" 2>&1 || echo "  ✗ Port $PORT is not accessible"
-          
-          echo ""
-          echo "► Testing SQL Connection:"
-          if /opt/mssql-tools18/bin/sqlcmd \
-            -S "${SERVER},${PORT}" \
-            -U "${{ secrets.SQL_USERNAME }}" \
-            -P "${{ secrets.SQL_PASSWORD }}" \
-            -d "master" \
-            -Q "SELECT '✓ Connection successful' as Status" \
-            -C \
-            -V 1 2>&1; then
-            echo "  ✓ Connection successful!"
-          else
-            echo "  ✗ Connection failed - will retry with enhanced settings"
-          fi
-
-      - name: Execute SQL Script with Retry Logic
+      - name: Execute SQL Script
         env:
           SERVER: ${{ secrets.SQL_SERVER }}
           PORT: ${{ secrets.SQL_PORT }}
           USERNAME: ${{ secrets.SQL_USERNAME }}
           PASSWORD: ${{ secrets.SQL_PASSWORD }}
-          DB_NAME: ${{ inputs.database-name }}
-          SCRIPT_PATH: ${{ inputs.sql-script-path }}
-          MAX_RETRIES: ${{ inputs.max-retries }}
-          RETRY_DELAY: ${{ inputs.retry-delay }}
         run: |
-          echo "╔═══════════════════════════════════════════════════════════════════╗"
-          echo "║                    📦 DEPLOYING DATABASE                         ║"
-          echo "╚═══════════════════════════════════════════════════════════════════╝"
-          
-          echo "► Database: ${DB_NAME}"
-          echo "► Script: ${SCRIPT_PATH}"
-          
-          # Check if script exists
-          if [ ! -f "${SCRIPT_PATH}" ]; then
-            echo "  ✗ Error: SQL script ${SCRIPT_PATH} not found!"
-            echo "  Current directory contents:"
-            ls -la
-            exit 1
-          fi
-          
-          # Replace database name in script
-          cp "${SCRIPT_PATH}" "${SCRIPT_PATH}.backup"
-          sed -i "s/TimesheetsDB/${DB_NAME}/g" "${SCRIPT_PATH}"
-          
-          # Connection parameters
-          CONNECTION_STRING="-S ${SERVER},${PORT:-1433} -U ${USERNAME} -P ${PASSWORD} -d master -C -V 1"
-          
-          # Retry loop
-          RETRY_COUNT=0
-          SUCCESS=false
-          
-          while [ ${RETRY_COUNT} -lt ${MAX_RETRIES} ]; do
-            echo ""
-            echo "─────────────────────────────────────────────────────────────────"
-            echo "  Attempt $((RETRY_COUNT + 1)) of ${MAX_RETRIES}"
-            echo "─────────────────────────────────────────────────────────────────"
-            
-            # Test connection first
-            echo "  ► Testing connection..."
-            if /opt/mssql-tools18/bin/sqlcmd ${CONNECTION_STRING} \
-              -Q "SELECT '✓ Connection OK' as Status" \
-              -b; then
-              echo "  ✓ Connection successful!"
-            else
-              echo "  ✗ Connection failed. Retrying in ${RETRY_DELAY} seconds..."
-              sleep ${RETRY_DELAY}
-              RETRY_COUNT=$((RETRY_COUNT + 1))
-              continue
-            fi
-            
-            # Execute script
-            echo "  ► Executing SQL script..."
-            if /opt/mssql-tools18/bin/sqlcmd ${CONNECTION_STRING} \
-              -i "${SCRIPT_PATH}" \
-              -b; then
-              echo "  ✓ SQL execution completed successfully!"
-              SUCCESS=true
-              break
-            else
-              echo "  ✗ SQL execution failed. Retrying in ${RETRY_DELAY} seconds..."
-              sleep ${RETRY_DELAY}
-              RETRY_COUNT=$((RETRY_COUNT + 1))
-            fi
-          done
-          
-          # Restore original script
-          mv "${SCRIPT_PATH}.backup" "${SCRIPT_PATH}"
-          
-          if [ "${SUCCESS}" != "true" ]; then
-            echo ""
-            echo "╔═══════════════════════════════════════════════════════════════════╗"
-            echo "║                    ❌ DEPLOYMENT FAILED                          ║"
-            echo "╚═══════════════════════════════════════════════════════════════════╝"
-            echo "  Failed to execute SQL script after ${MAX_RETRIES} attempts."
-            exit 1
-          fi
-          
-          echo "  ✓ Database deployment completed."
+          echo "Deploying database..."
+          /opt/mssql-tools18/bin/sqlcmd \
+            -S "${SERVER},${PORT:-1433}" \
+            -U "$USERNAME" \
+            -P "$PASSWORD" \
+            -d master \
+            -i "${{ inputs.sql-script-path }}" \
+            -b \
+            -C
+          echo "Database deployment completed."
 
       - name: Check and Create SSISDB if Needed
         if: ${{ inputs.deploy-ssis == true }}
@@ -212,36 +90,29 @@ jobs:
           USERNAME: ${{ secrets.SQL_USERNAME }}
           PASSWORD: ${{ secrets.SQL_PASSWORD }}
         run: |
-          echo ""
-          echo "╔═══════════════════════════════════════════════════════════════════╗"
-          echo "║                    🔧 SSISDB SETUP                              ║"
-          echo "╚═══════════════════════════════════════════════════════════════════╝"
-          
-          echo "  ► Checking if SSISDB exists..."
+          echo "Checking if SSISDB exists..."
           
           SSISDB_EXISTS=$(/opt/mssql-tools18/bin/sqlcmd \
             -S "${SERVER},${PORT:-1433}" \
-            -U "${USERNAME}" \
-            -P "${PASSWORD}" \
+            -U "$USERNAME" \
+            -P "$PASSWORD" \
             -d master \
             -Q "SET NOCOUNT ON; SELECT COUNT(*) FROM sys.databases WHERE name='SSISDB'" \
             -h-1 \
-            -C \
-            -V 1 | tr -d '[:space:]')
+            -C | tr -d '[:space:]')
           
           if [ "$SSISDB_EXISTS" == "0" ]; then
-            echo "  ► SSISDB does not exist. Creating..."
+            echo "SSISDB does not exist. Creating SSISDB..."
             /opt/mssql-tools18/bin/sqlcmd \
               -S "${SERVER},${PORT:-1433}" \
-              -U "${USERNAME}" \
-              -P "${PASSWORD}" \
+              -U "$USERNAME" \
+              -P "$PASSWORD" \
               -d master \
-              -Q "EXEC [master].[sys].[sp_ssis_catalog] @operation='create_catalog', @password='${PASSWORD}';" \
-              -C \
-              -V 1
-            echo "  ✓ SSISDB created successfully."
+              -Q "EXEC [master].[sys].[sp_ssis_catalog] @operation='create_catalog', @password='${{ secrets.SQL_PASSWORD }}';" \
+              -C
+            echo "SSISDB created successfully."
           else
-            echo "  ✓ SSISDB already exists."
+            echo "SSISDB already exists."
           fi
 
       - name: Create SSIS Folder
@@ -253,30 +124,28 @@ jobs:
           PASSWORD: ${{ secrets.SQL_PASSWORD }}
         run: |
           FOLDER_NAME="${{ inputs.ssis-folder-name }}"
-          echo "  ► Creating SSIS folder: ${FOLDER_NAME}"
+          echo "Creating SSIS folder: $FOLDER_NAME"
           
           FOLDER_EXISTS=$(/opt/mssql-tools18/bin/sqlcmd \
             -S "${SERVER},${PORT:-1433}" \
-            -U "${USERNAME}" \
-            -P "${PASSWORD}" \
+            -U "$USERNAME" \
+            -P "$PASSWORD" \
             -d SSISDB \
-            -Q "SET NOCOUNT ON; SELECT COUNT(*) FROM [SSISDB].[catalog].[folders] WHERE name='${FOLDER_NAME}'" \
+            -Q "SET NOCOUNT ON; SELECT COUNT(*) FROM [SSISDB].[catalog].[folders] WHERE name='$FOLDER_NAME'" \
             -h-1 \
-            -C \
-            -V 1 | tr -d '[:space:]')
+            -C | tr -d '[:space:]')
           
           if [ "$FOLDER_EXISTS" == "0" ]; then
             /opt/mssql-tools18/bin/sqlcmd \
               -S "${SERVER},${PORT:-1433}" \
-              -U "${USERNAME}" \
-              -P "${PASSWORD}" \
+              -U "$USERNAME" \
+              -P "$PASSWORD" \
               -d SSISDB \
-              -Q "EXEC [SSISDB].[catalog].[create_folder] @folder_name=N'${FOLDER_NAME}', @folder_id=0;" \
-              -C \
-              -V 1
-            echo "  ✓ Folder '${FOLDER_NAME}' created successfully."
+              -Q "EXEC [SSISDB].[catalog].[create_folder] @folder_name=N'$FOLDER_NAME', @folder_id=0;" \
+              -C
+            echo "Folder '$FOLDER_NAME' created successfully."
           else
-            echo "  ✓ Folder '${FOLDER_NAME}' already exists."
+            echo "Folder '$FOLDER_NAME' already exists."
           fi
 
       - name: Deploy SSIS Package
@@ -287,66 +156,54 @@ jobs:
           USERNAME: ${{ secrets.SQL_USERNAME }}
           PASSWORD: ${{ secrets.SQL_PASSWORD }}
         run: |
-          echo ""
-          echo "╔═══════════════════════════════════════════════════════════════════╗"
-          echo "║                    📦 DEPLOYING SSIS PACKAGE                    ║"
-          echo "╚═══════════════════════════════════════════════════════════════════╝"
-          
           PACKAGE_PATH="${{ inputs.ssis-package-path }}"
           FOLDER_NAME="${{ inputs.ssis-folder-name }}"
           PROJECT_NAME="${{ inputs.ssis-project-name }}"
           
-          echo "  ► Package: ${PACKAGE_PATH}"
-          echo "  ► Folder: ${FOLDER_NAME}"
-          echo "  ► Project: ${PROJECT_NAME}"
+          echo "Deploying SSIS package: $PACKAGE_PATH"
           
-          if [ ! -f "${PACKAGE_PATH}" ]; then
-            echo "  ✗ Error: Package file ${PACKAGE_PATH} not found!"
-            echo "  Current directory contents:"
+          if [ ! -f "$PACKAGE_PATH" ]; then
+            echo "Error: Package file $PACKAGE_PATH not found!"
+            echo "Current directory contents:"
             ls -la
             exit 1
           fi
           
           # Convert .ispac to base64
-          echo "  ► Converting package to base64..."
-          PACKAGE_BASE64=$(base64 -w 0 "${PACKAGE_PATH}")
-          
-          # Create temporary SQL file for deployment
-          cat > /tmp/deploy_ssis.sql << EOF
-          DECLARE @folder_id bigint;
-          DECLARE @project_id bigint;
-          DECLARE @operation_id bigint;
-          DECLARE @project_binary varbinary(max);
-          
-          SELECT @folder_id = folder_id 
-          FROM [SSISDB].[catalog].[folders] 
-          WHERE name = '${FOLDER_NAME}';
-          
-          SET @project_binary = CAST(N'' AS XML).value('xs:base64Binary(sql:variable(\"@base64\"))', 'varbinary(max)');
-          
-          EXEC [SSISDB].[catalog].[deploy_project] 
-            @folder_name = '${FOLDER_NAME}',
-            @project_name = '${PROJECT_NAME}',
-            @project_stream = @project_binary,
-            @operation_id = @operation_id OUTPUT;
-          
-          SELECT '✓ Deployment successful' as Status, @operation_id as OperationID;
-          EOF
+          echo "Converting package to base64..."
+          PACKAGE_BASE64=$(base64 -w 0 "$PACKAGE_PATH")
           
           # Deploy using T-SQL
-          echo "  ► Deploying package to SSISDB..."
+          echo "Deploying package to SSISDB..."
           /opt/mssql-tools18/bin/sqlcmd \
             -S "${SERVER},${PORT:-1433}" \
-            -U "${USERNAME}" \
-            -P "${PASSWORD}" \
+            -U "$USERNAME" \
+            -P "$PASSWORD" \
             -d SSISDB \
-            -i /tmp/deploy_ssis.sql \
-            -v base64="${PACKAGE_BASE64}" \
-            -C \
-            -V 1
+            -Q "
+              DECLARE @folder_id bigint;
+              DECLARE @project_id bigint;
+              DECLARE @operation_id bigint;
+              DECLARE @project_binary varbinary(max);
+              
+              SELECT @folder_id = folder_id 
+              FROM [SSISDB].[catalog].[folders] 
+              WHERE name = '$FOLDER_NAME';
+              
+              SET @project_binary = CAST(N'' AS XML).value('xs:base64Binary(sql:variable(\"@base64\"))', 'varbinary(max)');
+              
+              EXEC [SSISDB].[catalog].[deploy_project] 
+                @folder_name = '$FOLDER_NAME',
+                @project_name = '$PROJECT_NAME',
+                @project_stream = @project_binary,
+                @operation_id = @operation_id OUTPUT;
+              
+              SELECT 'Deployment successful' as Status, @operation_id as OperationID;
+            " \
+            -v base64="$PACKAGE_BASE64" \
+            -C
           
-          rm -f /tmp/deploy_ssis.sql
-          echo "  ✓ SSIS package deployed successfully."
+          echo "SSIS package deployed successfully."
 
       - name: Verify Database
         env:
@@ -354,48 +211,55 @@ jobs:
           PORT: ${{ secrets.SQL_PORT }}
           USERNAME: ${{ secrets.SQL_USERNAME }}
           PASSWORD: ${{ secrets.SQL_PASSWORD }}
-          DB_NAME: ${{ inputs.database-name }}
         run: |
-          echo ""
-          echo "╔═══════════════════════════════════════════════════════════════════╗"
-          echo "║                    ✅ VERIFYING DATABASE                        ║"
-          echo "╚═══════════════════════════════════════════════════════════════════╝"
+          echo "Verifying database deployment..."
           
-          echo "  ► Checking database exists..."
+          # Check database exists
           DB_EXISTS=$(/opt/mssql-tools18/bin/sqlcmd \
             -S "${SERVER},${PORT:-1433}" \
-            -U "${USERNAME}" \
-            -P "${PASSWORD}" \
+            -U "$USERNAME" \
+            -P "$PASSWORD" \
             -d master \
-            -Q "SET NOCOUNT ON; SELECT COUNT(*) FROM sys.databases WHERE name='${DB_NAME}';" \
+            -Q "SET NOCOUNT ON; SELECT COUNT(*) FROM sys.databases WHERE name='TimesheetsDB';" \
             -h-1 \
-            -C \
-            -V 1 | tr -d '[:space:]')
+            -C | tr -d '[:space:]')
           
-          if [ "${DB_EXISTS}" != "1" ]; then
-            echo "  ✗ ERROR: Database ${DB_NAME} was not created."
+          if [ "$DB_EXISTS" != "1" ]; then
+            echo "TimesheetsDB was not created."
             exit 1
           fi
-          echo "  ✓ Database ${DB_NAME} exists."
           
-          # Check if there are tables
-          TABLE_COUNT=$(/opt/mssql-tools18/bin/sqlcmd \
+          # Check Employee table
+          EMPLOYEES=$(/opt/mssql-tools18/bin/sqlcmd \
             -S "${SERVER},${PORT:-1433}" \
-            -U "${USERNAME}" \
-            -P "${PASSWORD}" \
-            -d "${DB_NAME}" \
-            -Q "SET NOCOUNT ON; SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA='timesheet';" \
+            -U "$USERNAME" \
+            -P "$PASSWORD" \
+            -d TimesheetsDB \
+            -Q "SET NOCOUNT ON; SELECT COUNT(*) FROM timesheet.Employee;" \
             -h-1 \
-            -C \
-            -V 1 | tr -d '[:space:]')
+            -C | tr -d '[:space:]')
           
-          echo "  ► Tables in timesheet schema: ${TABLE_COUNT}"
-          
-          if [ "${TABLE_COUNT}" -gt "0" ]; then
-            echo "  ✓ Database verification completed successfully."
-          else
-            echo "  ⚠ Warning: No tables found in timesheet schema."
+          if [ "$EMPLOYEES" -lt 1 ]; then
+            echo "Employee table verification failed."
+            exit 1
           fi
+          
+          # Check Client table
+          CLIENTS=$(/opt/mssql-tools18/bin/sqlcmd \
+            -S "${SERVER},${PORT:-1433}" \
+            -U "$USERNAME" \
+            -P "$PASSWORD" \
+            -d TimesheetsDB \
+            -Q "SET NOCOUNT ON; SELECT COUNT(*) FROM timesheet.Client;" \
+            -h-1 \
+            -C | tr -d '[:space:]')
+          
+          if [ "$CLIENTS" -lt 1 ]; then
+            echo "Client table verification failed."
+            exit 1
+          fi
+          
+          echo "Database verification completed successfully."
 
       - name: Verify SSIS Deployment
         if: ${{ inputs.deploy-ssis == true }}
@@ -405,48 +269,35 @@ jobs:
           USERNAME: ${{ secrets.SQL_USERNAME }}
           PASSWORD: ${{ secrets.SQL_PASSWORD }}
         run: |
-          echo ""
-          echo "╔═══════════════════════════════════════════════════════════════════╗"
-          echo "║                    ✅ VERIFYING SSIS DEPLOYMENT                 ║"
-          echo "╚═══════════════════════════════════════════════════════════════════╝"
+          echo "Verifying SSIS deployment..."
           
           FOLDER_NAME="${{ inputs.ssis-folder-name }}"
           PROJECT_NAME="${{ inputs.ssis-project-name }}"
           
           PROJECT_EXISTS=$(/opt/mssql-tools18/bin/sqlcmd \
             -S "${SERVER},${PORT:-1433}" \
-            -U "${USERNAME}" \
-            -P "${PASSWORD}" \
+            -U "$USERNAME" \
+            -P "$PASSWORD" \
             -d SSISDB \
             -Q "SET NOCOUNT ON; 
                 SELECT COUNT(*) 
                 FROM [SSISDB].[catalog].[projects] p
                 INNER JOIN [SSISDB].[catalog].[folders] f ON p.folder_id = f.folder_id
-                WHERE f.name = '${FOLDER_NAME}' 
-                  AND p.name = '${PROJECT_NAME}'" \
+                WHERE f.name = '$FOLDER_NAME' 
+                  AND p.name = '$PROJECT_NAME'" \
             -h-1 \
-            -C \
-            -V 1 | tr -d '[:space:]')
+            -C | tr -d '[:space:]')
           
-          if [ "${PROJECT_EXISTS}" -eq "1" ]; then
-            echo "  ✓ SSIS deployment verified successfully!"
+          if [ "$PROJECT_EXISTS" -eq "1" ]; then
+            echo "SSIS deployment verified successfully!"
           else
-            echo "  ⚠ Warning: SSIS project not found in SSISDB."
+            echo "Warning: SSIS project not found in SSISDB."
           fi
 
       - name: Deployment Complete
         run: |
           echo ""
-          echo "╔═══════════════════════════════════════════════════════════════════╗"
-          echo "║                                                                   ║"
-          echo "║                    ✅ DEPLOYMENT COMPLETE                         ║"
-          echo "║                                                                   ║"
-          echo "╠═══════════════════════════════════════════════════════════════════╣"
-          echo "║                                                                   ║"
-          echo "║  Environment    : ${{ inputs.environment-name }}"
-          echo "║  Database       : ${{ inputs.database-name }}"
-          echo "║  SSIS Deployed  : ${{ inputs.deploy-ssis }}"
-          echo "║                                                                   ║"
-          echo "║  🎉 All operations completed successfully!                        ║"
-          echo "║                                                                   ║"
-          echo "╚═══════════════════════════════════════════════════════════════════╝"
+          echo "==============================================="
+          echo "Deployment completed successfully."
+          echo "==============================================="
+
