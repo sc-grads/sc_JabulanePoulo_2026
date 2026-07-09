@@ -25,7 +25,7 @@ jobs:
           sudo apt-get update
           sudo ACCEPT_EULA=Y apt-get install -y mssql-tools18
 
-      # --- STEP 1: DEPLOY DATABASE (SQL Auth) ---
+      # --- STEP 1: DEPLOY DATABASE ---
       - name: Deploy SQL Database Script
         env:
           SERVER: ${{ secrets.SQL_SERVER }}
@@ -42,9 +42,9 @@ jobs:
             -i "scripts/create_database.sql" \
             -b \
             -C
-          echo "Database deployment completed."
+          echo "✅ Database deployment completed."
 
-      # --- STEP 2: SSIS CATALOG (SQL Auth) ---
+      # --- STEP 2: SSIS CATALOG ---
       - name: Initialize SSIS Catalog (SSISDB) if Missing
         env:
           SERVER: ${{ secrets.SQL_SERVER }}
@@ -72,19 +72,20 @@ jobs:
               -d master \
               -Q "EXEC [SSISDB].[catalog].[create_catalog] @password = '${{ secrets.SQL_PASSWORD }}';" \
               -C
-            echo "SSISDB created successfully."
+            echo "✅ SSISDB created successfully."
           else
-            echo "SSISDB already exists."
+            echo "✅ SSISDB already exists."
           fi
 
-      - name: Create SSIS Folder (ETL)
+      # --- STEP 3: CREATE SSIS FOLDER ---
+      - name: Create SSIS Folder
         env:
           SERVER: ${{ secrets.SQL_SERVER }}
           PORT: ${{ secrets.SQL_PORT }}
           USERNAME: ${{ secrets.SQL_USERNAME }}
           PASSWORD: ${{ secrets.SQL_PASSWORD }}
         run: |
-          FOLDER_NAME="ETL"
+          FOLDER_NAME="TimesheetDevTestMigration"
           echo "Verifying SSIS folder: $FOLDER_NAME"
           
           FOLDER_EXISTS=$(/opt/mssql-tools18/bin/sqlcmd \
@@ -110,6 +111,7 @@ jobs:
             echo "✅ Folder '$FOLDER_NAME' already exists."
           fi
 
+      # --- STEP 4: DEPLOY SSIS PACKAGE ---
       - name: Deploy SSIS Package (.ispac) to DevTest
         env:
           SERVER: ${{ secrets.SQL_SERVER }}
@@ -118,8 +120,8 @@ jobs:
           PASSWORD: ${{ secrets.SQL_PASSWORD }}
         run: |
           PACKAGE_PATH="ssis-packages/TimesheetMigration1.ispac"
-          FOLDER_NAME="ETL"
-          PROJECT_NAME="TimesheetMigration1"
+          FOLDER_NAME="TimesheetDevTestMigration"    # Updated to match your environment
+          PROJECT_NAME="TimesheetMigration1"          # Updated to match your environment
           
           echo "Checking for package at: $PACKAGE_PATH"
           
@@ -136,7 +138,7 @@ jobs:
           echo "Encoding package to Base64..."
           PACKAGE_BASE64=$(base64 -w 0 "$PACKAGE_PATH")
           
-          echo "Deploying Project..."
+          echo "Deploying Project to folder: $FOLDER_NAME"
           /opt/mssql-tools18/bin/sqlcmd \
             -S "${SERVER},${PORT:-1433}" \
             -U "$USERNAME" \
@@ -152,9 +154,59 @@ jobs:
             " \
             -v base64="$PACKAGE_BASE64" \
             -C
-          echo "✅ SSIS package deployed."
+          echo "✅ SSIS package deployed to: \SSISDB\$FOLDER_NAME\$PROJECT_NAME\"
 
-      # --- STEP 3: JOBS (SQL Auth) ---
+      # --- STEP 5: VERIFY DEPLOYMENT ---
+      - name: Verify SSIS Deployment
+        env:
+          SERVER: ${{ secrets.SQL_SERVER }}
+          PORT: ${{ secrets.SQL_PORT }}
+          USERNAME: ${{ secrets.SQL_USERNAME }}
+          PASSWORD: ${{ secrets.SQL_PASSWORD }}
+        run: |
+          echo "Verifying SSIS deployment..."
+          
+          FOLDER_NAME="TimesheetDevTestMigration"
+          PROJECT_NAME="TimesheetMigration1"
+          
+          PROJECT_EXISTS=$(/opt/mssql-tools18/bin/sqlcmd \
+            -S "${SERVER},${PORT:-1433}" \
+            -U "$USERNAME" \
+            -P "$PASSWORD" \
+            -d SSISDB \
+            -Q "SET NOCOUNT ON; 
+                SELECT COUNT(*) 
+                FROM [SSISDB].[catalog].[projects] p
+                INNER JOIN [SSISDB].[catalog].[folders] f ON p.folder_id = f.folder_id
+                WHERE f.name = '$FOLDER_NAME' 
+                  AND p.name = '$PROJECT_NAME'" \
+            -h-1 \
+            -C | tr -d '[:space:]')
+          
+          if [ "$PROJECT_EXISTS" -eq "1" ]; then
+            echo "✅ SSIS deployment verified successfully!"
+            
+            # List packages in the project
+            echo ""
+            echo "📦 Packages in project:"
+            /opt/mssql-tools18/bin/sqlcmd \
+              -S "${SERVER},${PORT:-1433}" \
+              -U "$USERNAME" \
+              -P "$PASSWORD" \
+              -d SSISDB \
+              -Q "SET NOCOUNT ON; 
+                  SELECT f.name as FolderName, p.name as ProjectName, pk.name as PackageName
+                  FROM [SSISDB].[catalog].[packages] pk
+                  INNER JOIN [SSISDB].[catalog].[projects] p ON pk.project_id = p.project_id
+                  INNER JOIN [SSISDB].[catalog].[folders] f ON p.folder_id = f.folder_id
+                  WHERE f.name = '$FOLDER_NAME' AND p.name = '$PROJECT_NAME'" \
+              -C
+          else
+            echo "❌ SSIS project not found in SSISDB."
+            exit 1
+          fi
+
+      # --- STEP 6: CREATE JOB ---
       - name: Create DevTest SQL Agent Job
         env:
           SERVER: ${{ secrets.SQL_SERVER }}
@@ -162,19 +214,17 @@ jobs:
           USERNAME: ${{ secrets.SQL_USERNAME }}
           PASSWORD: ${{ secrets.SQL_PASSWORD }}
         run: |
-          if [ -f "scripts/create_job.sql" ]; then
-            echo "Creating SQL Agent Job..."
-            /opt/mssql-tools18/bin/sqlcmd \
-              -S "${SERVER},${PORT:-1433}" \
-              -U "$USERNAME" \
-              -P "$PASSWORD" \
-              -d msdb \
-              -i "scripts/create_job.sql" \
-              -C
-          else
-            echo "⚠️ scripts/create_job.sql not found, skipping job creation"
-          fi
+          echo "Creating SQL Agent Job..."
+          /opt/mssql-tools18/bin/sqlcmd \
+            -S "${SERVER},${PORT:-1433}" \
+            -U "$USERNAME" \
+            -P "$PASSWORD" \
+            -d msdb \
+            -i "scripts/create_job.sql" \
+            -C
+          echo "✅ Job created successfully."
 
+      # --- STEP 7: RUN THE JOB ---
       - name: Run DevTest Migration Job
         env:
           SERVER: ${{ secrets.SQL_SERVER }}
@@ -189,8 +239,25 @@ jobs:
             -P "$PASSWORD" \
             -d msdb \
             -Q "EXEC dbo.sp_start_job N'RunTimesheetDevTestMigrationPK';" \
-            -C || echo "⚠️ Job may not exist or SQL Agent is not running"
-          echo "Job started."
+            -C
+          echo "✅ Job started."
+          
+          # Wait a few seconds and check job status
+          sleep 5
+          echo ""
+          echo "Job status:"
+          /opt/mssql-tools18/bin/sqlcmd \
+            -S "${SERVER},${PORT:-1433}" \
+            -U "$USERNAME" \
+            -P "$PASSWORD" \
+            -d msdb \
+            -Q "SET NOCOUNT ON; 
+                SELECT j.name, ja.run_status, ja.run_date, ja.run_time
+                FROM sysjobs j
+                INNER JOIN sysjobactivity ja ON j.job_id = ja.job_id
+                WHERE j.name = 'RunTimesheetDevTestMigrationPK'
+                ORDER BY ja.run_date DESC, ja.run_time DESC" \
+            -C
 
   # ==========================================
   # 2. Stage: Production/Deploy
@@ -230,7 +297,7 @@ jobs:
             -b \
             -C
 
-      # --- STEP 2: SSIS CATALOG (SQL Auth) ---
+      # --- STEP 2: SSIS CATALOG ---
       - name: Initialize SSIS Catalog (SSISDB) if Missing (Partner)
         env:
           SERVER: ${{ secrets.PARTNER_SQL_SERVER }}
@@ -258,14 +325,15 @@ jobs:
               -C
           fi
 
-      - name: Create SSIS Folder (ETL) (Partner)
+      # --- STEP 3: CREATE SSIS FOLDER ---
+      - name: Create SSIS Folder (Partner)
         env:
           SERVER: ${{ secrets.PARTNER_SQL_SERVER }}
           PORT: ${{ secrets.PARTNER_SQL_PORT }}
           USERNAME: ${{ secrets.PARTNER_SQL_USERNAME }}
           PASSWORD: ${{ secrets.PARTNER_SQL_PASSWORD }}
         run: |
-          FOLDER_NAME="ETL"
+          FOLDER_NAME="TimesheetDevTestMigration"
           FOLDER_EXISTS=$(/opt/mssql-tools18/bin/sqlcmd \
             -S "${SERVER},${PORT:-1433}" \
             -U "$USERNAME" \
@@ -288,6 +356,7 @@ jobs:
             echo "Folder '$FOLDER_NAME' already exists (Partner)."
           fi
 
+      # --- STEP 4: DEPLOY SSIS PACKAGE ---
       - name: Deploy SSIS Package (.ispac) to Partner
         env:
           SERVER: ${{ secrets.PARTNER_SQL_SERVER }}
@@ -296,7 +365,7 @@ jobs:
           PASSWORD: ${{ secrets.PARTNER_SQL_PASSWORD }}
         run: |
           PACKAGE_PATH="ssis-packages/TimesheetMigration1.ispac"
-          FOLDER_NAME="ETL"
+          FOLDER_NAME="TimesheetDevTestMigration"
           PROJECT_NAME="TimesheetMigration1"
           
           if [ ! -f "$PACKAGE_PATH" ]; then
@@ -322,7 +391,7 @@ jobs:
             -v base64="$PACKAGE_BASE64" \
             -C
 
-      # --- STEP 3: JOBS ---
+      # --- STEP 5: CREATE JOB ---
       - name: Create Partner SQL Agent Job
         env:
           SERVER: ${{ secrets.PARTNER_SQL_SERVER }}
@@ -340,6 +409,7 @@ jobs:
               -C
           fi
 
+      # --- STEP 6: RUN JOB ---
       - name: Run Partner Migration Job
         env:
           SERVER: ${{ secrets.PARTNER_SQL_SERVER }}
