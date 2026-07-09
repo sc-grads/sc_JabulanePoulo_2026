@@ -13,13 +13,12 @@ jobs:
   DevTest:
     uses: ./.github/workflows/reusable-deploy.yml
     with:
-      environment-name: DevTest/Deploy
+      environment-name: local-sql
       sql-script-path: scripts/create_database.sql
       deploy-ssis: true
-      ssis-package-path: ssis-packages/TimesheetDevTestMigrationPK.ispac
-      ssis-folder-name: TimesheetDevTestMigration
-      ssis-project-name: TimesheetDevTestMigrationPK
-      database-name: Timesheet-JP-DB
+      ssis-package-path: ssis-packages/TimesheetMigration1.ispac
+      ssis-folder-name: ETL
+      ssis-project-name: TimesheetMigration1
     secrets: inherit
 
   # Deploy to Partner Environment with SSIS
@@ -29,17 +28,16 @@ jobs:
       environment-name: partner-sql
       sql-script-path: scripts/create_database_partner.sql
       deploy-ssis: true
-      ssis-package-path: ssis-packages/TimesheetDevTestMigrationPK.ispac
-      ssis-folder-name: TimesheetDevTestMigration
-      ssis-project-name: TimesheetDevTestMigrationPK
-      database-name: Timesheet-JP-DB
+      ssis-package-path: ssis-packages/TimesheetMigration1.ispac
+      ssis-folder-name: ETL
+      ssis-project-name: TimesheetMigration1
     secrets: inherit
 
   # Run TimesheetMigration Job after DevTest deployment
   RunMigrationJob:
     needs: DevTest
     runs-on: ubuntu-latest
-    environment: DevTest/Deploy
+    environment: local-sql
     if: success()
     
     steps:
@@ -60,7 +58,7 @@ jobs:
           USERNAME: ${{ secrets.SQL_USERNAME }}
           PASSWORD: ${{ secrets.SQL_PASSWORD }}
         run: |
-          echo "Creating RunTimesheetDevTestMigrationPK job if it doesn't exist..."
+          echo "Creating TimesheetMigration job if it doesn't exist..."
           
           /opt/mssql-tools18/bin/sqlcmd \
             -S "${SERVER},${PORT}" \
@@ -77,14 +75,14 @@ jobs:
           USERNAME: ${{ secrets.SQL_USERNAME }}
           PASSWORD: ${{ secrets.SQL_PASSWORD }}
         run: |
-          echo "Starting RunTimesheetDevTestMigrationPK job..."
+          echo "Starting TimesheetMigration job..."
           
           /opt/mssql-tools18/bin/sqlcmd \
             -S "${SERVER},${PORT}" \
             -U "$USERNAME" \
             -P "$PASSWORD" \
             -d "msdb" \
-            -Q "EXEC dbo.sp_start_job N'RunTimesheetDevTestMigrationPK';" \
+            -Q "EXEC dbo.sp_start_job N'TimesheetMigration';" \
             -C
           
           echo "Waiting for job completion..."
@@ -107,7 +105,7 @@ jobs:
                   SELECT TOP 1 run_status 
                   FROM sysjobhistory h 
                   JOIN sysjobs j ON h.job_id = j.job_id 
-                  WHERE j.name = 'RunTimesheetDevTestMigrationPK' 
+                  WHERE j.name = 'TimesheetMigration' 
                   ORDER BY h.instance_id DESC" \
               -h-1 \
               -C | tr -d '[:space:]')
@@ -132,7 +130,7 @@ jobs:
                         message 
                       FROM sysjobhistory h 
                       JOIN sysjobs j ON h.job_id = j.job_id 
-                      WHERE j.name = 'RunTimesheetDevTestMigrationPK' 
+                      WHERE j.name = 'TimesheetMigration' 
                         AND run_status = 0 
                       ORDER BY h.instance_id DESC" \
                   -h-1 \
@@ -167,7 +165,7 @@ jobs:
             -S "${SERVER},${PORT}" \
             -U "$USERNAME" \
             -P "$PASSWORD" \
-            -d "Timesheet-JP-DB" \
+            -d "TimesheetsDB" \
             -Q "SET NOCOUNT ON; SELECT COUNT(*) FROM timesheet.Timesheet" \
             -h-1 \
             -C | tr -d '[:space:]')
@@ -205,7 +203,7 @@ jobs:
           USERNAME: ${{ secrets.PARTNER_SQL_USERNAME }}
           PASSWORD: ${{ secrets.PARTNER_SQL_PASSWORD }}
         run: |
-          echo "Creating Partner RunTimesheetDevTestMigrationPK job if it doesn't exist..."
+          echo "Creating Partner TimesheetMigration job if it doesn't exist..."
           
           /opt/mssql-tools18/bin/sqlcmd \
             -S "${SERVER},${PORT}" \
@@ -222,14 +220,14 @@ jobs:
           USERNAME: ${{ secrets.PARTNER_SQL_USERNAME }}
           PASSWORD: ${{ secrets.PARTNER_SQL_PASSWORD }}
         run: |
-          echo "Starting Partner RunTimesheetDevTestMigrationPK job..."
+          echo "Starting Partner TimesheetMigration job..."
           
           /opt/mssql-tools18/bin/sqlcmd \
             -S "${SERVER},${PORT}" \
             -U "$USERNAME" \
             -P "$PASSWORD" \
             -d "msdb" \
-            -Q "EXEC dbo.sp_start_job N'RunTimesheetDevTestMigrationPK';" \
+            -Q "EXEC dbo.sp_start_job N'TimesheetMigration';" \
             -C
           
           echo "Waiting for partner job completion..."
@@ -252,7 +250,7 @@ jobs:
                   SELECT TOP 1 run_status 
                   FROM sysjobhistory h 
                   JOIN sysjobs j ON h.job_id = j.job_id 
-                  WHERE j.name = 'RunTimesheetDevTestMigrationPK' 
+                  WHERE j.name = 'TimesheetMigration' 
                   ORDER BY h.instance_id DESC" \
               -h-1 \
               -C | tr -d '[:space:]')

@@ -16,19 +16,15 @@ on:
       ssis-package-path:
         required: false
         type: string
-        default: "ssis-packages/TimesheetDevTestMigrationPK.ispac"
+        default: "ssis-packages/TimesheetMigration1.ispac"
       ssis-folder-name:
         required: false
         type: string
-        default: "TimesheetDevTestMigration"
+        default: "ETL"
       ssis-project-name:
         required: false
         type: string
-        default: "TimesheetDevTestMigrationPK"
-      database-name:
-        required: false
-        type: string
-        default: "Timesheet-JP-DB"
+        default: "TimesheetMigration1"
     secrets:
       SQL_SERVER:
         required: true
@@ -60,14 +56,12 @@ jobs:
           echo "==============================================="
           echo "SQL Deployment"
           echo "==============================================="
-          echo "Environment    : ${{ inputs.environment-name }}"
-          echo "Server         : ${{ secrets.SQL_SERVER }}"
-          echo "Script         : ${{ inputs.sql-script-path }}"
-          echo "Deploy SSIS    : ${{ inputs.deploy-ssis }}"
-          echo "SSIS Package   : ${{ inputs.ssis-package-path }}"
-          echo "SSIS Folder    : ${{ inputs.ssis-folder-name }}"
-          echo "SSIS Project   : ${{ inputs.ssis-project-name }}"
-          echo "Database Name  : ${{ inputs.database-name }}"
+          echo "Environment : ${{ inputs.environment-name }}"
+          echo "Server      : ${{ secrets.SQL_SERVER }}"
+          echo "Script      : ${{ inputs.sql-script-path }}"
+          echo "Deploy SSIS : ${{ inputs.deploy-ssis }}"
+          echo "SSIS Package: ${{ inputs.ssis-package-path }}"
+          echo "SSIS Folder : ${{ inputs.ssis-folder-name }}"
           echo "==============================================="
 
       - name: Execute SQL Script
@@ -76,13 +70,8 @@ jobs:
           PORT: ${{ secrets.SQL_PORT }}
           USERNAME: ${{ secrets.SQL_USERNAME }}
           PASSWORD: ${{ secrets.SQL_PASSWORD }}
-          DB_NAME: ${{ inputs.database-name }}
         run: |
-          echo "Deploying database: $DB_NAME..."
-          
-          # Replace database name in script
-          sed -i "s/TimesheetsDB/$DB_NAME/g" "${{ inputs.sql-script-path }}"
-          
+          echo "Deploying database..."
           /opt/mssql-tools18/bin/sqlcmd \
             -S "${SERVER},${PORT:-1433}" \
             -U "$USERNAME" \
@@ -91,7 +80,6 @@ jobs:
             -i "${{ inputs.sql-script-path }}" \
             -b \
             -C
-          
           echo "Database deployment completed."
 
       - name: Check and Create SSISDB if Needed
@@ -223,7 +211,6 @@ jobs:
           PORT: ${{ secrets.SQL_PORT }}
           USERNAME: ${{ secrets.SQL_USERNAME }}
           PASSWORD: ${{ secrets.SQL_PASSWORD }}
-          DB_NAME: ${{ inputs.database-name }}
         run: |
           echo "Verifying database deployment..."
           
@@ -233,12 +220,12 @@ jobs:
             -U "$USERNAME" \
             -P "$PASSWORD" \
             -d master \
-            -Q "SET NOCOUNT ON; SELECT COUNT(*) FROM sys.databases WHERE name='$DB_NAME';" \
+            -Q "SET NOCOUNT ON; SELECT COUNT(*) FROM sys.databases WHERE name='TimesheetsDB';" \
             -h-1 \
             -C | tr -d '[:space:]')
           
           if [ "$DB_EXISTS" != "1" ]; then
-            echo "$DB_NAME was not created."
+            echo "TimesheetsDB was not created."
             exit 1
           fi
           
@@ -247,7 +234,7 @@ jobs:
             -S "${SERVER},${PORT:-1433}" \
             -U "$USERNAME" \
             -P "$PASSWORD" \
-            -d "$DB_NAME" \
+            -d TimesheetsDB \
             -Q "SET NOCOUNT ON; SELECT COUNT(*) FROM timesheet.Employee;" \
             -h-1 \
             -C | tr -d '[:space:]')
@@ -262,7 +249,7 @@ jobs:
             -S "${SERVER},${PORT:-1433}" \
             -U "$USERNAME" \
             -P "$PASSWORD" \
-            -d "$DB_NAME" \
+            -d TimesheetsDB \
             -Q "SET NOCOUNT ON; SELECT COUNT(*) FROM timesheet.Client;" \
             -h-1 \
             -C | tr -d '[:space:]')
@@ -313,3 +300,4 @@ jobs:
           echo "==============================================="
           echo "Deployment completed successfully."
           echo "==============================================="
+
