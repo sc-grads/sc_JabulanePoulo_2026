@@ -7,9 +7,6 @@ on:
   workflow_dispatch:
 
 jobs:
-  # ==========================================
-  # 1. Stage: DevTest/Deploy
-  # ==========================================
   DevTest_Deploy:
     name: DevTest/Deploy
     runs-on: ubuntu-latest
@@ -18,12 +15,17 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Install SQLCMD
+      - name: Install SQLCMD and Python
         run: |
+          # Install SQLCMD
           curl https://packages.microsoft.com/keys/microsoft.asc | sudo tee /etc/apt/trusted.gpg.d/microsoft.asc
           curl https://packages.microsoft.com/config/ubuntu/22.04/prod.list | sudo tee /etc/apt/sources.list.d/mssql-release.list
           sudo apt-get update
           sudo ACCEPT_EULA=Y apt-get install -y mssql-tools18
+          
+          # Install Python and pyodbc for SSIS deployment
+          sudo apt-get install -y python3 python3-pip
+          pip3 install pyodbc
 
       # --- STEP 1: DEPLOY DATABASE ---
       - name: Deploy SQL Database Script
@@ -42,7 +44,7 @@ jobs:
             -i "scripts/create_database.sql" \
             -b \
             -C
-          echo "✅ Database deployment completed."
+          echo "Database deployment completed."
 
       # --- STEP 2: SSIS CATALOG ---
       - name: Initialize SSIS Catalog (SSISDB) if Missing
@@ -72,9 +74,9 @@ jobs:
               -d master \
               -Q "EXEC [SSISDB].[catalog].[create_catalog] @password = '${{ secrets.SQL_PASSWORD }}';" \
               -C
-            echo "✅ SSISDB created successfully."
+            echo "SSISDB created successfully."
           else
-            echo "✅ SSISDB already exists."
+            echo "SSISDB already exists."
           fi
 
       # --- STEP 3: CREATE SSIS FOLDER ---
@@ -106,69 +108,118 @@ jobs:
               -d SSISDB \
               -Q "EXEC [SSISDB].[catalog].[create_folder] @folder_name=N'$FOLDER_NAME', @folder_id=0;" \
               -C
-            echo "✅ Folder '$FOLDER_NAME' created successfully."
+            echo "Folder '$FOLDER_NAME' created successfully."
           else
-            echo "✅ Folder '$FOLDER_NAME' already exists."
+            echo "Folder '$FOLDER_NAME' already exists."
           fi
 
-      # --- STEP 4: DEPLOY SSIS PACKAGE (FIXED) ---
+      # --- STEP 4: DEPLOY SSIS PACKAGE (USING PYTHON) ---
       - name: Deploy SSIS Package (.ispac) to DevTest
         env:
           SERVER: ${{ secrets.SQL_SERVER }}
           PORT: ${{ secrets.SQL_PORT }}
           USERNAME: ${{ secrets.SQL_USERNAME }}
           PASSWORD: ${{ secrets.SQL_PASSWORD }}
+          PACKAGE_PATH: ssis-packages/TimesheetMigration1.ispac
+          FOLDER_NAME: TimesheetDevTestMigration
+          PROJECT_NAME: TimesheetMigration1
         run: |
-          PACKAGE_PATH="ssis-packages/TimesheetMigration1.ispac"
-          FOLDER_NAME="TimesheetDevTestMigration"
-          PROJECT_NAME="TimesheetMigration1"
-          
           echo "Checking for package at: $PACKAGE_PATH"
           
           if [ ! -f "$PACKAGE_PATH" ]; then
-            echo "❌ Error: Package file $PACKAGE_PATH not found!"
-            echo "Current directory contents:"
+            echo "Error: Package file $PACKAGE_PATH not found!"
             ls -la
-            echo ""
-            echo "Checking for ssis-packages directory:"
             ls -la ssis-packages/ 2>/dev/null || echo "ssis-packages directory not found"
             exit 1
           fi
           
-          echo "Encoding package to Base64..."
-          PACKAGE_BASE64=$(base64 -w 0 "$PACKAGE_PATH")
+          echo "Deploying SSIS package using Python..."
           
-          echo "Deploying Project to folder: $FOLDER_NAME"
+          # Create Python deployment script
+          python3 << 'PYEOF'
+          import base64
+          import pyodbc
+          import os
           
-          # Create temporary SQL file with deployment command
-          cat > /tmp/deploy_ssis.sql << 'EOF'
-          DECLARE @project_binary varbinary(max);
-          DECLARE @base64 varchar(max) = 'BASE64_PLACEHOLDER';
-          SET @project_binary = CAST(N'' AS XML).value('xs:base64Binary(sql:variable("@base64"))', 'varbinary(max)');
-          EXEC [SSISDB].[catalog].[deploy_project] 
-            @folder_name = 'FOLDER_PLACEHOLDER',
-            @project_name = 'PROJECT_PLACEHOLDER',
-            @project_stream = @project_binary;
-          EOF
+          # Get environment variables
+          server = os.environ.get('SERVER', 'localhost')
+          port = os.environ.get('PORT', '1433')
+          username = os.environ.get('USERNAME', 'sa')
+          password = os.environ.get('PASSWORD', '')
+          package_path = os.environ.get('PACKAGE_PATH', 'ssis-packages/TimesheetMigration1.ispac')
+          folder_name = os.environ.get('FOLDER_NAME', 'TimesheetDevTestMigration')
+          project_name = os.environ.get('PROJECT_NAME', 'TimesheetMigration1')
           
-          # Replace placeholders with actual values
-          sed -i "s|BASE64_PLACEHOLDER|${PACKAGE_BASE64}|g" /tmp/deploy_ssis.sql
-          sed -i "s|FOLDER_PLACEHOLDER|${FOLDER_NAME}|g" /tmp/deploy_ssis.sql
-          sed -i "s|PROJECT_PLACEHOLDER|${PROJECT_NAME}|g" /tmp/deploy_ssis.sql
+          print(f"Connecting to: {server},{port}")
+          print(f"Deploying to folder: {folder_name}")
+          print(f"Project name: {project_name}")
           
-          # Execute the deployment
-          /opt/mssql-tools18/bin/sqlcmd \
-            -S "${SERVER},${PORT:-1433}" \
-            -U "$USERNAME" \
-            -P "$PASSWORD" \
-            -d SSISDB \
-            -i /tmp/deploy_ssis.sql \
-            -C
+          # Read and encode package
+          try:
+              with open(package_path, 'rb') as f:
+                  package_bytes = f.read()
+                  package_base64 = base64.b64encode(package_bytes).decode('utf-8')
+              print(f"Package size: {len(package_bytes)} bytes")
+          except Exception as e:
+              print(f"Error reading package: {e}")
+              exit(1)
           
-          # Clean up
-          rm -f /tmp/deploy_ssis.sql
+          # Connect to SQL Server
+          conn_str = f'DRIVER={{ODBC Driver 18 for SQL Server}};SERVER={server},{port};DATABASE=SSISDB;UID={username};PWD={password};TrustServerCertificate=yes;'
           
-          echo "✅ SSIS package deployed to: \SSISDB\$FOLDER_NAME\$PROJECT_NAME\"
+          try:
+              conn = pyodbc.connect(conn_str)
+              cursor = conn.cursor()
+              
+              # First, check if folder exists
+              cursor.execute("SELECT COUNT(*) FROM [SSISDB].[catalog].[folders] WHERE name = ?", (folder_name,))
+              folder_count = cursor.fetchone()[0]
+              
+              if folder_count == 0:
+                  print(f"Error: Folder '{folder_name}' does not exist!")
+                  print("Please create the folder first.")
+                  exit(1)
+              
+              # Deploy project
+              sql = """
+              DECLARE @project_binary varbinary(max);
+              DECLARE @base64 varchar(max) = ?;
+              SET @project_binary = CAST(N'' AS XML).value('xs:base64Binary(sql:variable("@base64"))', 'varbinary(max)');
+              EXEC [SSISDB].[catalog].[deploy_project] 
+                @folder_name = ?,
+                @project_name = ?,
+                @project_stream = @project_binary;
+              """
+              
+              print("Executing deployment...")
+              cursor.execute(sql, (package_base64, folder_name, project_name))
+              cursor.commit()
+              
+              print(f"Successfully deployed '{project_name}' to folder '{folder_name}'")
+              
+              # Verify deployment
+              cursor.execute("""
+                  SELECT COUNT(*) 
+                  FROM [SSISDB].[catalog].[projects] p
+                  INNER JOIN [SSISDB].[catalog].[folders] f ON p.folder_id = f.folder_id
+                  WHERE f.name = ? AND p.name = ?
+              """, (folder_name, project_name))
+              
+              project_count = cursor.fetchone()[0]
+              if project_count == 1:
+                  print("Verification successful: Project found in SSISDB")
+              else:
+                  print("Warning: Project not found in SSISDB after deployment")
+              
+          except Exception as e:
+              print(f"Error during deployment: {e}")
+              exit(1)
+          finally:
+              if 'conn' in locals():
+                  conn.close()
+          PYEOF
+          
+          echo "SSIS package deployed successfully!"
 
       # --- STEP 5: VERIFY DEPLOYMENT ---
       - name: Verify SSIS Deployment
@@ -198,10 +249,10 @@ jobs:
             -C | tr -d '[:space:]')
           
           if [ "$PROJECT_EXISTS" -eq "1" ]; then
-            echo "✅ SSIS deployment verified successfully!"
+            echo "SSIS deployment verified successfully!"
             
             echo ""
-            echo "📦 Packages in project:"
+            echo "Packages in project:"
             /opt/mssql-tools18/bin/sqlcmd \
               -S "${SERVER},${PORT:-1433}" \
               -U "$USERNAME" \
@@ -215,7 +266,7 @@ jobs:
                   WHERE f.name = '$FOLDER_NAME' AND p.name = '$PROJECT_NAME'" \
               -C
           else
-            echo "❌ SSIS project not found in SSISDB."
+            echo "SSIS project not found in SSISDB."
             exit 1
           fi
 
@@ -235,7 +286,7 @@ jobs:
             -d msdb \
             -i "scripts/create_job.sql" \
             -C
-          echo "✅ Job created successfully."
+          echo "Job created successfully."
 
       # --- STEP 7: RUN THE JOB ---
       - name: Run DevTest Migration Job
@@ -253,7 +304,7 @@ jobs:
             -d msdb \
             -Q "EXEC dbo.sp_start_job N'RunTimesheetDevTestMigrationPK';" \
             -C
-          echo "✅ Job started."
+          echo "Job started."
 
   # ==========================================
   # 2. Stage: Production/Deploy
@@ -268,12 +319,14 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Install SQLCMD
+      - name: Install SQLCMD and Python
         run: |
           curl https://packages.microsoft.com/keys/microsoft.asc | sudo tee /etc/apt/trusted.gpg.d/microsoft.asc
           curl https://packages.microsoft.com/config/ubuntu/22.04/prod.list | sudo tee /etc/apt/sources.list.d/mssql-release.list
           sudo apt-get update
           sudo ACCEPT_EULA=Y apt-get install -y mssql-tools18
+          sudo apt-get install -y python3 python3-pip
+          pip3 install pyodbc
 
       # --- STEP 1: DEPLOY DATABASE ---
       - name: Deploy SQL Database Script (Partner)
@@ -352,53 +405,71 @@ jobs:
             echo "Folder '$FOLDER_NAME' already exists (Partner)."
           fi
 
-      # --- STEP 4: DEPLOY SSIS PACKAGE (FIXED) ---
+      # --- STEP 4: DEPLOY SSIS PACKAGE ---
       - name: Deploy SSIS Package (.ispac) to Partner
         env:
           SERVER: ${{ secrets.PARTNER_SQL_SERVER }}
           PORT: ${{ secrets.PARTNER_SQL_PORT }}
           USERNAME: ${{ secrets.PARTNER_SQL_USERNAME }}
           PASSWORD: ${{ secrets.PARTNER_SQL_PASSWORD }}
+          PACKAGE_PATH: ssis-packages/TimesheetMigration1.ispac
+          FOLDER_NAME: TimesheetDevTestMigration
+          PROJECT_NAME: TimesheetMigration1
         run: |
-          PACKAGE_PATH="ssis-packages/TimesheetMigration1.ispac"
-          FOLDER_NAME="TimesheetDevTestMigration"
-          PROJECT_NAME="TimesheetMigration1"
+          echo "Checking for package at: $PACKAGE_PATH"
           
           if [ ! -f "$PACKAGE_PATH" ]; then
-            echo "❌ Error: Package file $PACKAGE_PATH not found!"
+            echo "Error: Package file $PACKAGE_PATH not found!"
             exit 1
           fi
           
-          echo "Encoding package to Base64..."
-          PACKAGE_BASE64=$(base64 -w 0 "$PACKAGE_PATH")
+          echo "Deploying SSIS package using Python..."
           
-          echo "Deploying Project to folder: $FOLDER_NAME"
+          python3 << 'PYEOF'
+          import base64
+          import pyodbc
+          import os
           
-          # Create temporary SQL file with deployment command
-          cat > /tmp/deploy_ssis.sql << 'EOF'
-          DECLARE @project_binary varbinary(max);
-          DECLARE @base64 varchar(max) = 'BASE64_PLACEHOLDER';
-          SET @project_binary = CAST(N'' AS XML).value('xs:base64Binary(sql:variable("@base64"))', 'varbinary(max)');
-          EXEC [SSISDB].[catalog].[deploy_project] 
-            @folder_name = 'FOLDER_PLACEHOLDER',
-            @project_name = 'PROJECT_PLACEHOLDER',
-            @project_stream = @project_binary;
-          EOF
+          server = os.environ.get('SERVER', 'localhost')
+          port = os.environ.get('PORT', '1433')
+          username = os.environ.get('USERNAME', 'sa')
+          password = os.environ.get('PASSWORD', '')
+          package_path = os.environ.get('PACKAGE_PATH', 'ssis-packages/TimesheetMigration1.ispac')
+          folder_name = os.environ.get('FOLDER_NAME', 'TimesheetDevTestMigration')
+          project_name = os.environ.get('PROJECT_NAME', 'TimesheetMigration1')
           
-          # Replace placeholders
-          sed -i "s|BASE64_PLACEHOLDER|${PACKAGE_BASE64}|g" /tmp/deploy_ssis.sql
-          sed -i "s|FOLDER_PLACEHOLDER|${FOLDER_NAME}|g" /tmp/deploy_ssis.sql
-          sed -i "s|PROJECT_PLACEHOLDER|${PROJECT_NAME}|g" /tmp/deploy_ssis.sql
+          with open(package_path, 'rb') as f:
+              package_bytes = f.read()
+              package_base64 = base64.b64encode(package_bytes).decode('utf-8')
           
-          /opt/mssql-tools18/bin/sqlcmd \
-            -S "${SERVER},${PORT:-1433}" \
-            -U "$USERNAME" \
-            -P "$PASSWORD" \
-            -d SSISDB \
-            -i /tmp/deploy_ssis.sql \
-            -C
+          conn_str = f'DRIVER={{ODBC Driver 18 for SQL Server}};SERVER={server},{port};DATABASE=SSISDB;UID={username};PWD={password};TrustServerCertificate=yes;'
           
-          rm -f /tmp/deploy_ssis.sql
+          try:
+              conn = pyodbc.connect(conn_str)
+              cursor = conn.cursor()
+              
+              sql = """
+              DECLARE @project_binary varbinary(max);
+              DECLARE @base64 varchar(max) = ?;
+              SET @project_binary = CAST(N'' AS XML).value('xs:base64Binary(sql:variable("@base64"))', 'varbinary(max)');
+              EXEC [SSISDB].[catalog].[deploy_project] 
+                @folder_name = ?,
+                @project_name = ?,
+                @project_stream = @project_binary;
+              """
+              
+              cursor.execute(sql, (package_base64, folder_name, project_name))
+              cursor.commit()
+              
+              print(f"Successfully deployed '{project_name}' to '{folder_name}'")
+              
+          except Exception as e:
+              print(f"Error: {e}")
+              exit(1)
+          finally:
+              if 'conn' in locals():
+                  conn.close()
+          PYEOF
 
       # --- STEP 5: CREATE JOB ---
       - name: Create Partner SQL Agent Job
@@ -433,4 +504,4 @@ jobs:
             -P "$PASSWORD" \
             -d msdb \
             -Q "EXEC dbo.sp_start_job N'RunTimesheetDevTestMigrationPK';" \
-            -C || echo "⚠️ Job may not exist or SQL Agent is not running"
+            -C || echo "Warning: Job may not exist or SQL Agent is not running"
