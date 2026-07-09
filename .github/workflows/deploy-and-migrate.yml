@@ -109,7 +109,7 @@ jobs:
           PROJECT_NAME="TimesheetMigration1"
           
           if [ ! -f "$PACKAGE_PATH" ]; then
-            echo "❌ Error: Package file $PACKAGE_PATH not found!"
+            echo " Error: Package file $PACKAGE_PATH not found!"
             exit 1
           fi
           
