@@ -18,6 +18,7 @@ jobs:
       deploy-ssis: true
       ssis-package-path: ssis-packages/TimesheetMigration1.ispac
       ssis-folder-name: ETL
+      ssis-project-name: TimesheetMigration1
     secrets: inherit
 
   # Deploy to Partner Environment with SSIS
@@ -29,6 +30,7 @@ jobs:
       deploy-ssis: true
       ssis-package-path: ssis-packages/TimesheetMigration1.ispac
       ssis-folder-name: ETL
+      ssis-project-name: TimesheetMigration1
     secrets: inherit
 
   # Run TimesheetMigration Job after DevTest deployment
@@ -49,85 +51,67 @@ jobs:
           sudo apt-get update
           sudo ACCEPT_EULA=Y apt-get install -y mssql-tools18
 
-      - name: Check and Create Job if Not Exists
+      - name: Create Migration Job
         env:
           SERVER: ${{ secrets.SQL_SERVER }}
           PORT: ${{ secrets.SQL_PORT }}
           USERNAME: ${{ secrets.SQL_USERNAME }}
           PASSWORD: ${{ secrets.SQL_PASSWORD }}
         run: |
-          echo "Checking if TimesheetMigration job exists..."
+          echo "Creating TimesheetMigration job if it doesn't exist..."
           
-          JOB_EXISTS=$(/opt/mssql-tools18/bin/sqlcmd \
+          /opt/mssql-tools18/bin/sqlcmd \
             -S "${SERVER},${PORT}" \
             -U "$USERNAME" \
             -P "$PASSWORD" \
             -d "msdb" \
-            -Q "SET NOCOUNT ON; SELECT COUNT(*) FROM sysjobs WHERE name = 'TimesheetMigration1'" \
-            -h-1 \
-            -C | tr -d '[:space:]')
-          
-          echo "Job exists: $JOB_EXISTS"
-          
-          if [ "$JOB_EXISTS" -eq "0" ]; then
-            echo "Creating TimesheetMigration job..."
-            
-            # Create the job
-            /opt/mssql-tools18/bin/sqlcmd \
-              -S "${SERVER},${PORT}" \
-              -U "$USERNAME" \
-              -P "$PASSWORD" \
-              -d "msdb" \
-              -Q "
+            -Q "
+              IF NOT EXISTS (SELECT 1 FROM sysjobs WHERE name = 'TimesheetMigration')
+              BEGIN
                 DECLARE @jobId BINARY(16);
+                
                 EXEC msdb.dbo.sp_add_job 
-                  @job_name=N'TimesheetMigration',
-                  @enabled=1,
-                  @notify_level_eventlog=0,
-                  @notify_level_email=0,
-                  @notify_level_netsend=0,
-                  @notify_level_page=0,
-                  @delete_level=0,
-                  @description=N'Timesheet Migration SSIS Package',
-                  @category_name=N'[Uncategorized (Local)]',
-                  @owner_login_name=N'sa',
+                  @job_name = N'TimesheetMigration',
+                  @enabled = 1,
+                  @notify_level_eventlog = 0,
+                  @notify_level_email = 0,
+                  @notify_level_netsend = 0,
+                  @notify_level_page = 0,
+                  @delete_level = 0,
+                  @description = N'Timesheet Migration SSIS Package',
+                  @category_name = N'[Uncategorized (Local)]',
+                  @owner_login_name = N'sa',
                   @job_id = @jobId OUTPUT;
                 
                 EXEC msdb.dbo.sp_add_jobstep 
-                  @job_name=N'TimesheetMigration',
-                  @step_name=N'Run SSIS Package',
-                  @step_id=1,
-                  @cmdexec_success_code=0,
-                  @on_success_action=1,
-                  @on_success_step_id=0,
-                  @on_fail_action=2,
-                  @on_fail_step_id=0,
-                  @retry_attempts=0,
-                  @retry_interval=0,
-                  @os_run_priority=0,
-                  @subsystem=N'SSIS',
-                  @command=N'/ISSERVER "\"\SSISDB\ETL\TimesheetMigration1\TimesheetMigration1.dtsx\"" /SERVER "\""$(ESCAPE_SQUOTE(SRVR))"\"" /Par "\""$ServerOption::LOGGING_LEVEL(Int16)\""";1 /Par "\""$ServerOption::SYNCHRONIZED(Boolean)\""";True /CALLERINFO SQLAGENT /REPORTING E',
-                  @database_name=N'master',
-                  @flags=0;
-                
-                EXEC msdb.dbo.sp_add_jobschedule 
-                  @job_name=N'TimesheetMigration',
-                  @name=N'Scheduled_Start',
-                  @enabled=1,
-                  @freq_type=1,
-                  @active_start_date=20200101;
+                  @job_name = N'TimesheetMigration',
+                  @step_name = N'Run SSIS Package',
+                  @step_id = 1,
+                  @cmdexec_success_code = 0,
+                  @on_success_action = 1,
+                  @on_success_step_id = 0,
+                  @on_fail_action = 2,
+                  @on_fail_step_id = 0,
+                  @retry_attempts = 0,
+                  @retry_interval = 0,
+                  @os_run_priority = 0,
+                  @subsystem = N'SSIS',
+                  @command = N'/ISSERVER "\"\SSISDB\ETL\TimesheetMigration1\TimesheetMigration1.dtsx\"" /SERVER "\"\"$(ESCAPE_SQUOTE(SRVR))\"\"" /Par "\"\"$ServerOption::LOGGING_LEVEL(Int16)\"\"\";1 /Par "\"\"$ServerOption::SYNCHRONIZED(Boolean)\"\"\";True /CALLERINFO SQLAGENT /REPORTING E',
+                  @database_name = N'master',
+                  @flags = 0;
                 
                 EXEC msdb.dbo.sp_add_jobserver 
-                  @job_name=N'TimesheetMigration',
-                  @server_name=N'(local)';
-              " \
-              -C
-            
-            echo "Job created successfully."
-            JOB_EXISTS=1
-          else
-            echo "Job already exists."
-          fi
+                  @job_name = N'TimesheetMigration',
+                  @server_name = N'(local)';
+                
+                PRINT 'Job created successfully';
+              END
+              ELSE
+              BEGIN
+                PRINT 'Job already exists';
+              END
+            " \
+            -C
 
       - name: Start and Monitor TimesheetMigration Job
         env:
@@ -138,7 +122,6 @@ jobs:
         run: |
           echo "Starting TimesheetMigration job..."
           
-          # Start the job
           /opt/mssql-tools18/bin/sqlcmd \
             -S "${SERVER},${PORT}" \
             -U "$USERNAME" \
@@ -147,9 +130,8 @@ jobs:
             -Q "EXEC dbo.sp_start_job N'TimesheetMigration';" \
             -C
           
-          echo "Job started. Waiting for completion..."
+          echo "Waiting for job completion..."
           
-          # Monitor job status with timeout
           MAX_WAIT=300
           WAIT_INTERVAL=10
           ELAPSED=0
@@ -159,69 +141,59 @@ jobs:
             sleep $WAIT_INTERVAL
             ELAPSED=$((ELAPSED + WAIT_INTERVAL))
             
-            JOB_STATUS=$(/opt/mssql-tools18/bin/sqlcmd \
+            RESULT=$(/opt/mssql-tools18/bin/sqlcmd \
               -S "${SERVER},${PORT}" \
               -U "$USERNAME" \
               -P "$PASSWORD" \
               -d "msdb" \
               -Q "SET NOCOUNT ON; 
-                  SELECT TOP 1 
-                    CASE 
-                      WHEN run_status = 0 THEN 'Failed' 
-                      WHEN run_status = 1 THEN 'Succeeded' 
-                      WHEN run_status = 2 THEN 'Retry' 
-                      WHEN run_status = 3 THEN 'Canceled' 
-                      ELSE 'Running' 
-                    END as Status,
-                    CASE 
-                      WHEN run_status IN (0,1,2,3) THEN 1 
-                      ELSE 0 
-                    END as Completed
+                  SELECT TOP 1 run_status 
                   FROM sysjobhistory h 
                   JOIN sysjobs j ON h.job_id = j.job_id 
                   WHERE j.name = 'TimesheetMigration' 
                   ORDER BY h.instance_id DESC" \
               -h-1 \
-              -C | tail -2 | head -1)
+              -C | tr -d '[:space:]')
             
-            JOB_STATUS=$(echo "$JOB_STATUS" | xargs)
-            
-            echo "Status check $((ELAPSED/WAIT_INTERVAL)): $JOB_STATUS"
-            
-            if [ "$JOB_STATUS" == "Succeeded" ]; then
-              echo "Job completed successfully!"
-              JOB_COMPLETED=true
-              break
-            elif [ "$JOB_STATUS" == "Failed" ] || [ "$JOB_STATUS" == "Canceled" ]; then
-              echo "Job failed or was cancelled."
-              echo "Fetching error details..."
-              
-              ERROR_DETAILS=$(/opt/mssql-tools18/bin/sqlcmd \
-                -S "${SERVER},${PORT}" \
-                -U "$USERNAME" \
-                -P "$PASSWORD" \
-                -d "msdb" \
-                -Q "SET NOCOUNT ON; 
-                    SELECT TOP 5 
-                      CONVERT(VARCHAR(20), run_date) as Date,
-                      CONVERT(VARCHAR(8), run_time) as Time,
-                      message
-                    FROM sysjobhistory h 
-                    JOIN sysjobs j ON h.job_id = j.job_id 
-                    WHERE j.name = 'TimesheetMigration' 
-                      AND run_status = 0
-                    ORDER BY h.instance_id DESC" \
-                -h-1 \
-                -C)
-              
-              echo "Recent errors:"
-              echo "$ERROR_DETAILS"
-              exit 1
-            fi
+            case $RESULT in
+              1)
+                echo "Job completed successfully!"
+                JOB_COMPLETED=true
+                break
+                ;;
+              0)
+                echo "Job failed!"
+                /opt/mssql-tools18/bin/sqlcmd \
+                  -S "${SERVER},${PORT}" \
+                  -U "$USERNAME" \
+                  -P "$PASSWORD" \
+                  -d "msdb" \
+                  -Q "SET NOCOUNT ON; 
+                      SELECT TOP 3 
+                        CONVERT(VARCHAR(20), run_date) as Date,
+                        CONVERT(VARCHAR(8), run_time) as Time,
+                        message 
+                      FROM sysjobhistory h 
+                      JOIN sysjobs j ON h.job_id = j.job_id 
+                      WHERE j.name = 'TimesheetMigration' 
+                        AND run_status = 0 
+                      ORDER BY h.instance_id DESC" \
+                  -h-1 \
+                  -C
+                exit 1
+                ;;
+              3)
+                echo "Job was cancelled!"
+                exit 1
+                ;;
+              *)
+                echo "Job status: $RESULT - Still running or unknown"
+                ;;
+            esac
           done
           
           if [ "$JOB_COMPLETED" != "true" ]; then
-            echo "Job did not complete within timeout ($MAX_WAIT seconds)."
+            echo "Job did not complete within timeout"
             exit 1
           fi
 
@@ -234,7 +206,6 @@ jobs:
         run: |
           echo "Verifying migration results..."
           
-          # Check if data was migrated
           TIMESHEET_COUNT=$(/opt/mssql-tools18/bin/sqlcmd \
             -S "${SERVER},${PORT}" \
             -U "$USERNAME" \
@@ -244,31 +215,12 @@ jobs:
             -h-1 \
             -C | tr -d '[:space:]')
           
-          echo "Timesheet records migrated: $TIMESHEET_COUNT"
+          echo "Timesheet records: $TIMESHEET_COUNT"
           
-          # Check audit log for migration entry
-          AUDIT_ENTRY=$(/opt/mssql-tools18/bin/sqlcmd \
-            -S "${SERVER},${PORT}" \
-            -U "$USERNAME" \
-            -P "$PASSWORD" \
-            -d "TimesheetsDB" \
-            -Q "SET NOCOUNT ON; 
-                SELECT TOP 1 
-                  LogStatus, 
-                  RowsInserted, 
-                  RowsUpdated,
-                  Message
-                FROM audit.AuditLog 
-                WHERE TaskName = 'TimesheetMigration' 
-                ORDER BY LogID DESC" \
-            -h-1 \
-            -C)
-          
-          echo "Audit entry:"
-          echo "$AUDIT_ENTRY"
-          
-          if [ "$TIMESHEET_COUNT" -eq "0" ]; then
-            echo "Warning: No timesheet records found after migration."
+          if [ "$TIMESHEET_COUNT" -gt "0" ]; then
+            echo "Migration verified successfully!"
+          else
+            echo "Warning: No records found in timesheet.Timesheet"
           fi
 
   # Run Partner TimesheetMigration Job after Partner deployment
@@ -289,84 +241,67 @@ jobs:
           sudo apt-get update
           sudo ACCEPT_EULA=Y apt-get install -y mssql-tools18
 
-      - name: Check and Create Partner Job if Not Exists
+      - name: Create Partner Migration Job
         env:
           SERVER: ${{ secrets.PARTNER_SQL_SERVER }}
           PORT: ${{ secrets.PARTNER_SQL_PORT }}
           USERNAME: ${{ secrets.PARTNER_SQL_USERNAME }}
           PASSWORD: ${{ secrets.PARTNER_SQL_PASSWORD }}
         run: |
-          echo "Checking if Partner TimesheetMigration job exists..."
+          echo "Creating Partner TimesheetMigration job if it doesn't exist..."
           
-          JOB_EXISTS=$(/opt/mssql-tools18/bin/sqlcmd \
+          /opt/mssql-tools18/bin/sqlcmd \
             -S "${SERVER},${PORT}" \
             -U "$USERNAME" \
             -P "$PASSWORD" \
             -d "msdb" \
-            -Q "SET NOCOUNT ON; SELECT COUNT(*) FROM sysjobs WHERE name = 'TimesheetMigration'" \
-            -h-1 \
-            -C | tr -d '[:space:]')
-          
-          echo "Job exists: $JOB_EXISTS"
-          
-          if [ "$JOB_EXISTS" -eq "0" ]; then
-            echo "Creating Partner TimesheetMigration job..."
-            # Create the job with partner server details
-            /opt/mssql-tools18/bin/sqlcmd \
-              -S "${SERVER},${PORT}" \
-              -U "$USERNAME" \
-              -P "$PASSWORD" \
-              -d "msdb" \
-              -Q "
+            -Q "
+              IF NOT EXISTS (SELECT 1 FROM sysjobs WHERE name = 'TimesheetMigration')
+              BEGIN
                 DECLARE @jobId BINARY(16);
+                
                 EXEC msdb.dbo.sp_add_job 
-                  @job_name=N'TimesheetMigration',
-                  @enabled=1,
-                  @notify_level_eventlog=0,
-                  @notify_level_email=0,
-                  @notify_level_netsend=0,
-                  @notify_level_page=0,
-                  @delete_level=0,
-                  @description=N'Timesheet Migration SSIS Package',
-                  @category_name=N'[Uncategorized (Local)]',
-                  @owner_login_name=N'sa',
+                  @job_name = N'TimesheetMigration',
+                  @enabled = 1,
+                  @notify_level_eventlog = 0,
+                  @notify_level_email = 0,
+                  @notify_level_netsend = 0,
+                  @notify_level_page = 0,
+                  @delete_level = 0,
+                  @description = N'Timesheet Migration SSIS Package',
+                  @category_name = N'[Uncategorized (Local)]',
+                  @owner_login_name = N'sa',
                   @job_id = @jobId OUTPUT;
                 
                 EXEC msdb.dbo.sp_add_jobstep 
-                  @job_name=N'TimesheetMigration',
-                  @step_name=N'Run SSIS Package',
-                  @step_id=1,
-                  @cmdexec_success_code=0,
-                  @on_success_action=1,
-                  @on_success_step_id=0,
-                  @on_fail_action=2,
-                  @on_fail_step_id=0,
-                  @retry_attempts=0,
-                  @retry_interval=0,
-                  @os_run_priority=0,
-                  @subsystem=N'SSIS',
-                  @command=N'/ISSERVER "\"\SSISDB\ETL\TimesheetMigration1\TimesheetMigration1.dtsx\"" /SERVER "\""$(ESCAPE_SQUOTE(SRVR))"\"" /Par "\""$ServerOption::LOGGING_LEVEL(Int16)\""";1 /Par "\""$ServerOption::SYNCHRONIZED(Boolean)\""";True /CALLERINFO SQLAGENT /REPORTING E',
-                  @database_name=N'master',
-                  @flags=0;
-                
-                EXEC msdb.dbo.sp_add_jobschedule 
-                  @job_name=N'TimesheetMigration',
-                  @name=N'Scheduled_Start',
-                  @enabled=1,
-                  @freq_type=1,
-                  @active_start_date=20200101;
+                  @job_name = N'TimesheetMigration',
+                  @step_name = N'Run SSIS Package',
+                  @step_id = 1,
+                  @cmdexec_success_code = 0,
+                  @on_success_action = 1,
+                  @on_success_step_id = 0,
+                  @on_fail_action = 2,
+                  @on_fail_step_id = 0,
+                  @retry_attempts = 0,
+                  @retry_interval = 0,
+                  @os_run_priority = 0,
+                  @subsystem = N'SSIS',
+                  @command = N'/ISSERVER "\"\SSISDB\ETL\TimesheetMigration1\TimesheetMigration1.dtsx\"" /SERVER "\"\"$(ESCAPE_SQUOTE(SRVR))\"\"" /Par "\"\"$ServerOption::LOGGING_LEVEL(Int16)\"\"\";1 /Par "\"\"$ServerOption::SYNCHRONIZED(Boolean)\"\"\";True /CALLERINFO SQLAGENT /REPORTING E',
+                  @database_name = N'master',
+                  @flags = 0;
                 
                 EXEC msdb.dbo.sp_add_jobserver 
-                  @job_name=N'TimesheetMigration',
-                  @server_name=N'(local)';
-              " \
-              -C
-            
-            echo "Partner job created successfully."
-            JOB_EXISTS=1
-          else
-            echo "Partner job already exists."
-          fi
+                  @job_name = N'TimesheetMigration',
+                  @server_name = N'(local)';
+                
+                PRINT 'Partner job created successfully';
+              END
+              ELSE
+              BEGIN
+                PRINT 'Partner job already exists';
+              END
+            " \
+            -C
 
       - name: Start and Monitor Partner TimesheetMigration Job
         env:
@@ -377,7 +312,6 @@ jobs:
         run: |
           echo "Starting Partner TimesheetMigration job..."
           
-          # Start the job
           /opt/mssql-tools18/bin/sqlcmd \
             -S "${SERVER},${PORT}" \
             -U "$USERNAME" \
@@ -386,9 +320,8 @@ jobs:
             -Q "EXEC dbo.sp_start_job N'TimesheetMigration';" \
             -C
           
-          echo "Partner job started. Monitoring status..."
+          echo "Waiting for partner job completion..."
           
-          # Monitor job status with timeout
           MAX_WAIT=300
           WAIT_INTERVAL=10
           ELAPSED=0
@@ -398,42 +331,41 @@ jobs:
             sleep $WAIT_INTERVAL
             ELAPSED=$((ELAPSED + WAIT_INTERVAL))
             
-            JOB_STATUS=$(/opt/mssql-tools18/bin/sqlcmd \
+            RESULT=$(/opt/mssql-tools18/bin/sqlcmd \
               -S "${SERVER},${PORT}" \
               -U "$USERNAME" \
               -P "$PASSWORD" \
               -d "msdb" \
               -Q "SET NOCOUNT ON; 
-                  SELECT TOP 1 
-                    CASE 
-                      WHEN run_status = 0 THEN 'Failed' 
-                      WHEN run_status = 1 THEN 'Succeeded' 
-                      WHEN run_status = 2 THEN 'Retry' 
-                      WHEN run_status = 3 THEN 'Canceled' 
-                      ELSE 'Running' 
-                    END as Status
+                  SELECT TOP 1 run_status 
                   FROM sysjobhistory h 
                   JOIN sysjobs j ON h.job_id = j.job_id 
                   WHERE j.name = 'TimesheetMigration' 
                   ORDER BY h.instance_id DESC" \
               -h-1 \
-              -C | tail -1)
+              -C | tr -d '[:space:]')
             
-            JOB_STATUS=$(echo "$JOB_STATUS" | xargs)
-            
-            echo "Status check $((ELAPSED/WAIT_INTERVAL)): $JOB_STATUS"
-            
-            if [ "$JOB_STATUS" == "Succeeded" ]; then
-              echo "Partner job completed successfully!"
-              JOB_COMPLETED=true
-              break
-            elif [ "$JOB_STATUS" == "Failed" ] || [ "$JOB_STATUS" == "Canceled" ]; then
-              echo "Partner job failed or was cancelled."
-              exit 1
-            fi
+            case $RESULT in
+              1)
+                echo "Partner job completed successfully!"
+                JOB_COMPLETED=true
+                break
+                ;;
+              0)
+                echo "Partner job failed!"
+                exit 1
+                ;;
+              3)
+                echo "Partner job was cancelled!"
+                exit 1
+                ;;
+              *)
+                echo "Partner job status: $RESULT - Still running or unknown"
+                ;;
+            esac
           done
           
           if [ "$JOB_COMPLETED" != "true" ]; then
-            echo "Partner job did not complete within timeout ($MAX_WAIT seconds)."
+            echo "Partner job did not complete within timeout"
             exit 1
           fi

@@ -25,7 +25,6 @@ on:
         required: false
         type: string
         default: "TimesheetMigration1"
-
     secrets:
       SQL_SERVER:
         required: true
@@ -35,8 +34,6 @@ on:
         required: true
       SQL_PASSWORD:
         required: true
-      AZURE_STORAGE_CONNECTION_STRING:
-        required: false
 
 jobs:
   deploy:
@@ -47,26 +44,20 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Install SQLCMD and Tools
+      - name: Install SQLCMD
         run: |
-          # Install SQLCMD
           curl https://packages.microsoft.com/keys/microsoft.asc | sudo tee /etc/apt/trusted.gpg.d/microsoft.asc
           curl https://packages.microsoft.com/config/ubuntu/22.04/prod.list | sudo tee /etc/apt/sources.list.d/mssql-release.list
           sudo apt-get update
           sudo ACCEPT_EULA=Y apt-get install -y mssql-tools18
 
-          # Install unzip for later use
-          sudo apt-get install -y unzip
-
       - name: Display Deployment Information
-        env:
-          SERVER: ${{ secrets.SQL_SERVER }}
         run: |
           echo "==============================================="
           echo "SQL Deployment"
           echo "==============================================="
           echo "Environment : ${{ inputs.environment-name }}"
-          echo "Server      : $SERVER"
+          echo "Server      : ${{ secrets.SQL_SERVER }}"
           echo "Script      : ${{ inputs.sql-script-path }}"
           echo "Deploy SSIS : ${{ inputs.deploy-ssis }}"
           echo "SSIS Package: ${{ inputs.ssis-package-path }}"
@@ -112,8 +103,6 @@ jobs:
           
           if [ "$SSISDB_EXISTS" == "0" ]; then
             echo "SSISDB does not exist. Creating SSISDB..."
-            
-            # Create SSISDB using SSIS catalog stored procedure
             /opt/mssql-tools18/bin/sqlcmd \
               -S "${SERVER},${PORT:-1433}" \
               -U "$USERNAME" \
@@ -121,7 +110,6 @@ jobs:
               -d master \
               -Q "EXEC [master].[sys].[sp_ssis_catalog] @operation='create_catalog', @password='${{ secrets.SQL_PASSWORD }}';" \
               -C
-            
             echo "SSISDB created successfully."
           else
             echo "SSISDB already exists."
@@ -138,7 +126,6 @@ jobs:
           FOLDER_NAME="${{ inputs.ssis-folder-name }}"
           echo "Creating SSIS folder: $FOLDER_NAME"
           
-          # Check if folder exists
           FOLDER_EXISTS=$(/opt/mssql-tools18/bin/sqlcmd \
             -S "${SERVER},${PORT:-1433}" \
             -U "$USERNAME" \
@@ -149,7 +136,6 @@ jobs:
             -C | tr -d '[:space:]')
           
           if [ "$FOLDER_EXISTS" == "0" ]; then
-            # Create folder
             /opt/mssql-tools18/bin/sqlcmd \
               -S "${SERVER},${PORT:-1433}" \
               -U "$USERNAME" \
@@ -162,7 +148,7 @@ jobs:
             echo "Folder '$FOLDER_NAME' already exists."
           fi
 
-      - name: Deploy SSIS Package using T-SQL
+      - name: Deploy SSIS Package
         if: ${{ inputs.deploy-ssis == true }}
         env:
           SERVER: ${{ secrets.SQL_SERVER }}
@@ -176,21 +162,18 @@ jobs:
           
           echo "Deploying SSIS package: $PACKAGE_PATH"
           
-          # Check if package file exists
           if [ ! -f "$PACKAGE_PATH" ]; then
             echo "Error: Package file $PACKAGE_PATH not found!"
             echo "Current directory contents:"
             ls -la
-            echo "Looking in ssis-packages directory:"
-            ls -la ssis-packages/ 2>/dev/null || echo "ssis-packages directory not found"
             exit 1
           fi
           
-          # Convert .ispac to base64 for deployment
+          # Convert .ispac to base64
           echo "Converting package to base64..."
           PACKAGE_BASE64=$(base64 -w 0 "$PACKAGE_PATH")
           
-          # Deploy using T-SQL with binary data
+          # Deploy using T-SQL
           echo "Deploying package to SSISDB..."
           /opt/mssql-tools18/bin/sqlcmd \
             -S "${SERVER},${PORT:-1433}" \
@@ -203,55 +186,35 @@ jobs:
               DECLARE @operation_id bigint;
               DECLARE @project_binary varbinary(max);
               
-              -- Get folder ID
               SELECT @folder_id = folder_id 
               FROM [SSISDB].[catalog].[folders] 
               WHERE name = '$FOLDER_NAME';
               
-              -- Convert base64 to binary
               SET @project_binary = CAST(N'' AS XML).value('xs:base64Binary(sql:variable(\"@base64\"))', 'varbinary(max)');
               
-              -- Deploy project
               EXEC [SSISDB].[catalog].[deploy_project] 
                 @folder_name = '$FOLDER_NAME',
                 @project_name = '$PROJECT_NAME',
                 @project_stream = @project_binary,
                 @operation_id = @operation_id OUTPUT;
               
-              SELECT 
-                'Deployment successful' as Status,
-                @operation_id as OperationID;
+              SELECT 'Deployment successful' as Status, @operation_id as OperationID;
             " \
             -v base64="$PACKAGE_BASE64" \
             -C
           
           echo "SSIS package deployed successfully."
 
-      - name: Alternative - Deploy SSIS Package using ispac deployment script
-        if: ${{ inputs.deploy-ssis == true }}
-        run: |
-          echo "Note: If T-SQL deployment fails, you can use the following alternative methods:"
-          echo ""
-          echo "Option 1: Use SQL Server Management Studio (SSMS) to manually deploy the .ispac file"
-          echo "  - Connect to the SQL Server"
-          echo "  - Right-click on the SSISDB folder"
-          echo "  - Select 'Deploy Project'"
-          echo "  - Follow the wizard to deploy ${{ inputs.ssis-package-path }}"
-          echo ""
-          echo "Option 2: Use Azure Data Factory or Azure-SSIS Integration Runtime"
-          echo "  - Configure Azure-SSIS IR to use the package"
-          echo ""
-          echo "Option 3: Use the dtutil command-line utility on Windows"
-          echo "  - dtutil /FILE \"${{ inputs.ssis-package-path }}\" /COPY SQL;\"${{ inputs.ssis-folder-name }}/${{ inputs.ssis-project-name }}\""
-
-      - name: Verify Database Exists
+      - name: Verify Database
         env:
           SERVER: ${{ secrets.SQL_SERVER }}
           PORT: ${{ secrets.SQL_PORT }}
           USERNAME: ${{ secrets.SQL_USERNAME }}
           PASSWORD: ${{ secrets.SQL_PASSWORD }}
         run: |
-          echo "Checking TimesheetsDB..."
+          echo "Verifying database deployment..."
+          
+          # Check database exists
           DB_EXISTS=$(/opt/mssql-tools18/bin/sqlcmd \
             -S "${SERVER},${PORT:-1433}" \
             -U "$USERNAME" \
@@ -261,19 +224,12 @@ jobs:
             -h-1 \
             -C | tr -d '[:space:]')
           
-          echo "Database Exists = $DB_EXISTS"
           if [ "$DB_EXISTS" != "1" ]; then
-            echo "TimesheetDB was not created."
+            echo "TimesheetsDB was not created."
             exit 1
           fi
-
-      - name: Verify Employee Table
-        env:
-          SERVER: ${{ secrets.SQL_SERVER }}
-          PORT: ${{ secrets.SQL_PORT }}
-          USERNAME: ${{ secrets.SQL_USERNAME }}
-          PASSWORD: ${{ secrets.SQL_PASSWORD }}
-        run: |
+          
+          # Check Employee table
           EMPLOYEES=$(/opt/mssql-tools18/bin/sqlcmd \
             -S "${SERVER},${PORT:-1433}" \
             -U "$USERNAME" \
@@ -283,19 +239,12 @@ jobs:
             -h-1 \
             -C | tr -d '[:space:]')
           
-          echo "Employees = $EMPLOYEES"
           if [ "$EMPLOYEES" -lt 1 ]; then
             echo "Employee table verification failed."
             exit 1
           fi
-
-      - name: Verify Client Table
-        env:
-          SERVER: ${{ secrets.SQL_SERVER }}
-          PORT: ${{ secrets.SQL_PORT }}
-          USERNAME: ${{ secrets.SQL_USERNAME }}
-          PASSWORD: ${{ secrets.SQL_PASSWORD }}
-        run: |
+          
+          # Check Client table
           CLIENTS=$(/opt/mssql-tools18/bin/sqlcmd \
             -S "${SERVER},${PORT:-1433}" \
             -U "$USERNAME" \
@@ -305,13 +254,14 @@ jobs:
             -h-1 \
             -C | tr -d '[:space:]')
           
-          echo "Clients = $CLIENTS"
           if [ "$CLIENTS" -lt 1 ]; then
             echo "Client table verification failed."
             exit 1
           fi
+          
+          echo "Database verification completed successfully."
 
-      - name: Verify SSIS Deployment (if applicable)
+      - name: Verify SSIS Deployment
         if: ${{ inputs.deploy-ssis == true }}
         env:
           SERVER: ${{ secrets.SQL_SERVER }}
@@ -338,18 +288,10 @@ jobs:
             -h-1 \
             -C | tr -d '[:space:]')
           
-          echo "Project exists in SSISDB: $PROJECT_EXISTS"
-          
           if [ "$PROJECT_EXISTS" -eq "1" ]; then
             echo "SSIS deployment verified successfully!"
           else
             echo "Warning: SSIS project not found in SSISDB."
-            echo "This might be because:"
-            echo "  1. The deployment step failed"
-            echo "  2. The package needs to be deployed manually"
-            echo "  3. The project name doesn't match"
-            echo ""
-            echo "You can manually deploy the package using SSMS or Azure Data Factory."
           fi
 
       - name: Deployment Complete
