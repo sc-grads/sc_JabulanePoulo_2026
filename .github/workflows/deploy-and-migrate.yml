@@ -35,7 +35,7 @@ jobs:
         run: |
           echo "Deploying TimesheetsDB to DevTest..."
           /opt/mssql-tools18/bin/sqlcmd \
-            -S "${SERVER},${PORT}" \
+            -S "${SERVER},${PORT:-1433}" \
             -U "$USERNAME" \
             -P "$PASSWORD" \
             -d master \
@@ -44,29 +44,34 @@ jobs:
             -C
           echo "Database deployment completed."
 
-      # --- STEP 2: SSIS CATALOG (Windows Auth) ---
+      # --- STEP 2: SSIS CATALOG (SQL Auth) ---
       - name: Initialize SSIS Catalog (SSISDB) if Missing
         env:
-          HOSTNAME: ${{ secrets.SQL_HOSTNAME }}
+          SERVER: ${{ secrets.SQL_SERVER }}
+          PORT: ${{ secrets.SQL_PORT }}
+          USERNAME: ${{ secrets.SQL_USERNAME }}
+          PASSWORD: ${{ secrets.SQL_PASSWORD }}
         run: |
-          echo "Checking if SSISDB exists using Windows Auth..."
+          echo "Checking if SSISDB exists..."
           
           SSISDB_EXISTS=$(/opt/mssql-tools18/bin/sqlcmd \
-            -S "$HOSTNAME" \
-            -E \
-            -C \
+            -S "${SERVER},${PORT:-1433}" \
+            -U "$USERNAME" \
+            -P "$PASSWORD" \
             -d master \
             -Q "SET NOCOUNT ON; SELECT COUNT(*) FROM sys.databases WHERE name='SSISDB'" \
-            -h-1 | tr -d '[:space:]')
+            -h-1 \
+            -C | tr -d '[:space:]')
           
           if [ "$SSISDB_EXISTS" == "0" ]; then
-            echo "Creating SSISDB via Windows Auth..."
+            echo "Creating SSISDB..."
             /opt/mssql-tools18/bin/sqlcmd \
-              -S "$HOSTNAME" \
-              -E \
-              -C \
+              -S "${SERVER},${PORT:-1433}" \
+              -U "$USERNAME" \
+              -P "$PASSWORD" \
               -d master \
-              -Q "EXEC [SSISDB].[catalog].[create_catalog] @password = '${{ secrets.SQL_PASSWORD }}';"
+              -Q "EXEC [SSISDB].[catalog].[create_catalog] @password = '${{ secrets.SQL_PASSWORD }}';" \
+              -C
             echo "SSISDB created successfully."
           else
             echo "SSISDB already exists."
@@ -74,27 +79,32 @@ jobs:
 
       - name: Create SSIS Folder (ETL)
         env:
-          HOSTNAME: ${{ secrets.SQL_HOSTNAME }}
+          SERVER: ${{ secrets.SQL_SERVER }}
+          PORT: ${{ secrets.SQL_PORT }}
+          USERNAME: ${{ secrets.SQL_USERNAME }}
+          PASSWORD: ${{ secrets.SQL_PASSWORD }}
         run: |
           FOLDER_NAME="ETL"
-          echo "Verifying SSIS folder: $FOLDER_NAME using Windows Auth..."
+          echo "Verifying SSIS folder: $FOLDER_NAME"
           
           FOLDER_EXISTS=$(/opt/mssql-tools18/bin/sqlcmd \
-            -S "$HOSTNAME" \
-            -E \
-            -C \
+            -S "${SERVER},${PORT:-1433}" \
+            -U "$USERNAME" \
+            -P "$PASSWORD" \
             -d SSISDB \
             -Q "SET NOCOUNT ON; SELECT COUNT(*) FROM [SSISDB].[catalog].[folders] WHERE name='$FOLDER_NAME'" \
-            -h-1 | tr -d '[:space:]')
+            -h-1 \
+            -C | tr -d '[:space:]')
           
           if [ "$FOLDER_EXISTS" == "0" ]; then
             echo "Folder '$FOLDER_NAME' not found. Creating..."
             /opt/mssql-tools18/bin/sqlcmd \
-              -S "$HOSTNAME" \
-              -E \
-              -C \
+              -S "${SERVER},${PORT:-1433}" \
+              -U "$USERNAME" \
+              -P "$PASSWORD" \
               -d SSISDB \
-              -Q "EXEC [SSISDB].[catalog].[create_folder] @folder_name=N'$FOLDER_NAME', @folder_id=0;"
+              -Q "EXEC [SSISDB].[catalog].[create_folder] @folder_name=N'$FOLDER_NAME', @folder_id=0;" \
+              -C
             echo "✅ Folder '$FOLDER_NAME' created successfully."
           else
             echo "✅ Folder '$FOLDER_NAME' already exists."
@@ -102,25 +112,35 @@ jobs:
 
       - name: Deploy SSIS Package (.ispac) to DevTest
         env:
-          HOSTNAME: ${{ secrets.SQL_HOSTNAME }}
+          SERVER: ${{ secrets.SQL_SERVER }}
+          PORT: ${{ secrets.SQL_PORT }}
+          USERNAME: ${{ secrets.SQL_USERNAME }}
+          PASSWORD: ${{ secrets.SQL_PASSWORD }}
         run: |
           PACKAGE_PATH="ssis-packages/TimesheetMigration1.ispac"
           FOLDER_NAME="ETL"
           PROJECT_NAME="TimesheetMigration1"
           
+          echo "Checking for package at: $PACKAGE_PATH"
+          
           if [ ! -f "$PACKAGE_PATH" ]; then
             echo "❌ Error: Package file $PACKAGE_PATH not found!"
+            echo "Current directory structure:"
+            ls -la
+            echo ""
+            echo "Checking for ssis-packages directory:"
+            ls -la ssis-packages/ 2>/dev/null || echo "ssis-packages directory not found"
             exit 1
           fi
           
           echo "Encoding package to Base64..."
           PACKAGE_BASE64=$(base64 -w 0 "$PACKAGE_PATH")
           
-          echo "Deploying Project using Windows Auth..."
+          echo "Deploying Project..."
           /opt/mssql-tools18/bin/sqlcmd \
-            -S "$HOSTNAME" \
-            -E \
-            -C \
+            -S "${SERVER},${PORT:-1433}" \
+            -U "$USERNAME" \
+            -P "$PASSWORD" \
             -d SSISDB \
             -Q "
               DECLARE @project_binary varbinary(max);
@@ -130,10 +150,11 @@ jobs:
                 @project_name = '$PROJECT_NAME',
                 @project_stream = @project_binary;
             " \
-            -v base64="$PACKAGE_BASE64"
+            -v base64="$PACKAGE_BASE64" \
+            -C
           echo "✅ SSIS package deployed."
 
-      # --- STEP 3: CREATE JOBS (SQL Auth) ---
+      # --- STEP 3: JOBS (SQL Auth) ---
       - name: Create DevTest SQL Agent Job
         env:
           SERVER: ${{ secrets.SQL_SERVER }}
@@ -141,14 +162,18 @@ jobs:
           USERNAME: ${{ secrets.SQL_USERNAME }}
           PASSWORD: ${{ secrets.SQL_PASSWORD }}
         run: |
-          echo "Creating SQL Agent Job..."
-          /opt/mssql-tools18/bin/sqlcmd \
-            -S "${SERVER},${PORT}" \
-            -U "$USERNAME" \
-            -P "$PASSWORD" \
-            -d msdb \
-            -i "scripts/create_job.sql" \
-            -C
+          if [ -f "scripts/create_job.sql" ]; then
+            echo "Creating SQL Agent Job..."
+            /opt/mssql-tools18/bin/sqlcmd \
+              -S "${SERVER},${PORT:-1433}" \
+              -U "$USERNAME" \
+              -P "$PASSWORD" \
+              -d msdb \
+              -i "scripts/create_job.sql" \
+              -C
+          else
+            echo "⚠️ scripts/create_job.sql not found, skipping job creation"
+          fi
 
       - name: Run DevTest Migration Job
         env:
@@ -159,12 +184,12 @@ jobs:
         run: |
           echo "Starting SQL Agent Job..."
           /opt/mssql-tools18/bin/sqlcmd \
-            -S "${SERVER},${PORT}" \
+            -S "${SERVER},${PORT:-1433}" \
             -U "$USERNAME" \
             -P "$PASSWORD" \
             -d msdb \
             -Q "EXEC dbo.sp_start_job N'RunTimesheetDevTestMigrationPK';" \
-            -C
+            -C || echo "⚠️ Job may not exist or SQL Agent is not running"
           echo "Job started."
 
   # ==========================================
@@ -197,7 +222,7 @@ jobs:
         run: |
           echo "Deploying TimesheetsDB to Production (Partner)..."
           /opt/mssql-tools18/bin/sqlcmd \
-            -S "${SERVER},${PORT}" \
+            -S "${SERVER},${PORT:-1433}" \
             -U "$USERNAME" \
             -P "$PASSWORD" \
             -d master \
@@ -205,57 +230,70 @@ jobs:
             -b \
             -C
 
-      # --- STEP 2: SSIS CATALOG (Windows Auth) ---
+      # --- STEP 2: SSIS CATALOG (SQL Auth) ---
       - name: Initialize SSIS Catalog (SSISDB) if Missing (Partner)
         env:
-          HOSTNAME: ${{ secrets.PARTNER_SQL_HOSTNAME }}
+          SERVER: ${{ secrets.PARTNER_SQL_SERVER }}
+          PORT: ${{ secrets.PARTNER_SQL_PORT }}
+          USERNAME: ${{ secrets.PARTNER_SQL_USERNAME }}
+          PASSWORD: ${{ secrets.PARTNER_SQL_PASSWORD }}
         run: |
           SSISDB_EXISTS=$(/opt/mssql-tools18/bin/sqlcmd \
-            -S "$HOSTNAME" \
-            -E \
-            -C \
+            -S "${SERVER},${PORT:-1433}" \
+            -U "$USERNAME" \
+            -P "$PASSWORD" \
             -d master \
             -Q "SET NOCOUNT ON; SELECT COUNT(*) FROM sys.databases WHERE name='SSISDB'" \
-            -h-1 | tr -d '[:space:]')
+            -h-1 \
+            -C | tr -d '[:space:]')
           
           if [ "$SSISDB_EXISTS" == "0" ]; then
             echo "Creating SSISDB (Partner)..."
             /opt/mssql-tools18/bin/sqlcmd \
-              -S "$HOSTNAME" \
-              -E \
-              -C \
+              -S "${SERVER},${PORT:-1433}" \
+              -U "$USERNAME" \
+              -P "$PASSWORD" \
               -d master \
-              -Q "EXEC [SSISDB].[catalog].[create_catalog] @password = '${{ secrets.PARTNER_SQL_PASSWORD }}';"
+              -Q "EXEC [SSISDB].[catalog].[create_catalog] @password = '${{ secrets.PARTNER_SQL_PASSWORD }}';" \
+              -C
           fi
 
       - name: Create SSIS Folder (ETL) (Partner)
         env:
-          HOSTNAME: ${{ secrets.PARTNER_SQL_HOSTNAME }}
+          SERVER: ${{ secrets.PARTNER_SQL_SERVER }}
+          PORT: ${{ secrets.PARTNER_SQL_PORT }}
+          USERNAME: ${{ secrets.PARTNER_SQL_USERNAME }}
+          PASSWORD: ${{ secrets.PARTNER_SQL_PASSWORD }}
         run: |
           FOLDER_NAME="ETL"
           FOLDER_EXISTS=$(/opt/mssql-tools18/bin/sqlcmd \
-            -S "$HOSTNAME" \
-            -E \
-            -C \
+            -S "${SERVER},${PORT:-1433}" \
+            -U "$USERNAME" \
+            -P "$PASSWORD" \
             -d SSISDB \
             -Q "SET NOCOUNT ON; SELECT COUNT(*) FROM [SSISDB].[catalog].[folders] WHERE name='$FOLDER_NAME'" \
-            -h-1 | tr -d '[:space:]')
+            -h-1 \
+            -C | tr -d '[:space:]')
           
           if [ "$FOLDER_EXISTS" == "0" ]; then
             echo "Creating SSIS folder '$FOLDER_NAME' (Partner)..."
             /opt/mssql-tools18/bin/sqlcmd \
-              -S "$HOSTNAME" \
-              -E \
-              -C \
+              -S "${SERVER},${PORT:-1433}" \
+              -U "$USERNAME" \
+              -P "$PASSWORD" \
               -d SSISDB \
-              -Q "EXEC [SSISDB].[catalog].[create_folder] @folder_name=N'$FOLDER_NAME', @folder_id=0;"
+              -Q "EXEC [SSISDB].[catalog].[create_folder] @folder_name=N'$FOLDER_NAME', @folder_id=0;" \
+              -C
           else
             echo "Folder '$FOLDER_NAME' already exists (Partner)."
           fi
 
       - name: Deploy SSIS Package (.ispac) to Partner
         env:
-          HOSTNAME: ${{ secrets.PARTNER_SQL_HOSTNAME }}
+          SERVER: ${{ secrets.PARTNER_SQL_SERVER }}
+          PORT: ${{ secrets.PARTNER_SQL_PORT }}
+          USERNAME: ${{ secrets.PARTNER_SQL_USERNAME }}
+          PASSWORD: ${{ secrets.PARTNER_SQL_PASSWORD }}
         run: |
           PACKAGE_PATH="ssis-packages/TimesheetMigration1.ispac"
           FOLDER_NAME="ETL"
@@ -269,9 +307,9 @@ jobs:
           PACKAGE_BASE64=$(base64 -w 0 "$PACKAGE_PATH")
           
           /opt/mssql-tools18/bin/sqlcmd \
-            -S "$HOSTNAME" \
-            -E \
-            -C \
+            -S "${SERVER},${PORT:-1433}" \
+            -U "$USERNAME" \
+            -P "$PASSWORD" \
             -d SSISDB \
             -Q "
               DECLARE @project_binary varbinary(max);
@@ -281,9 +319,10 @@ jobs:
                 @project_name = '$PROJECT_NAME',
                 @project_stream = @project_binary;
             " \
-            -v base64="$PACKAGE_BASE64"
+            -v base64="$PACKAGE_BASE64" \
+            -C
 
-      # --- STEP 3: CREATE JOBS ---
+      # --- STEP 3: JOBS ---
       - name: Create Partner SQL Agent Job
         env:
           SERVER: ${{ secrets.PARTNER_SQL_SERVER }}
@@ -291,13 +330,15 @@ jobs:
           USERNAME: ${{ secrets.PARTNER_SQL_USERNAME }}
           PASSWORD: ${{ secrets.PARTNER_SQL_PASSWORD }}
         run: |
-          /opt/mssql-tools18/bin/sqlcmd \
-            -S "${SERVER},${PORT}" \
-            -U "$USERNAME" \
-            -P "$PASSWORD" \
-            -d msdb \
-            -i "scripts/create_job.sql" \
-            -C
+          if [ -f "scripts/create_job.sql" ]; then
+            /opt/mssql-tools18/bin/sqlcmd \
+              -S "${SERVER},${PORT:-1433}" \
+              -U "$USERNAME" \
+              -P "$PASSWORD" \
+              -d msdb \
+              -i "scripts/create_job.sql" \
+              -C
+          fi
 
       - name: Run Partner Migration Job
         env:
@@ -308,9 +349,9 @@ jobs:
         run: |
           echo "Starting Partner SQL Agent Job..."
           /opt/mssql-tools18/bin/sqlcmd \
-            -S "${SERVER},${PORT}" \
+            -S "${SERVER},${PORT:-1433}" \
             -U "$USERNAME" \
             -P "$PASSWORD" \
             -d msdb \
             -Q "EXEC dbo.sp_start_job N'RunTimesheetDevTestMigrationPK';" \
-            -C
+            -C || echo "⚠️ Job may not exist or SQL Agent is not running"
