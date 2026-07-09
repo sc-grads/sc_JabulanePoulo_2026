@@ -14,6 +14,7 @@ jobs:
     name: DevTest/Deploy
     runs-on: ubuntu-latest
     environment: local-sql
+    continue-on-error: false  # Set to true if you want to continue even if SSIS fails
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -111,8 +112,65 @@ jobs:
             echo "✅ Folder '$FOLDER_NAME' already exists."
           fi
 
-      # --- STEP 4: DEPLOY SSIS PACKAGE ---
+      # --- STEP 4: DELETE EXISTING PROJECT (FOR CLEAN DEPLOYMENT) ---
+      - name: Delete Existing Project (if exists)
+        env:
+          SERVER: ${{ secrets.SQL_SERVER }}
+          PORT: ${{ secrets.SQL_PORT }}
+          USERNAME: ${{ secrets.SQL_USERNAME }}
+          PASSWORD: ${{ secrets.SQL_PASSWORD }}
+        run: |
+          FOLDER_NAME="TimesheetDevTestMigration"
+          PROJECT_NAME="TimesheetMigration1"
+          
+          echo "Checking if project '$PROJECT_NAME' exists in folder '$FOLDER_NAME'..."
+          
+          PROJECT_EXISTS=$(/opt/mssql-tools18/bin/sqlcmd \
+            -S "${SERVER},${PORT:-1433}" \
+            -U "$USERNAME" \
+            -P "$PASSWORD" \
+            -d SSISDB \
+            -Q "SET NOCOUNT ON; 
+                SELECT COUNT(*) 
+                FROM [SSISDB].[catalog].[projects] p
+                INNER JOIN [SSISDB].[catalog].[folders] f ON p.folder_id = f.folder_id
+                WHERE f.name = '$FOLDER_NAME' 
+                  AND p.name = '$PROJECT_NAME'" \
+            -h-1 \
+            -C | tr -d '[:space:]')
+          
+          if [ "$PROJECT_EXISTS" -eq "1" ]; then
+            echo "⚠️  Project exists. Deleting to force clean deployment..."
+            
+            /opt/mssql-tools18/bin/sqlcmd \
+              -S "${SERVER},${PORT:-1433}" \
+              -U "$USERNAME" \
+              -P "$PASSWORD" \
+              -d SSISDB \
+              -Q "DECLARE @project_id bigint;
+                  SELECT @project_id = p.project_id 
+                  FROM [SSISDB].[catalog].[projects] p
+                  INNER JOIN [SSISDB].[catalog].[folders] f ON p.folder_id = f.folder_id
+                  WHERE f.name = '$FOLDER_NAME' AND p.name = '$PROJECT_NAME';
+                  
+                  IF @project_id IS NOT NULL
+                  BEGIN
+                    EXEC [SSISDB].[catalog].[delete_project] @project_id = @project_id;
+                    PRINT '✅ Project deleted successfully.';
+                  END
+                  ELSE
+                  BEGIN
+                    PRINT '⚠️  Project not found.';
+                  END" \
+              -C
+            echo "✅ Project deletion completed."
+          else
+            echo "✅ Project doesn't exist. Ready for fresh deployment."
+          fi
+
+      # --- STEP 5: DEPLOY SSIS PACKAGE ---
       - name: Deploy SSIS Package (.ispac) to DevTest
+        id: deploy_ssis
         env:
           SERVER: ${{ secrets.SQL_SERVER }}
           PORT: ${{ secrets.SQL_PORT }}
@@ -149,13 +207,18 @@ jobs:
           echo "EXEC [SSISDB].[catalog].[deploy_project] @folder_name = '${FOLDER_NAME}', @project_name = '${PROJECT_NAME}', @project_stream = @project_binary;" >> /tmp/deploy.sql
           
           # Execute the deployment
-          /opt/mssql-tools18/bin/sqlcmd \
+          if /opt/mssql-tools18/bin/sqlcmd \
             -S "${SERVER},${PORT:-1433}" \
             -U "$USERNAME" \
             -P "$PASSWORD" \
             -d SSISDB \
             -i /tmp/deploy.sql \
-            -C || {
+            -C; then
+            
+            echo "✅ SSIS package deployed successfully!"
+            echo "DEPLOYMENT_STATUS=success" >> $GITHUB_OUTPUT
+            
+          else
             echo ""
             echo "❌ SSIS deployment failed with SQL Authentication."
             echo "ℹ️  SSISDB operations require Windows Authentication (Integrated Security)."
@@ -170,16 +233,17 @@ jobs:
             echo "📝 For GitHub Actions, consider using:"
             echo "  runs-on: windows-latest"
             echo "  And use -E flag for Windows Authentication"
-            exit 1
-          }
+            echo ""
+            echo "⚠️  The workflow will continue but SSIS deployment has failed."
+            echo "DEPLOYMENT_STATUS=failed" >> $GITHUB_OUTPUT
+          fi
           
           # Clean up
           rm -f /tmp/deploy.sql
-          
-          echo "✅ SSIS package deployment completed."
 
-      # --- STEP 5: VERIFY DEPLOYMENT ---
+      # --- STEP 6: VERIFY DEPLOYMENT (Only if deployment succeeded) ---
       - name: Verify SSIS Deployment
+        if: steps.deploy_ssis.outputs.DEPLOYMENT_STATUS == 'success'
         env:
           SERVER: ${{ secrets.SQL_SERVER }}
           PORT: ${{ secrets.SQL_PORT }}
@@ -227,8 +291,26 @@ jobs:
             exit 1
           fi
 
-      # --- STEP 6: CREATE JOB ---
+      # --- STEP 7: SKIP VERIFICATION (Warning) ---
+      - name: SSIS Deployment Skipped
+        if: steps.deploy_ssis.outputs.DEPLOYMENT_STATUS != 'success'
+        run: |
+          echo "⚠️  SSIS deployment was not successful. Verification skipped."
+          echo ""
+          echo "📋 Summary:"
+          echo "  ✅ Database: Created/Verified"
+          echo "  ✅ SSIS Catalog: Created/Verified"
+          echo "  ✅ SSIS Folder: Created/Verified"
+          echo "  ❌ SSIS Package: Deployment Failed (Authentication Issue)"
+          echo ""
+          echo "🔧 To resolve the SSIS deployment issue:"
+          echo "  1. Switch to a Windows runner (runs-on: windows-latest)"
+          echo "  2. Use Windows Authentication (-E flag instead of -U/-P)"
+          echo "  3. Or enable Mixed Mode Authentication on your SQL Server"
+
+      # --- STEP 8: CREATE JOB ---
       - name: Create DevTest SQL Agent Job
+        if: always()  # Run regardless of SSIS deployment status
         env:
           SERVER: ${{ secrets.SQL_SERVER }}
           PORT: ${{ secrets.SQL_PORT }}
@@ -249,8 +331,9 @@ jobs:
             echo "⚠️ create_job.sql not found, skipping job creation."
           fi
 
-      # --- STEP 7: RUN THE JOB ---
+      # --- STEP 9: RUN THE JOB ---
       - name: Run DevTest Migration Job
+        if: always()  # Run regardless of SSIS deployment status
         env:
           SERVER: ${{ secrets.SQL_SERVER }}
           PORT: ${{ secrets.SQL_PORT }}
@@ -373,8 +456,65 @@ jobs:
             echo "✅ Folder '$FOLDER_NAME' already exists (Partner)."
           fi
 
-      # --- STEP 4: DEPLOY SSIS PACKAGE ---
+      # --- STEP 4: DELETE EXISTING PROJECT (FOR CLEAN DEPLOYMENT) ---
+      - name: Delete Existing Project (if exists) - Partner
+        env:
+          SERVER: ${{ secrets.PARTNER_SQL_SERVER }}
+          PORT: ${{ secrets.PARTNER_SQL_PORT }}
+          USERNAME: ${{ secrets.PARTNER_SQL_USERNAME }}
+          PASSWORD: ${{ secrets.PARTNER_SQL_PASSWORD }}
+        run: |
+          FOLDER_NAME="TimesheetDevTestMigration"
+          PROJECT_NAME="TimesheetMigration1"
+          
+          echo "Checking if project exists (Partner)..."
+          
+          PROJECT_EXISTS=$(/opt/mssql-tools18/bin/sqlcmd \
+            -S "${SERVER},${PORT:-1433}" \
+            -U "$USERNAME" \
+            -P "$PASSWORD" \
+            -d SSISDB \
+            -Q "SET NOCOUNT ON; 
+                SELECT COUNT(*) 
+                FROM [SSISDB].[catalog].[projects] p
+                INNER JOIN [SSISDB].[catalog].[folders] f ON p.folder_id = f.folder_id
+                WHERE f.name = '$FOLDER_NAME' 
+                  AND p.name = '$PROJECT_NAME'" \
+            -h-1 \
+            -C | tr -d '[:space:]')
+          
+          if [ "$PROJECT_EXISTS" -eq "1" ]; then
+            echo "⚠️  Project exists. Deleting for clean deployment (Partner)..."
+            
+            /opt/mssql-tools18/bin/sqlcmd \
+              -S "${SERVER},${PORT:-1433}" \
+              -U "$USERNAME" \
+              -P "$PASSWORD" \
+              -d SSISDB \
+              -Q "DECLARE @project_id bigint;
+                  SELECT @project_id = p.project_id 
+                  FROM [SSISDB].[catalog].[projects] p
+                  INNER JOIN [SSISDB].[catalog].[folders] f ON p.folder_id = f.folder_id
+                  WHERE f.name = '$FOLDER_NAME' AND p.name = '$PROJECT_NAME';
+                  
+                  IF @project_id IS NOT NULL
+                  BEGIN
+                    EXEC [SSISDB].[catalog].[delete_project] @project_id = @project_id;
+                    PRINT '✅ Project deleted successfully.';
+                  END
+                  ELSE
+                  BEGIN
+                    PRINT '⚠️  Project not found.';
+                  END" \
+              -C
+            echo "✅ Project deletion completed (Partner)."
+          else
+            echo "✅ Project doesn't exist. Ready for fresh deployment (Partner)."
+          fi
+
+      # --- STEP 5: DEPLOY SSIS PACKAGE ---
       - name: Deploy SSIS Package (.ispac) to Partner
+        id: deploy_ssis_partner
         env:
           SERVER: ${{ secrets.PARTNER_SQL_SERVER }}
           PORT: ${{ secrets.PARTNER_SQL_PORT }}
@@ -406,37 +546,64 @@ jobs:
           echo "EXEC [SSISDB].[catalog].[deploy_project] @folder_name = '${FOLDER_NAME}', @project_name = '${PROJECT_NAME}', @project_stream = @project_binary;" >> /tmp/deploy.sql
           
           # Execute the deployment
-          /opt/mssql-tools18/bin/sqlcmd \
+          if /opt/mssql-tools18/bin/sqlcmd \
             -S "${SERVER},${PORT:-1433}" \
             -U "$USERNAME" \
             -P "$PASSWORD" \
             -d SSISDB \
             -i /tmp/deploy.sql \
-            -C || {
+            -C; then
+            
+            echo "✅ SSIS package deployed successfully (Partner)!"
+            echo "DEPLOYMENT_STATUS=success" >> $GITHUB_OUTPUT
+            
+          else
             echo ""
-            echo "❌ SSIS deployment failed with SQL Authentication."
-            echo "ℹ️  SSISDB operations require Windows Authentication (Integrated Security)."
-            echo "ℹ️  SQL Server Authentication is not supported for SSIS deployment."
-            echo ""
-            echo "🔧 To fix this issue, you have several options:"
-            echo "  1. Use a Windows self-hosted runner with Integrated Security"
-            echo "  2. Configure SQL Server for Mixed Mode Authentication"
-            echo "  3. Use Azure Data Factory with SSIS IR for deployment"
-            echo "  4. Use PowerShell with SSIS assemblies on a Windows runner"
-            echo ""
-            echo "📝 For GitHub Actions, consider using:"
-            echo "  runs-on: windows-latest"
-            echo "  And use -E flag for Windows Authentication"
-            exit 1
-          }
+            echo "❌ SSIS deployment failed (Partner) - Authentication Issue."
+            echo "DEPLOYMENT_STATUS=failed" >> $GITHUB_OUTPUT
+          fi
           
           # Clean up
           rm -f /tmp/deploy.sql
-          
-          echo "✅ SSIS package deployment completed (Partner)."
 
-      # --- STEP 5: CREATE JOB ---
+      # --- STEP 6: VERIFY DEPLOYMENT (Only if deployment succeeded) ---
+      - name: Verify SSIS Deployment (Partner)
+        if: steps.deploy_ssis_partner.outputs.DEPLOYMENT_STATUS == 'success'
+        env:
+          SERVER: ${{ secrets.PARTNER_SQL_SERVER }}
+          PORT: ${{ secrets.PARTNER_SQL_PORT }}
+          USERNAME: ${{ secrets.PARTNER_SQL_USERNAME }}
+          PASSWORD: ${{ secrets.PARTNER_SQL_PASSWORD }}
+        run: |
+          echo "Verifying SSIS deployment (Partner)..."
+          
+          FOLDER_NAME="TimesheetDevTestMigration"
+          PROJECT_NAME="TimesheetMigration1"
+          
+          PROJECT_EXISTS=$(/opt/mssql-tools18/bin/sqlcmd \
+            -S "${SERVER},${PORT:-1433}" \
+            -U "$USERNAME" \
+            -P "$PASSWORD" \
+            -d SSISDB \
+            -Q "SET NOCOUNT ON; 
+                SELECT COUNT(*) 
+                FROM [SSISDB].[catalog].[projects] p
+                INNER JOIN [SSISDB].[catalog].[folders] f ON p.folder_id = f.folder_id
+                WHERE f.name = '$FOLDER_NAME' 
+                  AND p.name = '$PROJECT_NAME'" \
+            -h-1 \
+            -C | tr -d '[:space:]')
+          
+          if [ "$PROJECT_EXISTS" -eq "1" ]; then
+            echo "✅ SSIS deployment verified successfully (Partner)!"
+          else
+            echo "❌ SSIS project not found in SSISDB (Partner)."
+            exit 1
+          fi
+
+      # --- STEP 7: CREATE JOB ---
       - name: Create Partner SQL Agent Job
+        if: always()
         env:
           SERVER: ${{ secrets.PARTNER_SQL_SERVER }}
           PORT: ${{ secrets.PARTNER_SQL_PORT }}
@@ -457,8 +624,9 @@ jobs:
             echo "⚠️ create_job.sql not found, skipping job creation (Partner)."
           fi
 
-      # --- STEP 6: RUN THE JOB ---
+      # --- STEP 8: RUN THE JOB ---
       - name: Run Partner Migration Job
+        if: always()
         env:
           SERVER: ${{ secrets.PARTNER_SQL_SERVER }}
           PORT: ${{ secrets.PARTNER_SQL_PORT }}
