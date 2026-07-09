@@ -19,6 +19,9 @@ jobs:
       ssis-package-path: ssis-packages/TimesheetMigration1.ispac
       ssis-folder-name: ETL
       ssis-project-name: TimesheetMigration1
+      database-name: TimesheetsDB
+      max-retries: 5
+      retry-delay: 15
     secrets: inherit
 
   # Deploy to Partner Environment with SSIS
@@ -31,6 +34,9 @@ jobs:
       ssis-package-path: ssis-packages/TimesheetMigration1.ispac
       ssis-folder-name: ETL
       ssis-project-name: TimesheetMigration1
+      database-name: TimesheetsDB_Partner
+      max-retries: 5
+      retry-delay: 15
     secrets: inherit
 
   # Run TimesheetMigration Job after DevTest deployment
@@ -58,15 +64,43 @@ jobs:
           USERNAME: ${{ secrets.SQL_USERNAME }}
           PASSWORD: ${{ secrets.SQL_PASSWORD }}
         run: |
-          echo "Creating TimesheetMigration job if it doesn't exist..."
+          echo "╔═══════════════════════════════════════════════════════════════════╗"
+          echo "║                    🔧 CREATING MIGRATION JOB                   ║"
+          echo "╚═══════════════════════════════════════════════════════════════════╝"
+          
+          # Check if job exists and drop if it does
+          JOB_EXISTS=$(/opt/mssql-tools18/bin/sqlcmd \
+            -S "${SERVER},${PORT:-1433}" \
+            -U "${USERNAME}" \
+            -P "${PASSWORD}" \
+            -d "msdb" \
+            -Q "SET NOCOUNT ON; SELECT COUNT(*) FROM sysjobs WHERE name='TimesheetMigration'" \
+            -h-1 \
+            -C \
+            -V 1 | tr -d '[:space:]')
+          
+          if [ "${JOB_EXISTS}" -eq "1" ]; then
+            echo "  ► Job exists, recreating..."
+            /opt/mssql-tools18/bin/sqlcmd \
+              -S "${SERVER},${PORT:-1433}" \
+              -U "${USERNAME}" \
+              -P "${PASSWORD}" \
+              -d "msdb" \
+              -Q "EXEC dbo.sp_delete_job @job_name='TimesheetMigration'" \
+              -C \
+              -V 1
+          fi
           
           /opt/mssql-tools18/bin/sqlcmd \
-            -S "${SERVER},${PORT}" \
-            -U "$USERNAME" \
-            -P "$PASSWORD" \
+            -S "${SERVER},${PORT:-1433}" \
+            -U "${USERNAME}" \
+            -P "${PASSWORD}" \
             -d "msdb" \
             -i "scripts/create_job.sql" \
-            -C
+            -C \
+            -V 1
+          
+          echo "  ✓ Migration job created successfully."
 
       - name: Start and Monitor TimesheetMigration Job
         env:
@@ -75,31 +109,39 @@ jobs:
           USERNAME: ${{ secrets.SQL_USERNAME }}
           PASSWORD: ${{ secrets.SQL_PASSWORD }}
         run: |
-          echo "Starting TimesheetMigration job..."
+          echo ""
+          echo "╔═══════════════════════════════════════════════════════════════════╗"
+          echo "║                    🚀 RUNNING MIGRATION JOB                    ║"
+          echo "╚═══════════════════════════════════════════════════════════════════╝"
+          
+          echo "  ► Starting TimesheetMigration job..."
           
           /opt/mssql-tools18/bin/sqlcmd \
-            -S "${SERVER},${PORT}" \
-            -U "$USERNAME" \
-            -P "$PASSWORD" \
+            -S "${SERVER},${PORT:-1433}" \
+            -U "${USERNAME}" \
+            -P "${PASSWORD}" \
             -d "msdb" \
             -Q "EXEC dbo.sp_start_job N'TimesheetMigration';" \
-            -C
+            -C \
+            -V 1
           
-          echo "Waiting for job completion..."
+          echo "  ► Waiting for job completion..."
           
-          MAX_WAIT=300
+          MAX_WAIT=600
           WAIT_INTERVAL=10
           ELAPSED=0
           JOB_COMPLETED=false
           
-          while [ $ELAPSED -lt $MAX_WAIT ]; do
-            sleep $WAIT_INTERVAL
+          while [ ${ELAPSED} -lt ${MAX_WAIT} ]; do
+            sleep ${WAIT_INTERVAL}
             ELAPSED=$((ELAPSED + WAIT_INTERVAL))
             
+            echo "  ⏳ Checking status... (${ELAPSED}/${MAX_WAIT} seconds)"
+            
             RESULT=$(/opt/mssql-tools18/bin/sqlcmd \
-              -S "${SERVER},${PORT}" \
-              -U "$USERNAME" \
-              -P "$PASSWORD" \
+              -S "${SERVER},${PORT:-1433}" \
+              -U "${USERNAME}" \
+              -P "${PASSWORD}" \
               -d "msdb" \
               -Q "SET NOCOUNT ON; 
                   SELECT TOP 1 run_status 
@@ -108,23 +150,24 @@ jobs:
                   WHERE j.name = 'TimesheetMigration' 
                   ORDER BY h.instance_id DESC" \
               -h-1 \
-              -C | tr -d '[:space:]')
+              -C \
+              -V 1 | tr -d '[:space:]')
             
-            case $RESULT in
+            case ${RESULT} in
               1)
-                echo "Job completed successfully!"
+                echo "  ✅ Job completed successfully!"
                 JOB_COMPLETED=true
                 break
                 ;;
               0)
-                echo "Job failed!"
+                echo "  ❌ Job failed!"
                 /opt/mssql-tools18/bin/sqlcmd \
-                  -S "${SERVER},${PORT}" \
-                  -U "$USERNAME" \
-                  -P "$PASSWORD" \
+                  -S "${SERVER},${PORT:-1433}" \
+                  -U "${USERNAME}" \
+                  -P "${PASSWORD}" \
                   -d "msdb" \
                   -Q "SET NOCOUNT ON; 
-                      SELECT TOP 3 
+                      SELECT TOP 5 
                         CONVERT(VARCHAR(20), run_date) as Date,
                         CONVERT(VARCHAR(8), run_time) as Time,
                         message 
@@ -134,21 +177,25 @@ jobs:
                         AND run_status = 0 
                       ORDER BY h.instance_id DESC" \
                   -h-1 \
-                  -C
+                  -C \
+                  -V 1
                 exit 1
                 ;;
               3)
-                echo "Job was cancelled!"
+                echo "  ⚠ Job was cancelled!"
                 exit 1
                 ;;
+              4)
+                echo "  🔄 Job is in progress..."
+                ;;
               *)
-                echo "Job status: $RESULT - Still running or unknown"
+                echo "  ℹ Job status: ${RESULT}"
                 ;;
             esac
           done
           
-          if [ "$JOB_COMPLETED" != "true" ]; then
-            echo "Job did not complete within timeout"
+          if [ "${JOB_COMPLETED}" != "true" ]; then
+            echo "  ❌ Job did not complete within timeout"
             exit 1
           fi
 
@@ -159,23 +206,42 @@ jobs:
           USERNAME: ${{ secrets.SQL_USERNAME }}
           PASSWORD: ${{ secrets.SQL_PASSWORD }}
         run: |
-          echo "Verifying migration results..."
+          echo ""
+          echo "╔═══════════════════════════════════════════════════════════════════╗"
+          echo "║                    ✅ VERIFYING MIGRATION                       ║"
+          echo "╚═══════════════════════════════════════════════════════════════════╝"
+          
+          TABLE_EXISTS=$(/opt/mssql-tools18/bin/sqlcmd \
+            -S "${SERVER},${PORT:-1433}" \
+            -U "${USERNAME}" \
+            -P "${PASSWORD}" \
+            -d "TimesheetsDB" \
+            -Q "SET NOCOUNT ON; SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME='Timesheet' AND TABLE_SCHEMA='timesheet'" \
+            -h-1 \
+            -C \
+            -V 1 | tr -d '[:space:]')
+          
+          if [ "${TABLE_EXISTS}" -eq "0" ]; then
+            echo "  ⚠ Warning: timesheet.Timesheet table not found"
+            exit 0
+          fi
           
           TIMESHEET_COUNT=$(/opt/mssql-tools18/bin/sqlcmd \
-            -S "${SERVER},${PORT}" \
-            -U "$USERNAME" \
-            -P "$PASSWORD" \
+            -S "${SERVER},${PORT:-1433}" \
+            -U "${USERNAME}" \
+            -P "${PASSWORD}" \
             -d "TimesheetsDB" \
             -Q "SET NOCOUNT ON; SELECT COUNT(*) FROM timesheet.Timesheet" \
             -h-1 \
-            -C | tr -d '[:space:]')
+            -C \
+            -V 1 | tr -d '[:space:]')
           
-          echo "Timesheet records: $TIMESHEET_COUNT"
+          echo "  ► Timesheet records: ${TIMESHEET_COUNT}"
           
-          if [ "$TIMESHEET_COUNT" -gt "0" ]; then
-            echo "Migration verified successfully!"
+          if [ "${TIMESHEET_COUNT}" -gt "0" ]; then
+            echo "  ✅ Migration verified successfully!"
           else
-            echo "Warning: No records found in timesheet.Timesheet"
+            echo "  ⚠ Warning: No records found in timesheet.Timesheet"
           fi
 
   # Run Partner TimesheetMigration Job after Partner deployment
@@ -203,15 +269,43 @@ jobs:
           USERNAME: ${{ secrets.PARTNER_SQL_USERNAME }}
           PASSWORD: ${{ secrets.PARTNER_SQL_PASSWORD }}
         run: |
-          echo "Creating Partner TimesheetMigration job if it doesn't exist..."
+          echo "╔═══════════════════════════════════════════════════════════════════╗"
+          echo "║                    🔧 CREATING PARTNER MIGRATION JOB           ║"
+          echo "╚═══════════════════════════════════════════════════════════════════╝"
+          
+          # Check if job exists and drop if it does
+          JOB_EXISTS=$(/opt/mssql-tools18/bin/sqlcmd \
+            -S "${SERVER},${PORT:-1433}" \
+            -U "${USERNAME}" \
+            -P "${PASSWORD}" \
+            -d "msdb" \
+            -Q "SET NOCOUNT ON; SELECT COUNT(*) FROM sysjobs WHERE name='TimesheetMigration'" \
+            -h-1 \
+            -C \
+            -V 1 | tr -d '[:space:]')
+          
+          if [ "${JOB_EXISTS}" -eq "1" ]; then
+            echo "  ► Job exists, recreating..."
+            /opt/mssql-tools18/bin/sqlcmd \
+              -S "${SERVER},${PORT:-1433}" \
+              -U "${USERNAME}" \
+              -P "${PASSWORD}" \
+              -d "msdb" \
+              -Q "EXEC dbo.sp_delete_job @job_name='TimesheetMigration'" \
+              -C \
+              -V 1
+          fi
           
           /opt/mssql-tools18/bin/sqlcmd \
-            -S "${SERVER},${PORT}" \
-            -U "$USERNAME" \
-            -P "$PASSWORD" \
+            -S "${SERVER},${PORT:-1433}" \
+            -U "${USERNAME}" \
+            -P "${PASSWORD}" \
             -d "msdb" \
             -i "scripts/create_job.sql" \
-            -C
+            -C \
+            -V 1
+          
+          echo "  ✓ Partner migration job created successfully."
 
       - name: Start and Monitor Partner TimesheetMigration Job
         env:
@@ -220,31 +314,39 @@ jobs:
           USERNAME: ${{ secrets.PARTNER_SQL_USERNAME }}
           PASSWORD: ${{ secrets.PARTNER_SQL_PASSWORD }}
         run: |
-          echo "Starting Partner TimesheetMigration job..."
+          echo ""
+          echo "╔═══════════════════════════════════════════════════════════════════╗"
+          echo "║                    🚀 RUNNING PARTNER MIGRATION JOB            ║"
+          echo "╚═══════════════════════════════════════════════════════════════════╝"
+          
+          echo "  ► Starting Partner TimesheetMigration job..."
           
           /opt/mssql-tools18/bin/sqlcmd \
-            -S "${SERVER},${PORT}" \
-            -U "$USERNAME" \
-            -P "$PASSWORD" \
+            -S "${SERVER},${PORT:-1433}" \
+            -U "${USERNAME}" \
+            -P "${PASSWORD}" \
             -d "msdb" \
             -Q "EXEC dbo.sp_start_job N'TimesheetMigration';" \
-            -C
+            -C \
+            -V 1
           
-          echo "Waiting for partner job completion..."
+          echo "  ► Waiting for partner job completion..."
           
-          MAX_WAIT=300
+          MAX_WAIT=600
           WAIT_INTERVAL=10
           ELAPSED=0
           JOB_COMPLETED=false
           
-          while [ $ELAPSED -lt $MAX_WAIT ]; do
-            sleep $WAIT_INTERVAL
+          while [ ${ELAPSED} -lt ${MAX_WAIT} ]; do
+            sleep ${WAIT_INTERVAL}
             ELAPSED=$((ELAPSED + WAIT_INTERVAL))
             
+            echo "  ⏳ Checking status... (${ELAPSED}/${MAX_WAIT} seconds)"
+            
             RESULT=$(/opt/mssql-tools18/bin/sqlcmd \
-              -S "${SERVER},${PORT}" \
-              -U "$USERNAME" \
-              -P "$PASSWORD" \
+              -S "${SERVER},${PORT:-1433}" \
+              -U "${USERNAME}" \
+              -P "${PASSWORD}" \
               -d "msdb" \
               -Q "SET NOCOUNT ON; 
                   SELECT TOP 1 run_status 
@@ -253,29 +355,51 @@ jobs:
                   WHERE j.name = 'TimesheetMigration' 
                   ORDER BY h.instance_id DESC" \
               -h-1 \
-              -C | tr -d '[:space:]')
+              -C \
+              -V 1 | tr -d '[:space:]')
             
-            case $RESULT in
+            case ${RESULT} in
               1)
-                echo "Partner job completed successfully!"
+                echo "  ✅ Partner job completed successfully!"
                 JOB_COMPLETED=true
                 break
                 ;;
               0)
-                echo "Partner job failed!"
+                echo "  ❌ Partner job failed!"
+                /opt/mssql-tools18/bin/sqlcmd \
+                  -S "${SERVER},${PORT:-1433}" \
+                  -U "${USERNAME}" \
+                  -P "${PASSWORD}" \
+                  -d "msdb" \
+                  -Q "SET NOCOUNT ON; 
+                      SELECT TOP 5 
+                        CONVERT(VARCHAR(20), run_date) as Date,
+                        CONVERT(VARCHAR(8), run_time) as Time,
+                        message 
+                      FROM sysjobhistory h 
+                      JOIN sysjobs j ON h.job_id = j.job_id 
+                      WHERE j.name = 'TimesheetMigration' 
+                        AND run_status = 0 
+                      ORDER BY h.instance_id DESC" \
+                  -h-1 \
+                  -C \
+                  -V 1
                 exit 1
                 ;;
               3)
-                echo "Partner job was cancelled!"
+                echo "  ⚠ Partner job was cancelled!"
                 exit 1
                 ;;
+              4)
+                echo "  🔄 Partner job is in progress..."
+                ;;
               *)
-                echo "Partner job status: $RESULT - Still running or unknown"
+                echo "  ℹ Partner job status: ${RESULT}"
                 ;;
             esac
           done
           
-          if [ "$JOB_COMPLETED" != "true" ]; then
-            echo "Partner job did not complete within timeout"
+          if [ "${JOB_COMPLETED}" != "true" ]; then
+            echo "  ❌ Partner job did not complete within timeout"
             exit 1
           fi

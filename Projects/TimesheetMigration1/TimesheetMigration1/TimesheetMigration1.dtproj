@@ -15,7 +15,7 @@
       <SSIS:Project SSIS:ProtectionLevel="EncryptSensitiveWithUserKey" xmlns:SSIS="www.microsoft.com/SqlServer/SSIS">
         <SSIS:Properties>
           <SSIS:Property SSIS:Name="ID">{bf69b432-9eae-46d0-a8d0-d2888422ef9b}</SSIS:Property>
-          <SSIS:Property SSIS:Name="Name">TimesheetDevTestMigrationPK</SSIS:Property>
+          <SSIS:Property SSIS:Name="Name">TimesheetMigration1</SSIS:Property>
           <SSIS:Property SSIS:Name="VersionMajor">1</SSIS:Property>
           <SSIS:Property SSIS:Name="VersionMinor">0</SSIS:Property>
           <SSIS:Property SSIS:Name="VersionBuild">0</SSIS:Property>
@@ -26,7 +26,7 @@
           <SSIS:Property SSIS:Name="CreatorComputerName">LAPTOP-7LSAQSR0</SSIS:Property>
           <SSIS:Property SSIS:Name="Description">
           </SSIS:Property>
-          <SSIS:Property SSIS:Name="PasswordVerifier" SSIS:Sensitive="1">AQAAANCMnd8BFdERjHoAwE/Cl+sBAAAAv6jtsw7XIEaYbC7kgXsSIgAAAAACAAAAAAAQZgAAAAEAACAAAAAlIH9xGSJqlgLrqCoJncXUiTKiOPWwTAE4ytawCb+2fgAAAAAOgAAAAAIAACAAAACQM84jWBPmwWYItNvl0ZnOUF7maQ9DxBy4ILVgbKxM/JAAAAAFXY/iMoul3mhGV+AF0aK4PwX4OO+kX7sP5L46B9NMHATQNlMKsakR28A7fqo7eplBZvJlll/3S/rAKLI+kH96ufgFKeJ9G2dxSV9AYbqLgufg5cryicNSSNcRXWZRVY4Efg6LX6V1+JLECoZIujAYOlzwhywAyhRJ7RdsKgWWxQQHpz/Tly8kiZqH4E89JO5AAAAAhvAmZ54Ir626tXtbdI5c3jEZXJ5gbO4CWrx2IgNeQpeIjyqQiiaBqUkseR1IOM0d+nf1dk3fWAIIqUtuuVvhrA==</SSIS:Property>
+          <SSIS:Property SSIS:Name="PasswordVerifier" SSIS:Sensitive="1">AQAAANCMnd8BFdERjHoAwE/Cl+sBAAAAv6jtsw7XIEaYbC7kgXsSIgAAAAACAAAAAAAQZgAAAAEAACAAAAA7GCTBbr0sEMKq8eOxHz4eU5TgP4Eh7zoEbP1++YlF4gAAAAAOgAAAAAIAACAAAADAj373F14bvU2h3TsH8my7FMr3g+8/yG1yAkquw48bdpAAAAD/0wc5Q4Ws7d8Kg9nwJ85tXeV8jsx1jFzzitzqoS6IGROaGQ37rFIRgoIEb5gP5QuHIxtNXnZ3OSCvD7EdGnMpGVcDcr8RAE381rJFleOoLriB1SL9D6UNHRDTdF0km1CWdi5mpZ/AgCrzkN1kPTFxg9r+wRM4tBkqvEOcYqvcYVd5wEQfzurqDjyJsnx0iA1AAAAAMRCcABASOIhNXCx9Fq8EssnJKuqhqR38dvKfjmaEgkVjnJ2zIeX9Zm0GHOOYhkTXnAhKwip8aTSaWWYz4p0FpQ==</SSIS:Property>
           <SSIS:Property SSIS:Name="FormatVersion">1</SSIS:Property>
         </SSIS:Properties>
         <SSIS:Packages>
