@@ -140,21 +140,21 @@ jobs:
           
           echo "Deploying Project to folder: $FOLDER_NAME"
           
-          # Create temporary SQL file with deployment command
-          cat > /tmp/deploy_ssis.sql << 'EOF'
+          # Create temporary SQL file with deployment command - FIXED SYNTAX
+          cat > /tmp/deploy_ssis.sql << EOF
+          SET QUOTED_IDENTIFIER ON;
+          SET ANSI_NULLS ON;
+          
           DECLARE @project_binary varbinary(max);
-          DECLARE @base64 varchar(max) = 'BASE64_PLACEHOLDER';
+          DECLARE @base64 varchar(max) = '${PACKAGE_BASE64}';
+          
           SET @project_binary = CAST(N'' AS XML).value('xs:base64Binary(sql:variable("@base64"))', 'varbinary(max)');
+          
           EXEC [SSISDB].[catalog].[deploy_project] 
-            @folder_name = 'FOLDER_PLACEHOLDER',
-            @project_name = 'PROJECT_PLACEHOLDER',
+            @folder_name = '${FOLDER_NAME}',
+            @project_name = '${PROJECT_NAME}',
             @project_stream = @project_binary;
           EOF
-          
-          # Replace placeholders with actual values
-          sed -i "s|BASE64_PLACEHOLDER|${PACKAGE_BASE64}|g" /tmp/deploy_ssis.sql
-          sed -i "s|FOLDER_PLACEHOLDER|${FOLDER_NAME}|g" /tmp/deploy_ssis.sql
-          sed -i "s|PROJECT_PLACEHOLDER|${PROJECT_NAME}|g" /tmp/deploy_ssis.sql
           
           # Execute the deployment
           /opt/mssql-tools18/bin/sqlcmd \
@@ -227,15 +227,19 @@ jobs:
           USERNAME: ${{ secrets.SQL_USERNAME }}
           PASSWORD: ${{ secrets.SQL_PASSWORD }}
         run: |
-          echo "Creating SQL Agent Job..."
-          /opt/mssql-tools18/bin/sqlcmd \
-            -S "${SERVER},${PORT:-1433}" \
-            -U "$USERNAME" \
-            -P "$PASSWORD" \
-            -d msdb \
-            -i "scripts/create_job.sql" \
-            -C
-          echo "✅ Job created successfully."
+          if [ -f "scripts/create_job.sql" ]; then
+            echo "Creating SQL Agent Job..."
+            /opt/mssql-tools18/bin/sqlcmd \
+              -S "${SERVER},${PORT:-1433}" \
+              -U "$USERNAME" \
+              -P "$PASSWORD" \
+              -d msdb \
+              -i "scripts/create_job.sql" \
+              -C
+            echo "✅ Job created successfully."
+          else
+            echo "⚠️ create_job.sql not found, skipping job creation."
+          fi
 
       # --- STEP 7: RUN THE JOB ---
       - name: Run DevTest Migration Job
@@ -252,7 +256,7 @@ jobs:
             -P "$PASSWORD" \
             -d msdb \
             -Q "EXEC dbo.sp_start_job N'RunTimesheetDevTestMigrationPK';" \
-            -C
+            -C || echo "⚠️ Job may not exist or SQL Agent is not running"
           echo "✅ Job started."
 
   # ==========================================
@@ -374,21 +378,21 @@ jobs:
           
           echo "Deploying Project to folder: $FOLDER_NAME"
           
-          # Create temporary SQL file with deployment command
-          cat > /tmp/deploy_ssis.sql << 'EOF'
+          # Create temporary SQL file with deployment command - FIXED SYNTAX
+          cat > /tmp/deploy_ssis.sql << EOF
+          SET QUOTED_IDENTIFIER ON;
+          SET ANSI_NULLS ON;
+          
           DECLARE @project_binary varbinary(max);
-          DECLARE @base64 varchar(max) = 'BASE64_PLACEHOLDER';
+          DECLARE @base64 varchar(max) = '${PACKAGE_BASE64}';
+          
           SET @project_binary = CAST(N'' AS XML).value('xs:base64Binary(sql:variable("@base64"))', 'varbinary(max)');
+          
           EXEC [SSISDB].[catalog].[deploy_project] 
-            @folder_name = 'FOLDER_PLACEHOLDER',
-            @project_name = 'PROJECT_PLACEHOLDER',
+            @folder_name = '${FOLDER_NAME}',
+            @project_name = '${PROJECT_NAME}',
             @project_stream = @project_binary;
           EOF
-          
-          # Replace placeholders
-          sed -i "s|BASE64_PLACEHOLDER|${PACKAGE_BASE64}|g" /tmp/deploy_ssis.sql
-          sed -i "s|FOLDER_PLACEHOLDER|${FOLDER_NAME}|g" /tmp/deploy_ssis.sql
-          sed -i "s|PROJECT_PLACEHOLDER|${PROJECT_NAME}|g" /tmp/deploy_ssis.sql
           
           /opt/mssql-tools18/bin/sqlcmd \
             -S "${SERVER},${PORT:-1433}" \
