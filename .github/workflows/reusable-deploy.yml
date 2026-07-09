@@ -6,23 +6,33 @@ on:
       environment-name:
         required: true
         type: string
-
       sql-script-path:
         required: true
         type: string
+      deploy-ssis:
+        required: false
+        type: boolean
+        default: false
+      ssis-package-path:
+        required: false
+        type: string
+        default: "ssis-packages/TimesheetMigration1.ispac"
+      ssis-folder-name:
+        required: false
+        type: string
+        default: "ETL"
 
     secrets:
       SQL_SERVER:
         required: true
-
       SQL_PORT:
         required: false
-
       SQL_USERNAME:
         required: true
-
       SQL_PASSWORD:
         required: true
+      AZURE_STORAGE_CONNECTION_STRING:
+        required: false
 
 jobs:
   deploy:
@@ -33,21 +43,25 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Install SQLCMD
+      - name: Install SQLCMD and SSIS Tools
         run: |
+          # Install SQLCMD
           curl https://packages.microsoft.com/keys/microsoft.asc | sudo tee /etc/apt/trusted.gpg.d/microsoft.asc
-
-          curl https://packages.microsoft.com/config/ubuntu/22.04/prod.list \
-          | sudo tee /etc/apt/sources.list.d/mssql-release.list
-
+          curl https://packages.microsoft.com/config/ubuntu/22.04/prod.list | sudo tee /etc/apt/sources.list.d/mssql-release.list
           sudo apt-get update
-
           sudo ACCEPT_EULA=Y apt-get install -y mssql-tools18
+
+          # Install SSIS deployment tools
+          sudo apt-get install -y dotnet-runtime-6.0
+          
+          # Download and install SSIS deployment utility
+          wget -q https://github.com/microsoft/SSIS/issues/raw/master/Tools/SSISDeploy/SSISDeploy_linux.zip
+          sudo unzip -o SSISDeploy_linux.zip -d /opt/ssis-deploy/
+          sudo chmod +x /opt/ssis-deploy/SSISDeploy
 
       - name: Display Deployment Information
         env:
           SERVER: ${{ secrets.SQL_SERVER }}
-
         run: |
           echo "==============================================="
           echo "SQL Deployment"
@@ -55,6 +69,9 @@ jobs:
           echo "Environment : ${{ inputs.environment-name }}"
           echo "Server      : $SERVER"
           echo "Script      : ${{ inputs.sql-script-path }}"
+          echo "Deploy SSIS : ${{ inputs.deploy-ssis }}"
+          echo "SSIS Package: ${{ inputs.ssis-package-path }}"
+          echo "SSIS Folder : ${{ inputs.ssis-folder-name }}"
           echo "==============================================="
 
       - name: Execute SQL Script
@@ -63,10 +80,8 @@ jobs:
           PORT: ${{ secrets.SQL_PORT }}
           USERNAME: ${{ secrets.SQL_USERNAME }}
           PASSWORD: ${{ secrets.SQL_PASSWORD }}
-
         run: |
           echo "Deploying database..."
-
           /opt/mssql-tools18/bin/sqlcmd \
             -S "${SERVER},${PORT:-1433}" \
             -U "$USERNAME" \
@@ -75,8 +90,112 @@ jobs:
             -i "${{ inputs.sql-script-path }}" \
             -b \
             -C
-
           echo "Database deployment completed."
+
+      - name: Check and Create SSISDB if Needed
+        if: ${{ inputs.deploy-ssis == true }}
+        env:
+          SERVER: ${{ secrets.SQL_SERVER }}
+          PORT: ${{ secrets.SQL_PORT }}
+          USERNAME: ${{ secrets.SQL_USERNAME }}
+          PASSWORD: ${{ secrets.SQL_PASSWORD }}
+        run: |
+          echo "Checking if SSISDB exists..."
+          
+          SSISDB_EXISTS=$(/opt/mssql-tools18/bin/sqlcmd \
+            -S "${SERVER},${PORT:-1433}" \
+            -U "$USERNAME" \
+            -P "$PASSWORD" \
+            -d master \
+            -Q "SET NOCOUNT ON; SELECT COUNT(*) FROM sys.databases WHERE name='SSISDB'" \
+            -h-1 \
+            -C | tr -d '[:space:]')
+          
+          if [ "$SSISDB_EXISTS" == "0" ]; then
+            echo "SSISDB does not exist. Creating SSISDB..."
+            
+            # Create SSISDB using SSIS catalog stored procedure
+            /opt/mssql-tools18/bin/sqlcmd \
+              -S "${SERVER},${PORT:-1433}" \
+              -U "$USERNAME" \
+              -P "$PASSWORD" \
+              -d master \
+              -Q "EXEC [master].[sys].[sp_ssis_catalog] @operation='create_catalog', @password='${{ secrets.SQL_PASSWORD }}';" \
+              -C
+            
+            echo "SSISDB created successfully."
+          else
+            echo "SSISDB already exists."
+          fi
+
+      - name: Create SSIS Folder
+        if: ${{ inputs.deploy-ssis == true }}
+        env:
+          SERVER: ${{ secrets.SQL_SERVER }}
+          PORT: ${{ secrets.SQL_PORT }}
+          USERNAME: ${{ secrets.SQL_USERNAME }}
+          PASSWORD: ${{ secrets.SQL_PASSWORD }}
+        run: |
+          FOLDER_NAME="${{ inputs.ssis-folder-name }}"
+          echo "Creating SSIS folder: $FOLDER_NAME"
+          
+          # Check if folder exists
+          FOLDER_EXISTS=$(/opt/mssql-tools18/bin/sqlcmd \
+            -S "${SERVER},${PORT:-1433}" \
+            -U "$USERNAME" \
+            -P "$PASSWORD" \
+            -d SSISDB \
+            -Q "SET NOCOUNT ON; SELECT COUNT(*) FROM [SSISDB].[catalog].[folders] WHERE name='$FOLDER_NAME'" \
+            -h-1 \
+            -C | tr -d '[:space:]')
+          
+          if [ "$FOLDER_EXISTS" == "0" ]; then
+            # Create folder
+            /opt/mssql-tools18/bin/sqlcmd \
+              -S "${SERVER},${PORT:-1433}" \
+              -U "$USERNAME" \
+              -P "$PASSWORD" \
+              -d SSISDB \
+              -Q "EXEC [SSISDB].[catalog].[create_folder] @folder_name=N'$FOLDER_NAME', @folder_id=0;" \
+              -C
+            echo "Folder '$FOLDER_NAME' created successfully."
+          else
+            echo "Folder '$FOLDER_NAME' already exists."
+          fi
+
+      - name: Deploy SSIS Package
+        if: ${{ inputs.deploy-ssis == true }}
+        env:
+          SERVER: ${{ secrets.SQL_SERVER }}
+          PORT: ${{ secrets.SQL_PORT }}
+          USERNAME: ${{ secrets.SQL_USERNAME }}
+          PASSWORD: ${{ secrets.SQL_PASSWORD }}
+        run: |
+          PACKAGE_PATH="${{ inputs.ssis-package-path }}"
+          FOLDER_NAME="${{ inputs.ssis-folder-name }}"
+          
+          echo "Deploying SSIS package: $PACKAGE_PATH"
+          
+          # Check if package file exists
+          if [ ! -f "$PACKAGE_PATH" ]; then
+            echo "Error: Package file $PACKAGE_PATH not found!"
+            echo "Current directory contents:"
+            ls -la
+            echo "Looking in ssis-packages directory:"
+            ls -la ssis-packages/ 2>/dev/null || echo "ssis-packages directory not found"
+            exit 1
+          fi
+          
+          # Deploy using SSIS deployment tool
+          /opt/ssis-deploy/SSISDeploy \
+            --server "${SERVER},${PORT:-1433}" \
+            --username "$USERNAME" \
+            --password "$PASSWORD" \
+            --folder "$FOLDER_NAME" \
+            --project "$PACKAGE_PATH" \
+            --deploy
+          
+          echo "SSIS package deployed successfully."
 
       - name: Verify Database Exists
         env:
@@ -84,23 +203,18 @@ jobs:
           PORT: ${{ secrets.SQL_PORT }}
           USERNAME: ${{ secrets.SQL_USERNAME }}
           PASSWORD: ${{ secrets.SQL_PASSWORD }}
-
         run: |
           echo "Checking TimesheetsDB..."
-
-          DB_EXISTS=$(
-            /opt/mssql-tools18/bin/sqlcmd \
-              -S "${SERVER},${PORT:-1433}" \
-              -U "$USERNAME" \
-              -P "$PASSWORD" \
-              -d master \
-              -Q "SET NOCOUNT ON; SELECT COUNT(*) FROM sys.databases WHERE name='TimesheetsDB';" \
-              -h -1 \
-              -C | tr -d '[:space:]'
-          )
-
+          DB_EXISTS=$(/opt/mssql-tools18/bin/sqlcmd \
+            -S "${SERVER},${PORT:-1433}" \
+            -U "$USERNAME" \
+            -P "$PASSWORD" \
+            -d master \
+            -Q "SET NOCOUNT ON; SELECT COUNT(*) FROM sys.databases WHERE name='TimesheetsDB';" \
+            -h-1 \
+            -C | tr -d '[:space:]')
+          
           echo "Database Exists = $DB_EXISTS"
-
           if [ "$DB_EXISTS" != "1" ]; then
             echo "TimesheetDB was not created."
             exit 1
@@ -112,21 +226,17 @@ jobs:
           PORT: ${{ secrets.SQL_PORT }}
           USERNAME: ${{ secrets.SQL_USERNAME }}
           PASSWORD: ${{ secrets.SQL_PASSWORD }}
-
         run: |
-          EMPLOYEES=$(
-            /opt/mssql-tools18/bin/sqlcmd \
-              -S "${SERVER},${PORT:-1433}" \
-              -U "$USERNAME" \
-              -P "$PASSWORD" \
-              -d TimesheetDB \
-              -Q "SET NOCOUNT ON; SELECT COUNT(*) FROM timesheet.Employee;" \
-              -h -1 \
-              -C | tr -d '[:space:]'
-          )
-
+          EMPLOYEES=$(/opt/mssql-tools18/bin/sqlcmd \
+            -S "${SERVER},${PORT:-1433}" \
+            -U "$USERNAME" \
+            -P "$PASSWORD" \
+            -d TimesheetsDB \
+            -Q "SET NOCOUNT ON; SELECT COUNT(*) FROM timesheet.Employee;" \
+            -h-1 \
+            -C | tr -d '[:space:]')
+          
           echo "Employees = $EMPLOYEES"
-
           if [ "$EMPLOYEES" -lt 1 ]; then
             echo "Employee table verification failed."
             exit 1
@@ -138,21 +248,17 @@ jobs:
           PORT: ${{ secrets.SQL_PORT }}
           USERNAME: ${{ secrets.SQL_USERNAME }}
           PASSWORD: ${{ secrets.SQL_PASSWORD }}
-
         run: |
-          CLIENTS=$(
-            /opt/mssql-tools18/bin/sqlcmd \
-              -S "${SERVER},${PORT:-1433}" \
-              -U "$USERNAME" \
-              -P "$PASSWORD" \
-              -d TimesheetDB \
-              -Q "SET NOCOUNT ON; SELECT COUNT(*) FROM timesheet.Client;" \
-              -h -1 \
-              -C | tr -d '[:space:]'
-          )
-
+          CLIENTS=$(/opt/mssql-tools18/bin/sqlcmd \
+            -S "${SERVER},${PORT:-1433}" \
+            -U "$USERNAME" \
+            -P "$PASSWORD" \
+            -d TimesheetsDB \
+            -Q "SET NOCOUNT ON; SELECT COUNT(*) FROM timesheet.Client;" \
+            -h-1 \
+            -C | tr -d '[:space:]')
+          
           echo "Clients = $CLIENTS"
-
           if [ "$CLIENTS" -lt 1 ]; then
             echo "Client table verification failed."
             exit 1
