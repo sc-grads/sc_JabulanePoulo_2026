@@ -25,7 +25,7 @@ jobs:
           sudo apt-get update
           sudo ACCEPT_EULA=Y apt-get install -y mssql-tools18
 
-      # --- STEP 1: DEPLOY DATABASE (SQL Auth is fine for DDL) ---
+      # --- STEP 1: DEPLOY DATABASE (SQL Auth is fine) ---
       - name: Deploy SQL Database Script
         env:
           SERVER: ${{ secrets.SQL_SERVER }}
@@ -44,13 +44,16 @@ jobs:
             -C
           echo "Database deployment completed."
 
-      # --- STEP 2: SSIS CATALOG (MUST use Windows Auth / -E) ---
+      # --- STEP 2: SSIS CATALOG (MUST use Windows Auth & Real Hostname) ---
       - name: Initialize SSIS Catalog (SSISDB) if Missing
+        env:
+          HOSTNAME: ${{ secrets.SQL_HOSTNAME }} # Use the real IP/Hostname of your machine
         run: |
           echo "Checking if SSISDB exists using Windows Auth..."
-          # Note: Using localhost and -E (Windows Auth) to bypass the SSIS limitation
+          
+          # Use the actual hostname, TrustServerCertificate=yes, and force Windows Auth via driver
           SSISDB_EXISTS=$(/opt/mssql-tools18/bin/sqlcmd \
-            -S "localhost" \
+            -S "$HOSTNAME" \
             -E \
             -C \
             -d master \
@@ -60,7 +63,7 @@ jobs:
           if [ "$SSISDB_EXISTS" == "0" ]; then
             echo "Creating SSISDB via Windows Auth..."
             /opt/mssql-tools18/bin/sqlcmd \
-              -S "localhost" \
+              -S "$HOSTNAME" \
               -E \
               -C \
               -d master \
@@ -71,12 +74,14 @@ jobs:
           fi
 
       - name: Create SSIS Folder (ETL)
+        env:
+          HOSTNAME: ${{ secrets.SQL_HOSTNAME }}
         run: |
           FOLDER_NAME="ETL"
           echo "Verifying SSIS folder: $FOLDER_NAME using Windows Auth..."
           
           FOLDER_EXISTS=$(/opt/mssql-tools18/bin/sqlcmd \
-            -S "localhost" \
+            -S "$HOSTNAME" \
             -E \
             -C \
             -d SSISDB \
@@ -86,7 +91,7 @@ jobs:
           if [ "$FOLDER_EXISTS" == "0" ]; then
             echo "Folder '$FOLDER_NAME' not found. Creating..."
             /opt/mssql-tools18/bin/sqlcmd \
-              -S "localhost" \
+              -S "$HOSTNAME" \
               -E \
               -C \
               -d SSISDB \
@@ -97,6 +102,8 @@ jobs:
           fi
 
       - name: Deploy SSIS Package (.ispac) to DevTest
+        env:
+          HOSTNAME: ${{ secrets.SQL_HOSTNAME }}
         run: |
           PACKAGE_PATH="ssis-packages/TimesheetMigration1.ispac"
           FOLDER_NAME="ETL"
@@ -112,7 +119,7 @@ jobs:
           
           echo "Deploying Project using Windows Auth..."
           /opt/mssql-tools18/bin/sqlcmd \
-            -S "localhost" \
+            -S "$HOSTNAME" \
             -E \
             -C \
             -d SSISDB \
@@ -199,11 +206,13 @@ jobs:
             -b \
             -C
 
-      # --- STEP 2: SSIS CATALOG (Windows Auth via localhost) ---
+      # --- STEP 2: SSIS CATALOG (Windows Auth) ---
       - name: Initialize SSIS Catalog (SSISDB) if Missing (Partner)
+        env:
+          HOSTNAME: ${{ secrets.PARTNER_SQL_HOSTNAME }}
         run: |
           SSISDB_EXISTS=$(/opt/mssql-tools18/bin/sqlcmd \
-            -S "localhost" \
+            -S "$HOSTNAME" \
             -E \
             -C \
             -d master \
@@ -213,7 +222,7 @@ jobs:
           if [ "$SSISDB_EXISTS" == "0" ]; then
             echo "Creating SSISDB (Partner)..."
             /opt/mssql-tools18/bin/sqlcmd \
-              -S "localhost" \
+              -S "$HOSTNAME" \
               -E \
               -C \
               -d master \
@@ -221,10 +230,12 @@ jobs:
           fi
 
       - name: Create SSIS Folder (ETL) (Partner)
+        env:
+          HOSTNAME: ${{ secrets.PARTNER_SQL_HOSTNAME }}
         run: |
           FOLDER_NAME="ETL"
           FOLDER_EXISTS=$(/opt/mssql-tools18/bin/sqlcmd \
-            -S "localhost" \
+            -S "$HOSTNAME" \
             -E \
             -C \
             -d SSISDB \
@@ -234,7 +245,7 @@ jobs:
           if [ "$FOLDER_EXISTS" == "0" ]; then
             echo "Creating SSIS folder '$FOLDER_NAME' (Partner)..."
             /opt/mssql-tools18/bin/sqlcmd \
-              -S "localhost" \
+              -S "$HOSTNAME" \
               -E \
               -C \
               -d SSISDB \
@@ -244,6 +255,8 @@ jobs:
           fi
 
       - name: Deploy SSIS Package (.ispac) to Partner
+        env:
+          HOSTNAME: ${{ secrets.PARTNER_SQL_HOSTNAME }}
         run: |
           PACKAGE_PATH="ssis-packages/TimesheetMigration1.ispac"
           FOLDER_NAME="ETL"
@@ -257,7 +270,7 @@ jobs:
           PACKAGE_BASE64=$(base64 -w 0 "$PACKAGE_PATH")
           
           /opt/mssql-tools18/bin/sqlcmd \
-            -S "localhost" \
+            -S "$HOSTNAME" \
             -E \
             -C \
             -d SSISDB \
