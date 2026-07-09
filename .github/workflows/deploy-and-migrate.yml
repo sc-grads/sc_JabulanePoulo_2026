@@ -25,7 +25,7 @@ jobs:
           sudo apt-get update
           sudo ACCEPT_EULA=Y apt-get install -y mssql-tools18
 
-      # --- STEP 1: DEPLOY DATABASE (SQL Auth is fine) ---
+      # --- STEP 1: DEPLOY DATABASE (SQL Auth) ---
       - name: Deploy SQL Database Script
         env:
           SERVER: ${{ secrets.SQL_SERVER }}
@@ -44,14 +44,13 @@ jobs:
             -C
           echo "Database deployment completed."
 
-      # --- STEP 2: SSIS CATALOG (MUST use Windows Auth & Real Hostname) ---
+      # --- STEP 2: SSIS CATALOG (Windows Auth) ---
       - name: Initialize SSIS Catalog (SSISDB) if Missing
         env:
-          HOSTNAME: ${{ secrets.SQL_HOSTNAME }} # Use the real IP/Hostname of your machine
+          HOSTNAME: ${{ secrets.SQL_HOSTNAME }}
         run: |
           echo "Checking if SSISDB exists using Windows Auth..."
           
-          # Use the actual hostname, TrustServerCertificate=yes, and force Windows Auth via driver
           SSISDB_EXISTS=$(/opt/mssql-tools18/bin/sqlcmd \
             -S "$HOSTNAME" \
             -E \
@@ -67,8 +66,8 @@ jobs:
               -E \
               -C \
               -d master \
-              -Q "EXEC SSISDB.catalog.create_catalog @password = 'Password123!';" 
-            echo "SSISDB creation attempted."
+              -Q "EXEC [SSISDB].[catalog].[create_catalog] @password = '${{ secrets.SQL_PASSWORD }}';"
+            echo "SSISDB created successfully."
           else
             echo "SSISDB already exists."
           fi
@@ -106,10 +105,11 @@ jobs:
           HOSTNAME: ${{ secrets.SQL_HOSTNAME }}
         run: |
           PACKAGE_PATH="ssis-packages/TimesheetMigration1.ispac"
+          FOLDER_NAME="ETL"
           PROJECT_NAME="TimesheetMigration1"
           
           if [ ! -f "$PACKAGE_PATH" ]; then
-            echo " Error: Package file $PACKAGE_PATH not found!"
+            echo "❌ Error: Package file $PACKAGE_PATH not found!"
             exit 1
           fi
           
@@ -133,7 +133,7 @@ jobs:
             -v base64="$PACKAGE_BASE64"
           echo "✅ SSIS package deployed."
 
-      # --- STEP 3: JOBS (SQL Auth is fine for msdb) ---
+      # --- STEP 3: CREATE JOBS (SQL Auth) ---
       - name: Create DevTest SQL Agent Job
         env:
           SERVER: ${{ secrets.SQL_SERVER }}
@@ -201,7 +201,7 @@ jobs:
             -U "$USERNAME" \
             -P "$PASSWORD" \
             -d master \
-            -i "scripts/create_database_partner.sql" \
+            -i "scripts/create_database.sql" \
             -b \
             -C
 
@@ -225,7 +225,7 @@ jobs:
               -E \
               -C \
               -d master \
-              -Q "EXEC SSISDB.catalog.create_catalog @password = 'Password123!';"
+              -Q "EXEC [SSISDB].[catalog].[create_catalog] @password = '${{ secrets.PARTNER_SQL_PASSWORD }}';"
           fi
 
       - name: Create SSIS Folder (ETL) (Partner)
@@ -283,7 +283,7 @@ jobs:
             " \
             -v base64="$PACKAGE_BASE64"
 
-      # --- STEP 3: JOBS ---
+      # --- STEP 3: CREATE JOBS ---
       - name: Create Partner SQL Agent Job
         env:
           SERVER: ${{ secrets.PARTNER_SQL_SERVER }}

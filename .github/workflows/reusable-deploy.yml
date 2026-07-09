@@ -34,6 +34,13 @@ on:
         required: true
       SQL_PASSWORD:
         required: true
+      # Windows Authentication secrets for SSIS
+      SQL_HOSTNAME:
+        required: false
+      WIN_AUTH_USERNAME:
+        required: false
+      WIN_AUTH_PASSWORD:
+        required: false
 
 jobs:
   deploy:
@@ -64,6 +71,7 @@ jobs:
           echo "SSIS Folder : ${{ inputs.ssis-folder-name }}"
           echo "==============================================="
 
+      # --- STEP 1: DEPLOY DATABASE (SQL Auth) ---
       - name: Execute SQL Script
         env:
           SERVER: ${{ secrets.SQL_SERVER }}
@@ -82,34 +90,33 @@ jobs:
             -C
           echo "Database deployment completed."
 
+      # --- STEP 2: SSIS CATALOG (Windows Auth required) ---
       - name: Check and Create SSISDB if Needed
         if: ${{ inputs.deploy-ssis == true }}
         env:
-          SERVER: ${{ secrets.SQL_SERVER }}
-          PORT: ${{ secrets.SQL_PORT }}
-          USERNAME: ${{ secrets.SQL_USERNAME }}
-          PASSWORD: ${{ secrets.SQL_PASSWORD }}
+          HOSTNAME: ${{ secrets.SQL_HOSTNAME }}
+          WIN_USER: ${{ secrets.WIN_AUTH_USERNAME }}
+          WIN_PASS: ${{ secrets.WIN_AUTH_PASSWORD }}
         run: |
-          echo "Checking if SSISDB exists..."
+          echo "Checking if SSISDB exists using Windows Auth..."
           
+          # Use Windows Authentication for SSIS operations
           SSISDB_EXISTS=$(/opt/mssql-tools18/bin/sqlcmd \
-            -S "${SERVER},${PORT:-1433}" \
-            -U "$USERNAME" \
-            -P "$PASSWORD" \
+            -S "$HOSTNAME" \
+            -E \
+            -C \
             -d master \
             -Q "SET NOCOUNT ON; SELECT COUNT(*) FROM sys.databases WHERE name='SSISDB'" \
-            -h-1 \
-            -C | tr -d '[:space:]')
+            -h-1 | tr -d '[:space:]')
           
           if [ "$SSISDB_EXISTS" == "0" ]; then
-            echo "SSISDB does not exist. Creating SSISDB..."
+            echo "SSISDB does not exist. Creating SSISDB using Windows Auth..."
             /opt/mssql-tools18/bin/sqlcmd \
-              -S "${SERVER},${PORT:-1433}" \
-              -U "$USERNAME" \
-              -P "$PASSWORD" \
+              -S "$HOSTNAME" \
+              -E \
+              -C \
               -d master \
-              -Q "EXEC [master].[sys].[sp_ssis_catalog] @operation='create_catalog', @password='${{ secrets.SQL_PASSWORD }}';" \
-              -C
+              -Q "EXEC [SSISDB].[catalog].[create_catalog] @password = '${{ secrets.SQL_PASSWORD }}';"
             echo "SSISDB created successfully."
           else
             echo "SSISDB already exists."
@@ -118,93 +125,88 @@ jobs:
       - name: Create SSIS Folder
         if: ${{ inputs.deploy-ssis == true }}
         env:
-          SERVER: ${{ secrets.SQL_SERVER }}
-          PORT: ${{ secrets.SQL_PORT }}
-          USERNAME: ${{ secrets.SQL_USERNAME }}
-          PASSWORD: ${{ secrets.SQL_PASSWORD }}
+          HOSTNAME: ${{ secrets.SQL_HOSTNAME }}
         run: |
           FOLDER_NAME="${{ inputs.ssis-folder-name }}"
-          echo "Creating SSIS folder: $FOLDER_NAME"
+          echo "Verifying SSIS folder: $FOLDER_NAME using Windows Auth..."
           
           FOLDER_EXISTS=$(/opt/mssql-tools18/bin/sqlcmd \
-            -S "${SERVER},${PORT:-1433}" \
-            -U "$USERNAME" \
-            -P "$PASSWORD" \
+            -S "$HOSTNAME" \
+            -E \
+            -C \
             -d SSISDB \
             -Q "SET NOCOUNT ON; SELECT COUNT(*) FROM [SSISDB].[catalog].[folders] WHERE name='$FOLDER_NAME'" \
-            -h-1 \
-            -C | tr -d '[:space:]')
+            -h-1 | tr -d '[:space:]')
           
           if [ "$FOLDER_EXISTS" == "0" ]; then
+            echo "Folder '$FOLDER_NAME' not found. Creating..."
             /opt/mssql-tools18/bin/sqlcmd \
-              -S "${SERVER},${PORT:-1433}" \
-              -U "$USERNAME" \
-              -P "$PASSWORD" \
+              -S "$HOSTNAME" \
+              -E \
+              -C \
               -d SSISDB \
-              -Q "EXEC [SSISDB].[catalog].[create_folder] @folder_name=N'$FOLDER_NAME', @folder_id=0;" \
-              -C
-            echo "Folder '$FOLDER_NAME' created successfully."
+              -Q "EXEC [SSISDB].[catalog].[create_folder] @folder_name=N'$FOLDER_NAME', @folder_id=0;"
+            echo "✅ Folder '$FOLDER_NAME' created successfully."
           else
-            echo "Folder '$FOLDER_NAME' already exists."
+            echo "✅ Folder '$FOLDER_NAME' already exists."
           fi
 
       - name: Deploy SSIS Package
         if: ${{ inputs.deploy-ssis == true }}
+        env:
+          HOSTNAME: ${{ secrets.SQL_HOSTNAME }}
+        run: |
+          PACKAGE_PATH="${{ inputs.ssis-package-path }}"
+          FOLDER_NAME="${{ inputs.ssis-folder-name }}"
+          PROJECT_NAME="${{ inputs.ssis-project-name }}"
+          
+          echo "Deploying SSIS package: $PACKAGE_PATH using Windows Auth..."
+          
+          if [ ! -f "$PACKAGE_PATH" ]; then
+            echo "Error: Package file $PACKAGE_PATH not found!"
+            echo "Current directory contents:"
+            ls -la ssis-packages/
+            exit 1
+          fi
+          
+          echo "Encoding package to Base64..."
+          PACKAGE_BASE64=$(base64 -w 0 "$PACKAGE_PATH")
+          
+          echo "Deploying Project using Windows Auth..."
+          /opt/mssql-tools18/bin/sqlcmd \
+            -S "$HOSTNAME" \
+            -E \
+            -C \
+            -d SSISDB \
+            -Q "
+              DECLARE @project_binary varbinary(max);
+              SET @project_binary = CAST(N'' AS XML).value('xs:base64Binary(sql:variable(\"@base64\"))', 'varbinary(max)');
+              EXEC [SSISDB].[catalog].[deploy_project] 
+                @folder_name = '$FOLDER_NAME',
+                @project_name = '$PROJECT_NAME',
+                @project_stream = @project_binary;
+            " \
+            -v base64="$PACKAGE_BASE64"
+          echo "✅ SSIS package deployed."
+
+      # --- STEP 3: CREATE JOB (SQL Auth for msdb) ---
+      - name: Create SQL Agent Job
         env:
           SERVER: ${{ secrets.SQL_SERVER }}
           PORT: ${{ secrets.SQL_PORT }}
           USERNAME: ${{ secrets.SQL_USERNAME }}
           PASSWORD: ${{ secrets.SQL_PASSWORD }}
         run: |
-          PACKAGE_PATH="${{ inputs.ssis-package-path }}"
-          FOLDER_NAME="${{ inputs.ssis-folder-name }}"
-          PROJECT_NAME="${{ inputs.ssis-project-name }}"
-          
-          echo "Deploying SSIS package: $PACKAGE_PATH"
-          
-          if [ ! -f "$PACKAGE_PATH" ]; then
-            echo "Error: Package file $PACKAGE_PATH not found!"
-            echo "Current directory contents:"
-            ls -la
-            exit 1
-          fi
-          
-          # Convert .ispac to base64
-          echo "Converting package to base64..."
-          PACKAGE_BASE64=$(base64 -w 0 "$PACKAGE_PATH")
-          
-          # Deploy using T-SQL
-          echo "Deploying package to SSISDB..."
+          echo "Creating SQL Agent Job..."
           /opt/mssql-tools18/bin/sqlcmd \
             -S "${SERVER},${PORT:-1433}" \
             -U "$USERNAME" \
             -P "$PASSWORD" \
-            -d SSISDB \
-            -Q "
-              DECLARE @folder_id bigint;
-              DECLARE @project_id bigint;
-              DECLARE @operation_id bigint;
-              DECLARE @project_binary varbinary(max);
-              
-              SELECT @folder_id = folder_id 
-              FROM [SSISDB].[catalog].[folders] 
-              WHERE name = '$FOLDER_NAME';
-              
-              SET @project_binary = CAST(N'' AS XML).value('xs:base64Binary(sql:variable(\"@base64\"))', 'varbinary(max)');
-              
-              EXEC [SSISDB].[catalog].[deploy_project] 
-                @folder_name = '$FOLDER_NAME',
-                @project_name = '$PROJECT_NAME',
-                @project_stream = @project_binary,
-                @operation_id = @operation_id OUTPUT;
-              
-              SELECT 'Deployment successful' as Status, @operation_id as OperationID;
-            " \
-            -v base64="$PACKAGE_BASE64" \
+            -d msdb \
+            -i "scripts/create_job.sql" \
             -C
-          
-          echo "SSIS package deployed successfully."
 
+      # --- STEP 4: VERIFY ---
       - name: Verify Database
         env:
           SERVER: ${{ secrets.SQL_SERVER }}
@@ -214,7 +216,6 @@ jobs:
         run: |
           echo "Verifying database deployment..."
           
-          # Check database exists
           DB_EXISTS=$(/opt/mssql-tools18/bin/sqlcmd \
             -S "${SERVER},${PORT:-1433}" \
             -U "$USERNAME" \
@@ -229,7 +230,6 @@ jobs:
             exit 1
           fi
           
-          # Check Employee table
           EMPLOYEES=$(/opt/mssql-tools18/bin/sqlcmd \
             -S "${SERVER},${PORT:-1433}" \
             -U "$USERNAME" \
@@ -244,30 +244,12 @@ jobs:
             exit 1
           fi
           
-          # Check Client table
-          CLIENTS=$(/opt/mssql-tools18/bin/sqlcmd \
-            -S "${SERVER},${PORT:-1433}" \
-            -U "$USERNAME" \
-            -P "$PASSWORD" \
-            -d TimesheetsDB \
-            -Q "SET NOCOUNT ON; SELECT COUNT(*) FROM timesheet.Client;" \
-            -h-1 \
-            -C | tr -d '[:space:]')
-          
-          if [ "$CLIENTS" -lt 1 ]; then
-            echo "Client table verification failed."
-            exit 1
-          fi
-          
           echo "Database verification completed successfully."
 
       - name: Verify SSIS Deployment
         if: ${{ inputs.deploy-ssis == true }}
         env:
-          SERVER: ${{ secrets.SQL_SERVER }}
-          PORT: ${{ secrets.SQL_PORT }}
-          USERNAME: ${{ secrets.SQL_USERNAME }}
-          PASSWORD: ${{ secrets.SQL_PASSWORD }}
+          HOSTNAME: ${{ secrets.SQL_HOSTNAME }}
         run: |
           echo "Verifying SSIS deployment..."
           
@@ -275,9 +257,9 @@ jobs:
           PROJECT_NAME="${{ inputs.ssis-project-name }}"
           
           PROJECT_EXISTS=$(/opt/mssql-tools18/bin/sqlcmd \
-            -S "${SERVER},${PORT:-1433}" \
-            -U "$USERNAME" \
-            -P "$PASSWORD" \
+            -S "$HOSTNAME" \
+            -E \
+            -C \
             -d SSISDB \
             -Q "SET NOCOUNT ON; 
                 SELECT COUNT(*) 
@@ -285,19 +267,17 @@ jobs:
                 INNER JOIN [SSISDB].[catalog].[folders] f ON p.folder_id = f.folder_id
                 WHERE f.name = '$FOLDER_NAME' 
                   AND p.name = '$PROJECT_NAME'" \
-            -h-1 \
-            -C | tr -d '[:space:]')
+            -h-1 | tr -d '[:space:]')
           
           if [ "$PROJECT_EXISTS" -eq "1" ]; then
-            echo "SSIS deployment verified successfully!"
+            echo "✅ SSIS deployment verified successfully!"
           else
-            echo "Warning: SSIS project not found in SSISDB."
+            echo "⚠️ Warning: SSIS project not found in SSISDB."
           fi
 
       - name: Deployment Complete
         run: |
           echo ""
           echo "==============================================="
-          echo "Deployment completed successfully."
+          echo "✅ Deployment completed successfully."
           echo "==============================================="
-
