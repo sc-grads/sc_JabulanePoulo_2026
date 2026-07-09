@@ -111,7 +111,7 @@ jobs:
             echo "✅ Folder '$FOLDER_NAME' already exists."
           fi
 
-      # --- STEP 4: DEPLOY SSIS PACKAGE ---
+      # --- STEP 4: DEPLOY SSIS PACKAGE (FIXED) ---
       - name: Deploy SSIS Package (.ispac) to DevTest
         env:
           SERVER: ${{ secrets.SQL_SERVER }}
@@ -120,14 +120,14 @@ jobs:
           PASSWORD: ${{ secrets.SQL_PASSWORD }}
         run: |
           PACKAGE_PATH="ssis-packages/TimesheetMigration1.ispac"
-          FOLDER_NAME="TimesheetDevTestMigration"    # Updated to match your environment
-          PROJECT_NAME="TimesheetMigration1"          # Updated to match your environment
+          FOLDER_NAME="TimesheetDevTestMigration"
+          PROJECT_NAME="TimesheetMigration1"
           
           echo "Checking for package at: $PACKAGE_PATH"
           
           if [ ! -f "$PACKAGE_PATH" ]; then
             echo "❌ Error: Package file $PACKAGE_PATH not found!"
-            echo "Current directory structure:"
+            echo "Current directory contents:"
             ls -la
             echo ""
             echo "Checking for ssis-packages directory:"
@@ -139,21 +139,35 @@ jobs:
           PACKAGE_BASE64=$(base64 -w 0 "$PACKAGE_PATH")
           
           echo "Deploying Project to folder: $FOLDER_NAME"
+          
+          # Create temporary SQL file with deployment command
+          cat > /tmp/deploy_ssis.sql << 'EOF'
+          DECLARE @project_binary varbinary(max);
+          DECLARE @base64 varchar(max) = 'BASE64_PLACEHOLDER';
+          SET @project_binary = CAST(N'' AS XML).value('xs:base64Binary(sql:variable("@base64"))', 'varbinary(max)');
+          EXEC [SSISDB].[catalog].[deploy_project] 
+            @folder_name = 'FOLDER_PLACEHOLDER',
+            @project_name = 'PROJECT_PLACEHOLDER',
+            @project_stream = @project_binary;
+          EOF
+          
+          # Replace placeholders with actual values
+          sed -i "s|BASE64_PLACEHOLDER|${PACKAGE_BASE64}|g" /tmp/deploy_ssis.sql
+          sed -i "s|FOLDER_PLACEHOLDER|${FOLDER_NAME}|g" /tmp/deploy_ssis.sql
+          sed -i "s|PROJECT_PLACEHOLDER|${PROJECT_NAME}|g" /tmp/deploy_ssis.sql
+          
+          # Execute the deployment
           /opt/mssql-tools18/bin/sqlcmd \
             -S "${SERVER},${PORT:-1433}" \
             -U "$USERNAME" \
             -P "$PASSWORD" \
             -d SSISDB \
-            -Q "
-              DECLARE @project_binary varbinary(max);
-              SET @project_binary = CAST(N'' AS XML).value('xs:base64Binary(sql:variable(\"@base64\"))', 'varbinary(max)');
-              EXEC [SSISDB].[catalog].[deploy_project] 
-                @folder_name = '$FOLDER_NAME',
-                @project_name = '$PROJECT_NAME',
-                @project_stream = @project_binary;
-            " \
-            -v base64="$PACKAGE_BASE64" \
+            -i /tmp/deploy_ssis.sql \
             -C
+          
+          # Clean up
+          rm -f /tmp/deploy_ssis.sql
+          
           echo "✅ SSIS package deployed to: \SSISDB\$FOLDER_NAME\$PROJECT_NAME\"
 
       # --- STEP 5: VERIFY DEPLOYMENT ---
@@ -186,7 +200,6 @@ jobs:
           if [ "$PROJECT_EXISTS" -eq "1" ]; then
             echo "✅ SSIS deployment verified successfully!"
             
-            # List packages in the project
             echo ""
             echo "📦 Packages in project:"
             /opt/mssql-tools18/bin/sqlcmd \
@@ -241,23 +254,6 @@ jobs:
             -Q "EXEC dbo.sp_start_job N'RunTimesheetDevTestMigrationPK';" \
             -C
           echo "✅ Job started."
-          
-          # Wait a few seconds and check job status
-          sleep 5
-          echo ""
-          echo "Job status:"
-          /opt/mssql-tools18/bin/sqlcmd \
-            -S "${SERVER},${PORT:-1433}" \
-            -U "$USERNAME" \
-            -P "$PASSWORD" \
-            -d msdb \
-            -Q "SET NOCOUNT ON; 
-                SELECT j.name, ja.run_status, ja.run_date, ja.run_time
-                FROM sysjobs j
-                INNER JOIN sysjobactivity ja ON j.job_id = ja.job_id
-                WHERE j.name = 'RunTimesheetDevTestMigrationPK'
-                ORDER BY ja.run_date DESC, ja.run_time DESC" \
-            -C
 
   # ==========================================
   # 2. Stage: Production/Deploy
@@ -356,7 +352,7 @@ jobs:
             echo "Folder '$FOLDER_NAME' already exists (Partner)."
           fi
 
-      # --- STEP 4: DEPLOY SSIS PACKAGE ---
+      # --- STEP 4: DEPLOY SSIS PACKAGE (FIXED) ---
       - name: Deploy SSIS Package (.ispac) to Partner
         env:
           SERVER: ${{ secrets.PARTNER_SQL_SERVER }}
@@ -373,23 +369,36 @@ jobs:
             exit 1
           fi
           
+          echo "Encoding package to Base64..."
           PACKAGE_BASE64=$(base64 -w 0 "$PACKAGE_PATH")
+          
+          echo "Deploying Project to folder: $FOLDER_NAME"
+          
+          # Create temporary SQL file with deployment command
+          cat > /tmp/deploy_ssis.sql << 'EOF'
+          DECLARE @project_binary varbinary(max);
+          DECLARE @base64 varchar(max) = 'BASE64_PLACEHOLDER';
+          SET @project_binary = CAST(N'' AS XML).value('xs:base64Binary(sql:variable("@base64"))', 'varbinary(max)');
+          EXEC [SSISDB].[catalog].[deploy_project] 
+            @folder_name = 'FOLDER_PLACEHOLDER',
+            @project_name = 'PROJECT_PLACEHOLDER',
+            @project_stream = @project_binary;
+          EOF
+          
+          # Replace placeholders
+          sed -i "s|BASE64_PLACEHOLDER|${PACKAGE_BASE64}|g" /tmp/deploy_ssis.sql
+          sed -i "s|FOLDER_PLACEHOLDER|${FOLDER_NAME}|g" /tmp/deploy_ssis.sql
+          sed -i "s|PROJECT_PLACEHOLDER|${PROJECT_NAME}|g" /tmp/deploy_ssis.sql
           
           /opt/mssql-tools18/bin/sqlcmd \
             -S "${SERVER},${PORT:-1433}" \
             -U "$USERNAME" \
             -P "$PASSWORD" \
             -d SSISDB \
-            -Q "
-              DECLARE @project_binary varbinary(max);
-              SET @project_binary = CAST(N'' AS XML).value('xs:base64Binary(sql:variable(\"@base64\"))', 'varbinary(max)');
-              EXEC [SSISDB].[catalog].[deploy_project] 
-                @folder_name = '$FOLDER_NAME',
-                @project_name = '$PROJECT_NAME',
-                @project_stream = @project_binary;
-            " \
-            -v base64="$PACKAGE_BASE64" \
+            -i /tmp/deploy_ssis.sql \
             -C
+          
+          rm -f /tmp/deploy_ssis.sql
 
       # --- STEP 5: CREATE JOB ---
       - name: Create Partner SQL Agent Job
@@ -409,7 +418,7 @@ jobs:
               -C
           fi
 
-      # --- STEP 6: RUN JOB ---
+      # --- STEP 6: RUN THE JOB ---
       - name: Run Partner Migration Job
         env:
           SERVER: ${{ secrets.PARTNER_SQL_SERVER }}
