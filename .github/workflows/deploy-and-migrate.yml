@@ -1,47 +1,19 @@
-name: Deploy Database and Run Migration
-run-name: "${{ github.event_name == 'push' && format('Deploy {0} - {1}', github.ref_name, github.sha) || 'Manual Deployment' }}"
+name: Pinggys SSIS Deployment
 
 on:
   push:
     branches:
       - main
-      - develop
   workflow_dispatch:
 
 jobs:
-  # Deploy to DevTest Environment with SSIS
-  DevTest:
-    uses: ./.github/workflows/reusable-deploy.yml
-    with:
-      environment-name: local-sql
-      sql-script-path: scripts/create_database.sql
-      deploy-ssis: true
-      ssis-package-path: ssis-packages/TimesheetMigration1.ispac
-      ssis-folder-name: ETL
-      ssis-project-name: TimesheetMigration1
-    secrets: inherit
-
-  # Deploy to Partner Environment with SSIS
-  Partner:
-    uses: ./.github/workflows/reusable-deploy.yml
-    with:
-      environment-name: partner-sql
-      sql-script-path: scripts/create_database_partner.sql
-      deploy-ssis: true
-      ssis-package-path: ssis-packages/TimesheetMigration1.ispac
-      ssis-folder-name: ETL
-      ssis-project-name: TimesheetMigration1
-    secrets: inherit
-
-  # Run TimesheetMigration Job after DevTest deployment
-  RunMigrationJob:
-    needs: DevTest
+  # 1. Stage: DevTest/Deploy (Matches the first node in your screenshot)
+  DevTest_Deploy:
+    name: DevTest/Deploy
     runs-on: ubuntu-latest
     environment: local-sql
-    if: success()
-    
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Install SQLCMD
@@ -51,142 +23,44 @@ jobs:
           sudo apt-get update
           sudo ACCEPT_EULA=Y apt-get install -y mssql-tools18
 
-      - name: Create Migration Job
+      - name: Deploy SQL Database to DevTest
         env:
           SERVER: ${{ secrets.SQL_SERVER }}
           PORT: ${{ secrets.SQL_PORT }}
           USERNAME: ${{ secrets.SQL_USERNAME }}
           PASSWORD: ${{ secrets.SQL_PASSWORD }}
         run: |
-          echo "Creating TimesheetMigration job if it doesn't exist..."
-          
+          echo "Deploying to DevTest..."
           /opt/mssql-tools18/bin/sqlcmd \
             -S "${SERVER},${PORT}" \
             -U "$USERNAME" \
             -P "$PASSWORD" \
-            -d "msdb" \
-            -i "scripts/create_job.sql" \
+            -d master \
+            -i "scripts/create_database.sql" \
             -C
 
-      - name: Start and Monitor TimesheetMigration Job
+      - name: Create & Start Migration Job
         env:
           SERVER: ${{ secrets.SQL_SERVER }}
           PORT: ${{ secrets.SQL_PORT }}
           USERNAME: ${{ secrets.SQL_USERNAME }}
           PASSWORD: ${{ secrets.SQL_PASSWORD }}
         run: |
-          echo "Starting TimesheetMigration job..."
+          echo "Creating migration job..."
+          /opt/mssql-tools18/bin/sqlcmd -S "${SERVER},${PORT}" -U "$USERNAME" -P "$PASSWORD" -d msdb -i "scripts/create_job.sql" -C
           
-          /opt/mssql-tools18/bin/sqlcmd \
-            -S "${SERVER},${PORT}" \
-            -U "$USERNAME" \
-            -P "$PASSWORD" \
-            -d "msdb" \
-            -Q "EXEC dbo.sp_start_job N'TimesheetMigration';" \
-            -C
-          
-          echo "Waiting for job completion..."
-          
-          MAX_WAIT=300
-          WAIT_INTERVAL=10
-          ELAPSED=0
-          JOB_COMPLETED=false
-          
-          while [ $ELAPSED -lt $MAX_WAIT ]; do
-            sleep $WAIT_INTERVAL
-            ELAPSED=$((ELAPSED + WAIT_INTERVAL))
-            
-            RESULT=$(/opt/mssql-tools18/bin/sqlcmd \
-              -S "${SERVER},${PORT}" \
-              -U "$USERNAME" \
-              -P "$PASSWORD" \
-              -d "msdb" \
-              -Q "SET NOCOUNT ON; 
-                  SELECT TOP 1 run_status 
-                  FROM sysjobhistory h 
-                  JOIN sysjobs j ON h.job_id = j.job_id 
-                  WHERE j.name = 'TimesheetMigration' 
-                  ORDER BY h.instance_id DESC" \
-              -h-1 \
-              -C | tr -d '[:space:]')
-            
-            case $RESULT in
-              1)
-                echo "Job completed successfully!"
-                JOB_COMPLETED=true
-                break
-                ;;
-              0)
-                echo "Job failed!"
-                /opt/mssql-tools18/bin/sqlcmd \
-                  -S "${SERVER},${PORT}" \
-                  -U "$USERNAME" \
-                  -P "$PASSWORD" \
-                  -d "msdb" \
-                  -Q "SET NOCOUNT ON; 
-                      SELECT TOP 3 
-                        CONVERT(VARCHAR(20), run_date) as Date,
-                        CONVERT(VARCHAR(8), run_time) as Time,
-                        message 
-                      FROM sysjobhistory h 
-                      JOIN sysjobs j ON h.job_id = j.job_id 
-                      WHERE j.name = 'TimesheetMigration' 
-                        AND run_status = 0 
-                      ORDER BY h.instance_id DESC" \
-                  -h-1 \
-                  -C
-                exit 1
-                ;;
-              3)
-                echo "Job was cancelled!"
-                exit 1
-                ;;
-              *)
-                echo "Job status: $RESULT - Still running or unknown"
-                ;;
-            esac
-          done
-          
-          if [ "$JOB_COMPLETED" != "true" ]; then
-            echo "Job did not complete within timeout"
-            exit 1
-          fi
+          echo "Starting migration job..."
+          /opt/mssql-tools18/bin/sqlcmd -S "${SERVER},${PORT}" -U "$USERNAME" -P "$PASSWORD" -d msdb -Q "EXEC dbo.sp_start_job N'RunTimesheetDevTestMigrationPK';" -C
 
-      - name: Verify Migration Results
-        env:
-          SERVER: ${{ secrets.SQL_SERVER }}
-          PORT: ${{ secrets.SQL_PORT }}
-          USERNAME: ${{ secrets.SQL_USERNAME }}
-          PASSWORD: ${{ secrets.SQL_PASSWORD }}
-        run: |
-          echo "Verifying migration results..."
-          
-          TIMESHEET_COUNT=$(/opt/mssql-tools18/bin/sqlcmd \
-            -S "${SERVER},${PORT}" \
-            -U "$USERNAME" \
-            -P "$PASSWORD" \
-            -d "TimesheetsDB" \
-            -Q "SET NOCOUNT ON; SELECT COUNT(*) FROM timesheet.Timesheet" \
-            -h-1 \
-            -C | tr -d '[:space:]')
-          
-          echo "Timesheet records: $TIMESHEET_COUNT"
-          
-          if [ "$TIMESHEET_COUNT" -gt "0" ]; then
-            echo "Migration verified successfully!"
-          else
-            echo "Warning: No records found in timesheet.Timesheet"
-          fi
-
-  # Run Partner TimesheetMigration Job after Partner deployment
-  RunPartnerMigrationJob:
-    needs: Partner
+  # 2. Stage: Production/Deploy (Matches the second node in your screenshot)
+  Production_Deploy:
+    name: Production/Deploy
     runs-on: ubuntu-latest
-    environment: partner-sql
-    if: success()
-    
+    needs: DevTest_Deploy  # This creates the arrow/dependency from DevTest to Production
+    environment: partner-sql  # Assuming "Production" uses your partner secrets
+    if: success()            # Only run if DevTest succeeded
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Install SQLCMD
@@ -196,86 +70,31 @@ jobs:
           sudo apt-get update
           sudo ACCEPT_EULA=Y apt-get install -y mssql-tools18
 
-      - name: Create Partner Migration Job
+      - name: Deploy SQL Database to Production
         env:
           SERVER: ${{ secrets.PARTNER_SQL_SERVER }}
           PORT: ${{ secrets.PARTNER_SQL_PORT }}
           USERNAME: ${{ secrets.PARTNER_SQL_USERNAME }}
           PASSWORD: ${{ secrets.PARTNER_SQL_PASSWORD }}
         run: |
-          echo "Creating Partner TimesheetMigration job if it doesn't exist..."
-          
+          echo "Deploying to Production..."
           /opt/mssql-tools18/bin/sqlcmd \
             -S "${SERVER},${PORT}" \
             -U "$USERNAME" \
             -P "$PASSWORD" \
-            -d "msdb" \
-            -i "scripts/create_job.sql" \
+            -d master \
+            -i "scripts/create_database_partner.sql" \
             -C
 
-      - name: Start and Monitor Partner TimesheetMigration Job
+      - name: Create & Start Partner Migration Job
         env:
           SERVER: ${{ secrets.PARTNER_SQL_SERVER }}
           PORT: ${{ secrets.PARTNER_SQL_PORT }}
           USERNAME: ${{ secrets.PARTNER_SQL_USERNAME }}
           PASSWORD: ${{ secrets.PARTNER_SQL_PASSWORD }}
         run: |
-          echo "Starting Partner TimesheetMigration job..."
+          echo "Creating partner migration job..."
+          /opt/mssql-tools18/bin/sqlcmd -S "${SERVER},${PORT}" -U "$USERNAME" -P "$PASSWORD" -d msdb -i "scripts/create_job.sql" -C
           
-          /opt/mssql-tools18/bin/sqlcmd \
-            -S "${SERVER},${PORT}" \
-            -U "$USERNAME" \
-            -P "$PASSWORD" \
-            -d "msdb" \
-            -Q "EXEC dbo.sp_start_job N'TimesheetMigration';" \
-            -C
-          
-          echo "Waiting for partner job completion..."
-          
-          MAX_WAIT=300
-          WAIT_INTERVAL=10
-          ELAPSED=0
-          JOB_COMPLETED=false
-          
-          while [ $ELAPSED -lt $MAX_WAIT ]; do
-            sleep $WAIT_INTERVAL
-            ELAPSED=$((ELAPSED + WAIT_INTERVAL))
-            
-            RESULT=$(/opt/mssql-tools18/bin/sqlcmd \
-              -S "${SERVER},${PORT}" \
-              -U "$USERNAME" \
-              -P "$PASSWORD" \
-              -d "msdb" \
-              -Q "SET NOCOUNT ON; 
-                  SELECT TOP 1 run_status 
-                  FROM sysjobhistory h 
-                  JOIN sysjobs j ON h.job_id = j.job_id 
-                  WHERE j.name = 'TimesheetMigration' 
-                  ORDER BY h.instance_id DESC" \
-              -h-1 \
-              -C | tr -d '[:space:]')
-            
-            case $RESULT in
-              1)
-                echo "Partner job completed successfully!"
-                JOB_COMPLETED=true
-                break
-                ;;
-              0)
-                echo "Partner job failed!"
-                exit 1
-                ;;
-              3)
-                echo "Partner job was cancelled!"
-                exit 1
-                ;;
-              *)
-                echo "Partner job status: $RESULT - Still running or unknown"
-                ;;
-            esac
-          done
-          
-          if [ "$JOB_COMPLETED" != "true" ]; then
-            echo "Partner job did not complete within timeout"
-            exit 1
-          fi
+          echo "Starting partner migration job..."
+          /opt/mssql-tools18/bin/sqlcmd -S "${SERVER},${PORT}" -U "$USERNAME" -P "$PASSWORD" -d msdb -Q "EXEC dbo.sp_start_job N'RunTimesheetDevTestMigrationPK';" -C
