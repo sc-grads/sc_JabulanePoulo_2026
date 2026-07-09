@@ -5,12 +5,12 @@
 USE msdb;
 GO
 
-IF NOT EXISTS (SELECT 1 FROM sysjobs WHERE name = 'TimesheetMigration')
+IF NOT EXISTS (SELECT 1 FROM sysjobs WHERE name = 'TimesheetMigration1')
 BEGIN
     DECLARE @jobId BINARY(16);
     
     EXEC msdb.dbo.sp_add_job 
-        @job_name = N'TimesheetMigration',
+        @job_name = N'TimesheetMigration1',
         @enabled = 1,
         @notify_level_eventlog = 0,
         @notify_level_email = 0,
@@ -23,7 +23,7 @@ BEGIN
         @job_id = @jobId OUTPUT;
     
     EXEC msdb.dbo.sp_add_jobstep 
-        @job_name = N'TimesheetMigration',
+        @job_name = N'TimesheetMigration1',
         @step_name = N'Run SSIS Package',
         @step_id = 1,
         @cmdexec_success_code = 0,
@@ -40,7 +40,7 @@ BEGIN
         @flags = 0;
     
     EXEC msdb.dbo.sp_add_jobserver 
-        @job_name = N'TimesheetMigration',
+        @job_name = N'TimesheetMigration1',
         @server_name = N'(local)';
     
     PRINT 'Job created successfully';
