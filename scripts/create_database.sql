@@ -244,10 +244,6 @@ INSERT INTO [timesheet].[Client] (ClientName)
 VALUES 
     ('Internal Sambe'),
     ('Discovery');
-
--- =============================================
--- Verification Queries
--- =============================================
 -- =============================================
 -- Stored Procedure: Create Migration Job
 -- =============================================
@@ -263,7 +259,7 @@ BEGIN
     IF EXISTS (SELECT 1 FROM msdb.dbo.sysjobs WHERE name = @JobName)
     BEGIN
         PRINT 'Job already exists: ' + @JobName;
-        RETURN 0;
+        RETURN;
     END
     
     DECLARE @jobId BINARY(16);
@@ -307,9 +303,13 @@ BEGIN
         @server_name = N'(local)';
     
     PRINT 'Job created successfully: ' + @JobName;
-    RETURN 0;
+    RETURN;
 END
 GO
+-- =============================================
+-- Verification Queries
+-- =============================================
+
 -- Verify the data was inserted
 SELECT 'Employee Count' as [Check], COUNT(*) as [Count] FROM [timesheet].[Employee]
 UNION ALL
