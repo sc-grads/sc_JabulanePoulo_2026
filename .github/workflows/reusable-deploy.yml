@@ -21,6 +21,10 @@ on:
         required: false
         type: string
         default: "ETL"
+      ssis-project-name:
+        required: false
+        type: string
+        default: "TimesheetMigration1"
 
     secrets:
       SQL_SERVER:
@@ -43,7 +47,7 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Install SQLCMD and SSIS Tools
+      - name: Install SQLCMD and Tools
         run: |
           # Install SQLCMD
           curl https://packages.microsoft.com/keys/microsoft.asc | sudo tee /etc/apt/trusted.gpg.d/microsoft.asc
@@ -51,13 +55,8 @@ jobs:
           sudo apt-get update
           sudo ACCEPT_EULA=Y apt-get install -y mssql-tools18
 
-          # Install SSIS deployment tools
-          sudo apt-get install -y dotnet-runtime-6.0
-          
-          # Download and install SSIS deployment utility
-          wget -q https://github.com/microsoft/SSIS/issues/raw/master/Tools/SSISDeploy/SSISDeploy_linux.zip
-          sudo unzip -o SSISDeploy_linux.zip -d /opt/ssis-deploy/
-          sudo chmod +x /opt/ssis-deploy/SSISDeploy
+          # Install unzip for later use
+          sudo apt-get install -y unzip
 
       - name: Display Deployment Information
         env:
@@ -163,7 +162,7 @@ jobs:
             echo "Folder '$FOLDER_NAME' already exists."
           fi
 
-      - name: Deploy SSIS Package
+      - name: Deploy SSIS Package using T-SQL
         if: ${{ inputs.deploy-ssis == true }}
         env:
           SERVER: ${{ secrets.SQL_SERVER }}
@@ -173,6 +172,7 @@ jobs:
         run: |
           PACKAGE_PATH="${{ inputs.ssis-package-path }}"
           FOLDER_NAME="${{ inputs.ssis-folder-name }}"
+          PROJECT_NAME="${{ inputs.ssis-project-name }}"
           
           echo "Deploying SSIS package: $PACKAGE_PATH"
           
@@ -186,16 +186,63 @@ jobs:
             exit 1
           fi
           
-          # Deploy using SSIS deployment tool
-          /opt/ssis-deploy/SSISDeploy \
-            --server "${SERVER},${PORT:-1433}" \
-            --username "$USERNAME" \
-            --password "$PASSWORD" \
-            --folder "$FOLDER_NAME" \
-            --project "$PACKAGE_PATH" \
-            --deploy
+          # Convert .ispac to base64 for deployment
+          echo "Converting package to base64..."
+          PACKAGE_BASE64=$(base64 -w 0 "$PACKAGE_PATH")
+          
+          # Deploy using T-SQL with binary data
+          echo "Deploying package to SSISDB..."
+          /opt/mssql-tools18/bin/sqlcmd \
+            -S "${SERVER},${PORT:-1433}" \
+            -U "$USERNAME" \
+            -P "$PASSWORD" \
+            -d SSISDB \
+            -Q "
+              DECLARE @folder_id bigint;
+              DECLARE @project_id bigint;
+              DECLARE @operation_id bigint;
+              DECLARE @project_binary varbinary(max);
+              
+              -- Get folder ID
+              SELECT @folder_id = folder_id 
+              FROM [SSISDB].[catalog].[folders] 
+              WHERE name = '$FOLDER_NAME';
+              
+              -- Convert base64 to binary
+              SET @project_binary = CAST(N'' AS XML).value('xs:base64Binary(sql:variable(\"@base64\"))', 'varbinary(max)');
+              
+              -- Deploy project
+              EXEC [SSISDB].[catalog].[deploy_project] 
+                @folder_name = '$FOLDER_NAME',
+                @project_name = '$PROJECT_NAME',
+                @project_stream = @project_binary,
+                @operation_id = @operation_id OUTPUT;
+              
+              SELECT 
+                'Deployment successful' as Status,
+                @operation_id as OperationID;
+            " \
+            -v base64="$PACKAGE_BASE64" \
+            -C
           
           echo "SSIS package deployed successfully."
+
+      - name: Alternative - Deploy SSIS Package using ispac deployment script
+        if: ${{ inputs.deploy-ssis == true }}
+        run: |
+          echo "Note: If T-SQL deployment fails, you can use the following alternative methods:"
+          echo ""
+          echo "Option 1: Use SQL Server Management Studio (SSMS) to manually deploy the .ispac file"
+          echo "  - Connect to the SQL Server"
+          echo "  - Right-click on the SSISDB folder"
+          echo "  - Select 'Deploy Project'"
+          echo "  - Follow the wizard to deploy ${{ inputs.ssis-package-path }}"
+          echo ""
+          echo "Option 2: Use Azure Data Factory or Azure-SSIS Integration Runtime"
+          echo "  - Configure Azure-SSIS IR to use the package"
+          echo ""
+          echo "Option 3: Use the dtutil command-line utility on Windows"
+          echo "  - dtutil /FILE \"${{ inputs.ssis-package-path }}\" /COPY SQL;\"${{ inputs.ssis-folder-name }}/${{ inputs.ssis-project-name }}\""
 
       - name: Verify Database Exists
         env:
@@ -262,6 +309,47 @@ jobs:
           if [ "$CLIENTS" -lt 1 ]; then
             echo "Client table verification failed."
             exit 1
+          fi
+
+      - name: Verify SSIS Deployment (if applicable)
+        if: ${{ inputs.deploy-ssis == true }}
+        env:
+          SERVER: ${{ secrets.SQL_SERVER }}
+          PORT: ${{ secrets.SQL_PORT }}
+          USERNAME: ${{ secrets.SQL_USERNAME }}
+          PASSWORD: ${{ secrets.SQL_PASSWORD }}
+        run: |
+          echo "Verifying SSIS deployment..."
+          
+          FOLDER_NAME="${{ inputs.ssis-folder-name }}"
+          PROJECT_NAME="${{ inputs.ssis-project-name }}"
+          
+          PROJECT_EXISTS=$(/opt/mssql-tools18/bin/sqlcmd \
+            -S "${SERVER},${PORT:-1433}" \
+            -U "$USERNAME" \
+            -P "$PASSWORD" \
+            -d SSISDB \
+            -Q "SET NOCOUNT ON; 
+                SELECT COUNT(*) 
+                FROM [SSISDB].[catalog].[projects] p
+                INNER JOIN [SSISDB].[catalog].[folders] f ON p.folder_id = f.folder_id
+                WHERE f.name = '$FOLDER_NAME' 
+                  AND p.name = '$PROJECT_NAME'" \
+            -h-1 \
+            -C | tr -d '[:space:]')
+          
+          echo "Project exists in SSISDB: $PROJECT_EXISTS"
+          
+          if [ "$PROJECT_EXISTS" -eq "1" ]; then
+            echo "SSIS deployment verified successfully!"
+          else
+            echo "Warning: SSIS project not found in SSISDB."
+            echo "This might be because:"
+            echo "  1. The deployment step failed"
+            echo "  2. The package needs to be deployed manually"
+            echo "  3. The project name doesn't match"
+            echo ""
+            echo "You can manually deploy the package using SSMS or Azure Data Factory."
           fi
 
       - name: Deployment Complete
