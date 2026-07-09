@@ -15,7 +15,7 @@
       <SSIS:Project SSIS:ProtectionLevel="EncryptSensitiveWithUserKey" xmlns:SSIS="www.microsoft.com/SqlServer/SSIS">
         <SSIS:Properties>
           <SSIS:Property SSIS:Name="ID">{bf69b432-9eae-46d0-a8d0-d2888422ef9b}</SSIS:Property>
-          <SSIS:Property SSIS:Name="Name">TimesheetMigration1</SSIS:Property>
+          <SSIS:Property SSIS:Name="Name">TimesheetDevTestMigrationPK</SSIS:Property>
           <SSIS:Property SSIS:Name="VersionMajor">1</SSIS:Property>
           <SSIS:Property SSIS:Name="VersionMinor">0</SSIS:Property>
           <SSIS:Property SSIS:Name="VersionBuild">0</SSIS:Property>
@@ -26,7 +26,7 @@
           <SSIS:Property SSIS:Name="CreatorComputerName">LAPTOP-7LSAQSR0</SSIS:Property>
           <SSIS:Property SSIS:Name="Description">
           </SSIS:Property>
-          <SSIS:Property SSIS:Name="PasswordVerifier" SSIS:Sensitive="1">AQAAANCMnd8BFdERjHoAwE/Cl+sBAAAAv6jtsw7XIEaYbC7kgXsSIgAAAAACAAAAAAAQZgAAAAEAACAAAAAJ2ZdKGCZUIzsBv18Yb4CaC2o/IvNEzsVxhU6D6aGVawAAAAAOgAAAAAIAACAAAAC2/xT2YZZ9CW9ceETF27NRPKffUBNEi1t/dIcla5gBkpAAAAA7nWjiJEkRohY2ToNmPz3dLVwp2d2YqXfnWZUOg3h8mnNbYGaI8FMdiIiDCcWXPxBHiQeHBN43KUCiE0QMqKLXtNzxNtO0Fki7IMKDgCiMNjlPiV7YVkh/Vk8+84GGkW2fjo9Wg2LcjLKygxiI1VQrfylXEqu2H086sDOtrchZPm73KIUx08iE1fJ77Eupa1hAAAAAwV20DwHcJ0BZOXzwZMyOIdN+otuDwnwwoOHnSfgbNKFspkW5VCHMeNBMJ0bTI22mSYN9iq77HQBsGaXIXdEBEQ==</SSIS:Property>
+          <SSIS:Property SSIS:Name="PasswordVerifier" SSIS:Sensitive="1">AQAAANCMnd8BFdERjHoAwE/Cl+sBAAAAv6jtsw7XIEaYbC7kgXsSIgAAAAACAAAAAAAQZgAAAAEAACAAAAB7l0ddq4IV+/tG2CVcxriC4XkXcIbrvtJ9nK0+Eh0+QwAAAAAOgAAAAAIAACAAAADe5tfDtqFjHVydfZAB4lS1lK6a1ULAAwpkjiiWI1e4m5AAAACDbpcpmteGulHh9ev4x+dgvbSlLJVXOGHxkbDPCbrUhEXDQ/G+i/gBSSfTHya3nZQ35KvlnIfknsdFs+a3YKsWCmcbs3ZxrW8IxoWaObH5ocFiPeHpqwh1bkjdxGo+n2iegEGcrcdThKUzGoEV0AMk+G8NnIoQLpnt54VwlkVULqSe2cROONazHqQptmAri6pAAAAAvKlCwqrfpMMS/1Il/KCnZXj0W94fTp/uoM+1e2hcR/ShszIGm75N0H4ix73TLs+Oi8SFdmoi+GIdwUvkMLqcCQ==</SSIS:Property>
           <SSIS:Property SSIS:Name="FormatVersion">1</SSIS:Property>
         </SSIS:Properties>
         <SSIS:Packages>
@@ -42,10 +42,10 @@
                 <SSIS:Property SSIS:Name="Name">TimesheetMigration</SSIS:Property>
                 <SSIS:Property SSIS:Name="VersionMajor">1</SSIS:Property>
                 <SSIS:Property SSIS:Name="VersionMinor">0</SSIS:Property>
-                <SSIS:Property SSIS:Name="VersionBuild">264</SSIS:Property>
+                <SSIS:Property SSIS:Name="VersionBuild">277</SSIS:Property>
                 <SSIS:Property SSIS:Name="VersionComments">
                 </SSIS:Property>
-                <SSIS:Property SSIS:Name="VersionGUID">{5138C324-188B-4665-AD36-C42F61FBA6D9}</SSIS:Property>
+                <SSIS:Property SSIS:Name="VersionGUID">{7D333464-27B5-45CB-B70D-D3D5704FE28F}</SSIS:Property>
                 <SSIS:Property SSIS:Name="PackageFormatVersion">8</SSIS:Property>
                 <SSIS:Property SSIS:Name="Description">
                 </SSIS:Property>
