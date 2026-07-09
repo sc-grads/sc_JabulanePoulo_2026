@@ -111,7 +111,7 @@ jobs:
             echo "✅ Folder '$FOLDER_NAME' already exists."
           fi
 
-      # --- STEP 4: DEPLOY SSIS PACKAGE (USING DIFFERENT APPROACH) ---
+      # --- STEP 4: DEPLOY SSIS PACKAGE ---
       - name: Deploy SSIS Package (.ispac) to DevTest
         env:
           SERVER: ${{ secrets.SQL_SERVER }}
@@ -140,21 +140,43 @@ jobs:
           
           echo "Deploying Project to folder: $FOLDER_NAME"
           
-          # Using sqlcmd with inline queries instead of heredoc
+          # Create deployment SQL using echo with escaped quotes
+          echo "SET QUOTED_IDENTIFIER ON;" > /tmp/deploy.sql
+          echo "SET ANSI_NULLS ON;" >> /tmp/deploy.sql
+          echo "DECLARE @project_binary varbinary(max);" >> /tmp/deploy.sql
+          echo "DECLARE @base64 varchar(max) = '${PACKAGE_BASE64}';" >> /tmp/deploy.sql
+          echo "SET @project_binary = CAST(N'' AS XML).value('xs:base64Binary(sql:variable(\"@base64\"))', 'varbinary(max)');" >> /tmp/deploy.sql
+          echo "EXEC [SSISDB].[catalog].[deploy_project] @folder_name = '${FOLDER_NAME}', @project_name = '${PROJECT_NAME}', @project_stream = @project_binary;" >> /tmp/deploy.sql
+          
+          # Execute the deployment
           /opt/mssql-tools18/bin/sqlcmd \
             -S "${SERVER},${PORT:-1433}" \
             -U "$USERNAME" \
             -P "$PASSWORD" \
             -d SSISDB \
-            -Q "SET QUOTED_IDENTIFIER ON; SET ANSI_NULLS ON; DECLARE @project_binary varbinary(max); DECLARE @base64 varchar(max) = '${PACKAGE_BASE64}'; SET @project_binary = CAST(N'' AS XML).value('xs:base64Binary(sql:variable(\"@base64\"))', 'varbinary(max)'); EXEC [SSISDB].[catalog].[deploy_project] @folder_name = '${FOLDER_NAME}', @project_name = '${PROJECT_NAME}', @project_stream = @project_binary;" \
+            -i /tmp/deploy.sql \
             -C || {
-              echo "❌ SQL Authentication not supported for SSIS deployment."
-              echo "ℹ️  SSISDB operations require Windows Authentication."
-              echo "ℹ️  Please configure your SQL Server to use Integrated Security."
-              exit 1
-            }
+            echo ""
+            echo "❌ SSIS deployment failed with SQL Authentication."
+            echo "ℹ️  SSISDB operations require Windows Authentication (Integrated Security)."
+            echo "ℹ️  SQL Server Authentication is not supported for SSIS deployment."
+            echo ""
+            echo "🔧 To fix this issue, you have several options:"
+            echo "  1. Use a Windows self-hosted runner with Integrated Security"
+            echo "  2. Configure SQL Server for Mixed Mode Authentication"
+            echo "  3. Use Azure Data Factory with SSIS IR for deployment"
+            echo "  4. Use PowerShell with SSIS assemblies on a Windows runner"
+            echo ""
+            echo "📝 For GitHub Actions, consider using:"
+            echo "  runs-on: windows-latest"
+            echo "  And use -E flag for Windows Authentication"
+            exit 1
+          }
           
-          echo "✅ SSIS package deployed to: \SSISDB\$FOLDER_NAME\$PROJECT_NAME\"
+          # Clean up
+          rm -f /tmp/deploy.sql
+          
+          echo "✅ SSIS package deployment completed."
 
       # --- STEP 5: VERIFY DEPLOYMENT ---
       - name: Verify SSIS Deployment
@@ -282,6 +304,7 @@ jobs:
             -i "scripts/create_database.sql" \
             -b \
             -C
+          echo "✅ Database deployment completed."
 
       # --- STEP 2: SSIS CATALOG ---
       - name: Initialize SSIS Catalog (SSISDB) if Missing (Partner)
@@ -291,6 +314,8 @@ jobs:
           USERNAME: ${{ secrets.PARTNER_SQL_USERNAME }}
           PASSWORD: ${{ secrets.PARTNER_SQL_PASSWORD }}
         run: |
+          echo "Checking if SSISDB exists (Partner)..."
+          
           SSISDB_EXISTS=$(/opt/mssql-tools18/bin/sqlcmd \
             -S "${SERVER},${PORT:-1433}" \
             -U "$USERNAME" \
@@ -309,6 +334,9 @@ jobs:
               -d master \
               -Q "EXEC [SSISDB].[catalog].[create_catalog] @password = '${{ secrets.PARTNER_SQL_PASSWORD }}';" \
               -C
+            echo "✅ SSISDB created successfully (Partner)."
+          else
+            echo "✅ SSISDB already exists (Partner)."
           fi
 
       # --- STEP 3: CREATE SSIS FOLDER ---
@@ -320,6 +348,8 @@ jobs:
           PASSWORD: ${{ secrets.PARTNER_SQL_PASSWORD }}
         run: |
           FOLDER_NAME="TimesheetDevTestMigration"
+          echo "Verifying SSIS folder: $FOLDER_NAME (Partner)"
+          
           FOLDER_EXISTS=$(/opt/mssql-tools18/bin/sqlcmd \
             -S "${SERVER},${PORT:-1433}" \
             -U "$USERNAME" \
@@ -338,11 +368,12 @@ jobs:
               -d SSISDB \
               -Q "EXEC [SSISDB].[catalog].[create_folder] @folder_name=N'$FOLDER_NAME', @folder_id=0;" \
               -C
+            echo "✅ Folder '$FOLDER_NAME' created successfully (Partner)."
           else
-            echo "Folder '$FOLDER_NAME' already exists (Partner)."
+            echo "✅ Folder '$FOLDER_NAME' already exists (Partner)."
           fi
 
-      # --- STEP 4: DEPLOY SSIS PACKAGE (USING DIFFERENT APPROACH) ---
+      # --- STEP 4: DEPLOY SSIS PACKAGE ---
       - name: Deploy SSIS Package (.ispac) to Partner
         env:
           SERVER: ${{ secrets.PARTNER_SQL_SERVER }}
@@ -354,6 +385,8 @@ jobs:
           FOLDER_NAME="TimesheetDevTestMigration"
           PROJECT_NAME="TimesheetMigration1"
           
+          echo "Checking for package at: $PACKAGE_PATH"
+          
           if [ ! -f "$PACKAGE_PATH" ]; then
             echo "❌ Error: Package file $PACKAGE_PATH not found!"
             exit 1
@@ -362,21 +395,45 @@ jobs:
           echo "Encoding package to Base64..."
           PACKAGE_BASE64=$(base64 -w 0 "$PACKAGE_PATH")
           
-          echo "Deploying Project to folder: $FOLDER_NAME"
+          echo "Deploying Project to folder: $FOLDER_NAME (Partner)"
           
-          # Using sqlcmd with inline queries instead of heredoc
+          # Create deployment SQL using echo with escaped quotes
+          echo "SET QUOTED_IDENTIFIER ON;" > /tmp/deploy.sql
+          echo "SET ANSI_NULLS ON;" >> /tmp/deploy.sql
+          echo "DECLARE @project_binary varbinary(max);" >> /tmp/deploy.sql
+          echo "DECLARE @base64 varchar(max) = '${PACKAGE_BASE64}';" >> /tmp/deploy.sql
+          echo "SET @project_binary = CAST(N'' AS XML).value('xs:base64Binary(sql:variable(\"@base64\"))', 'varbinary(max)');" >> /tmp/deploy.sql
+          echo "EXEC [SSISDB].[catalog].[deploy_project] @folder_name = '${FOLDER_NAME}', @project_name = '${PROJECT_NAME}', @project_stream = @project_binary;" >> /tmp/deploy.sql
+          
+          # Execute the deployment
           /opt/mssql-tools18/bin/sqlcmd \
             -S "${SERVER},${PORT:-1433}" \
             -U "$USERNAME" \
             -P "$PASSWORD" \
             -d SSISDB \
-            -Q "SET QUOTED_IDENTIFIER ON; SET ANSI_NULLS ON; DECLARE @project_binary varbinary(max); DECLARE @base64 varchar(max) = '${PACKAGE_BASE64}'; SET @project_binary = CAST(N'' AS XML).value('xs:base64Binary(sql:variable(\"@base64\"))', 'varbinary(max)'); EXEC [SSISDB].[catalog].[deploy_project] @folder_name = '${FOLDER_NAME}', @project_name = '${PROJECT_NAME}', @project_stream = @project_binary;" \
+            -i /tmp/deploy.sql \
             -C || {
-              echo "❌ SQL Authentication not supported for SSIS deployment."
-              echo "ℹ️  SSISDB operations require Windows Authentication."
-              echo "ℹ️  Please configure your SQL Server to use Integrated Security."
-              exit 1
-            }
+            echo ""
+            echo "❌ SSIS deployment failed with SQL Authentication."
+            echo "ℹ️  SSISDB operations require Windows Authentication (Integrated Security)."
+            echo "ℹ️  SQL Server Authentication is not supported for SSIS deployment."
+            echo ""
+            echo "🔧 To fix this issue, you have several options:"
+            echo "  1. Use a Windows self-hosted runner with Integrated Security"
+            echo "  2. Configure SQL Server for Mixed Mode Authentication"
+            echo "  3. Use Azure Data Factory with SSIS IR for deployment"
+            echo "  4. Use PowerShell with SSIS assemblies on a Windows runner"
+            echo ""
+            echo "📝 For GitHub Actions, consider using:"
+            echo "  runs-on: windows-latest"
+            echo "  And use -E flag for Windows Authentication"
+            exit 1
+          }
+          
+          # Clean up
+          rm -f /tmp/deploy.sql
+          
+          echo "✅ SSIS package deployment completed (Partner)."
 
       # --- STEP 5: CREATE JOB ---
       - name: Create Partner SQL Agent Job
@@ -387,6 +444,7 @@ jobs:
           PASSWORD: ${{ secrets.PARTNER_SQL_PASSWORD }}
         run: |
           if [ -f "scripts/create_job.sql" ]; then
+            echo "Creating SQL Agent Job (Partner)..."
             /opt/mssql-tools18/bin/sqlcmd \
               -S "${SERVER},${PORT:-1433}" \
               -U "$USERNAME" \
@@ -394,6 +452,9 @@ jobs:
               -d msdb \
               -i "scripts/create_job.sql" \
               -C
+            echo "✅ Job created successfully (Partner)."
+          else
+            echo "⚠️ create_job.sql not found, skipping job creation (Partner)."
           fi
 
       # --- STEP 6: RUN THE JOB ---
@@ -411,4 +472,5 @@ jobs:
             -P "$PASSWORD" \
             -d msdb \
             -Q "EXEC dbo.sp_start_job N'RunTimesheetDevTestMigrationPK';" \
-            -C || echo "⚠️ Job may not exist or SQL Agent is not running"
+            -C || echo "⚠️ Job may not exist or SQL Agent is not running (Partner)"
+          echo "✅ Job started (Partner)."
