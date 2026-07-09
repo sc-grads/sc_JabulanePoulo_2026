@@ -96,7 +96,7 @@ jobs:
                   @retry_interval = 0,
                   @os_run_priority = 0,
                   @subsystem = N'SSIS',
-                  @command = N'/ISSERVER "\"\SSISDB\ETL\TimesheetMigration1\TimesheetMigration1.dtsx\"" /SERVER "\"\"$(ESCAPE_SQUOTE(SRVR))\"\"" /Par "\"\"$ServerOption::LOGGING_LEVEL(Int16)\"\"\";1 /Par "\"\"$ServerOption::SYNCHRONIZED(Boolean)\"\"\";True /CALLERINFO SQLAGENT /REPORTING E',
+                  @command = N'/ISSERVER "\"\SSISDB\ETL\TimesheetMigration1\TimesheetMigration1.dtsx\"" /SERVER "\"\"localhost\"\"" /Par "\"\"$ServerOption::LOGGING_LEVEL(Int16)\"\"\";1 /Par "\"\"$ServerOption::SYNCHRONIZED(Boolean)\"\"\";True /CALLERINFO SQLAGENT /REPORTING E',
                   @database_name = N'master',
                   @flags = 0;
                 
@@ -286,7 +286,7 @@ jobs:
                   @retry_interval = 0,
                   @os_run_priority = 0,
                   @subsystem = N'SSIS',
-                  @command = N'/ISSERVER "\"\SSISDB\ETL\TimesheetMigration1\TimesheetMigration1.dtsx\"" /SERVER "\"\"$(ESCAPE_SQUOTE(SRVR))\"\"" /Par "\"\"$ServerOption::LOGGING_LEVEL(Int16)\"\"\";1 /Par "\"\"$ServerOption::SYNCHRONIZED(Boolean)\"\"\";True /CALLERINFO SQLAGENT /REPORTING E',
+                  @command = N'/ISSERVER "\"\SSISDB\ETL\TimesheetMigration1\TimesheetMigration1.dtsx\"" /SERVER "\"\"localhost\"\"" /Par "\"\"$ServerOption::LOGGING_LEVEL(Int16)\"\"\";1 /Par "\"\"$ServerOption::SYNCHRONIZED(Boolean)\"\"\";True /CALLERINFO SQLAGENT /REPORTING E',
                   @database_name = N'master',
                   @flags = 0;
                 

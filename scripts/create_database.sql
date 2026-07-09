@@ -269,7 +269,8 @@ BEGIN
     DECLARE @jobId BINARY(16);
     DECLARE @Command NVARCHAR(4000);
     
-    SET @Command = N'/ISSERVER "\"\SSISDB\' + @FolderName + N'\' + @ProjectName + N'\' + @PackageName + N'\"" /SERVER "\"\"$(ESCAPE_SQUOTE(SRVR))\"\"" /Par "\"\"$ServerOption::LOGGING_LEVEL(Int16)\"\"\";1 /Par "\"\"$ServerOption::SYNCHRONIZED(Boolean)\"\"\";True /CALLERINFO SQLAGENT /REPORTING E';
+    -- Build the SSIS command - using localhost instead of SRVR variable
+    SET @Command = N'/ISSERVER "\"\SSISDB\' + @FolderName + N'\' + @ProjectName + N'\' + @PackageName + N'\"" /SERVER "\"\"localhost\"\"" /Par "\"\"$ServerOption::LOGGING_LEVEL(Int16)\"\"\";1 /Par "\"\"$ServerOption::SYNCHRONIZED(Boolean)\"\"\";True /CALLERINFO SQLAGENT /REPORTING E';
     
     EXEC msdb.dbo.sp_add_job 
         @job_name = @JobName,
