@@ -43,7 +43,7 @@ jobs:
             -i "scripts/create_database.sql" \
             -b \
             -C
-          echo "✅ Database deployment completed."
+          echo " Database deployment completed."
 
       # --- STEP 2: SSIS CATALOG ---
       - name: Initialize SSIS Catalog (SSISDB) if Missing
@@ -73,9 +73,9 @@ jobs:
               -d master \
               -Q "EXEC [SSISDB].[catalog].[create_catalog] @password = '${{ secrets.SQL_PASSWORD }}';" \
               -C
-            echo "✅ SSISDB created successfully."
+            echo " SSISDB created successfully."
           else
-            echo "✅ SSISDB already exists."
+            echo " SSISDB already exists."
           fi
 
       # --- STEP 3: CREATE SSIS FOLDER ---
@@ -107,9 +107,9 @@ jobs:
               -d SSISDB \
               -Q "EXEC [SSISDB].[catalog].[create_folder] @folder_name=N'$FOLDER_NAME', @folder_id=0;" \
               -C
-            echo "✅ Folder '$FOLDER_NAME' created successfully."
+            echo " Folder '$FOLDER_NAME' created successfully."
           else
-            echo "✅ Folder '$FOLDER_NAME' already exists."
+            echo " Folder '$FOLDER_NAME' already exists."
           fi
 
       # --- STEP 4: DELETE EXISTING PROJECT (FOR CLEAN DEPLOYMENT) ---
@@ -140,7 +140,7 @@ jobs:
             -C | tr -d '[:space:]')
           
           if [ "$PROJECT_EXISTS" -eq "1" ]; then
-            echo "⚠️  Project exists. Deleting to force clean deployment..."
+            echo "  Project exists. Deleting to force clean deployment..."
             
             /opt/mssql-tools18/bin/sqlcmd \
               -S "${SERVER},${PORT:-1433}" \
@@ -156,16 +156,16 @@ jobs:
                   IF @project_id IS NOT NULL
                   BEGIN
                     EXEC [SSISDB].[catalog].[delete_project] @project_id = @project_id;
-                    PRINT '✅ Project deleted successfully.';
+                    PRINT ' Project deleted successfully.';
                   END
                   ELSE
                   BEGIN
-                    PRINT '⚠️  Project not found.';
+                    PRINT '  Project not found.';
                   END" \
               -C
-            echo "✅ Project deletion completed."
+            echo " Project deletion completed."
           else
-            echo "✅ Project doesn't exist. Ready for fresh deployment."
+            echo " Project doesn't exist. Ready for fresh deployment."
           fi
 
       # --- STEP 5: DEPLOY SSIS PACKAGE ---
@@ -184,7 +184,7 @@ jobs:
           echo "Checking for package at: $PACKAGE_PATH"
           
           if [ ! -f "$PACKAGE_PATH" ]; then
-            echo "❌ Error: Package file $PACKAGE_PATH not found!"
+            echo " Error: Package file $PACKAGE_PATH not found!"
             echo "Current directory contents:"
             ls -la
             echo ""
@@ -215,26 +215,26 @@ jobs:
             -i /tmp/deploy.sql \
             -C; then
             
-            echo "✅ SSIS package deployed successfully!"
+            echo " SSIS package deployed successfully!"
             echo "DEPLOYMENT_STATUS=success" >> $GITHUB_OUTPUT
             
           else
             echo ""
-            echo "❌ SSIS deployment failed with SQL Authentication."
-            echo "ℹ️  SSISDB operations require Windows Authentication (Integrated Security)."
-            echo "ℹ️  SQL Server Authentication is not supported for SSIS deployment."
+            echo " SSIS deployment failed with SQL Authentication."
+            echo "  SSISDB operations require Windows Authentication (Integrated Security)."
+            echo " SQL Server Authentication is not supported for SSIS deployment."
             echo ""
-            echo "🔧 To fix this issue, you have several options:"
+            echo " To fix this issue, you have several options:"
             echo "  1. Use a Windows self-hosted runner with Integrated Security"
             echo "  2. Configure SQL Server for Mixed Mode Authentication"
             echo "  3. Use Azure Data Factory with SSIS IR for deployment"
             echo "  4. Use PowerShell with SSIS assemblies on a Windows runner"
             echo ""
-            echo "📝 For GitHub Actions, consider using:"
+            echo " For GitHub Actions, consider using:"
             echo "  runs-on: windows-latest"
             echo "  And use -E flag for Windows Authentication"
             echo ""
-            echo "⚠️  The workflow will continue but SSIS deployment has failed."
+            echo "  The workflow will continue but SSIS deployment has failed."
             echo "DEPLOYMENT_STATUS=failed" >> $GITHUB_OUTPUT
           fi
           
@@ -270,10 +270,10 @@ jobs:
             -C | tr -d '[:space:]')
           
           if [ "$PROJECT_EXISTS" -eq "1" ]; then
-            echo "✅ SSIS deployment verified successfully!"
+            echo " SSIS deployment verified successfully!"
             
             echo ""
-            echo "📦 Packages in project:"
+            echo " Packages in project:"
             /opt/mssql-tools18/bin/sqlcmd \
               -S "${SERVER},${PORT:-1433}" \
               -U "$USERNAME" \
@@ -287,7 +287,7 @@ jobs:
                   WHERE f.name = '$FOLDER_NAME' AND p.name = '$PROJECT_NAME'" \
               -C
           else
-            echo "❌ SSIS project not found in SSISDB."
+            echo " SSIS project not found in SSISDB."
             exit 1
           fi
 
@@ -295,15 +295,15 @@ jobs:
       - name: SSIS Deployment Skipped
         if: steps.deploy_ssis.outputs.DEPLOYMENT_STATUS != 'success'
         run: |
-          echo "⚠️  SSIS deployment was not successful. Verification skipped."
+          echo "  SSIS deployment was not successful. Verification skipped."
           echo ""
-          echo "📋 Summary:"
-          echo "  ✅ Database: Created/Verified"
-          echo "  ✅ SSIS Catalog: Created/Verified"
-          echo "  ✅ SSIS Folder: Created/Verified"
-          echo "  ❌ SSIS Package: Deployment Failed (Authentication Issue)"
+          echo " Summary:"
+          echo "   Database: Created/Verified"
+          echo "   SSIS Catalog: Created/Verified"
+          echo "   SSIS Folder: Created/Verified"
+          echo "   SSIS Package: Deployment Failed (Authentication Issue)"
           echo ""
-          echo "🔧 To resolve the SSIS deployment issue:"
+          echo " To resolve the SSIS deployment issue:"
           echo "  1. Switch to a Windows runner (runs-on: windows-latest)"
           echo "  2. Use Windows Authentication (-E flag instead of -U/-P)"
           echo "  3. Or enable Mixed Mode Authentication on your SQL Server"
@@ -326,9 +326,9 @@ jobs:
               -d msdb \
               -i "scripts/create_job.sql" \
               -C
-            echo "✅ Job created successfully."
+            echo " Job created successfully."
           else
-            echo "⚠️ create_job.sql not found, skipping job creation."
+            echo " create_job.sql not found, skipping job creation."
           fi
 
       # --- STEP 9: RUN THE JOB ---
@@ -347,8 +347,8 @@ jobs:
             -P "$PASSWORD" \
             -d msdb \
             -Q "EXEC dbo.sp_start_job N'RunTimesheetDevTestMigrationPK';" \
-            -C || echo "⚠️ Job may not exist or SQL Agent is not running"
-          echo "✅ Job started."
+            -C || echo " Job may not exist or SQL Agent is not running"
+          echo " Job started."
 
   # ==========================================
   # 2. Stage: Production/Deploy
@@ -387,7 +387,7 @@ jobs:
             -i "scripts/create_database.sql" \
             -b \
             -C
-          echo "✅ Database deployment completed."
+          echo " Database deployment completed."
 
       # --- STEP 2: SSIS CATALOG ---
       - name: Initialize SSIS Catalog (SSISDB) if Missing (Partner)
@@ -417,9 +417,9 @@ jobs:
               -d master \
               -Q "EXEC [SSISDB].[catalog].[create_catalog] @password = '${{ secrets.PARTNER_SQL_PASSWORD }}';" \
               -C
-            echo "✅ SSISDB created successfully (Partner)."
+            echo " SSISDB created successfully (Partner)."
           else
-            echo "✅ SSISDB already exists (Partner)."
+            echo " SSISDB already exists (Partner)."
           fi
 
       # --- STEP 3: CREATE SSIS FOLDER ---
@@ -451,9 +451,9 @@ jobs:
               -d SSISDB \
               -Q "EXEC [SSISDB].[catalog].[create_folder] @folder_name=N'$FOLDER_NAME', @folder_id=0;" \
               -C
-            echo "✅ Folder '$FOLDER_NAME' created successfully (Partner)."
+            echo " Folder '$FOLDER_NAME' created successfully (Partner)."
           else
-            echo "✅ Folder '$FOLDER_NAME' already exists (Partner)."
+            echo " Folder '$FOLDER_NAME' already exists (Partner)."
           fi
 
       # --- STEP 4: DELETE EXISTING PROJECT (FOR CLEAN DEPLOYMENT) ---
@@ -484,7 +484,7 @@ jobs:
             -C | tr -d '[:space:]')
           
           if [ "$PROJECT_EXISTS" -eq "1" ]; then
-            echo "⚠️  Project exists. Deleting for clean deployment (Partner)..."
+            echo "  Project exists. Deleting for clean deployment (Partner)..."
             
             /opt/mssql-tools18/bin/sqlcmd \
               -S "${SERVER},${PORT:-1433}" \
@@ -500,16 +500,16 @@ jobs:
                   IF @project_id IS NOT NULL
                   BEGIN
                     EXEC [SSISDB].[catalog].[delete_project] @project_id = @project_id;
-                    PRINT '✅ Project deleted successfully.';
+                    PRINT ' Project deleted successfully.';
                   END
                   ELSE
                   BEGIN
-                    PRINT '⚠️  Project not found.';
+                    PRINT '  Project not found.';
                   END" \
               -C
-            echo "✅ Project deletion completed (Partner)."
+            echo " Project deletion completed (Partner)."
           else
-            echo "✅ Project doesn't exist. Ready for fresh deployment (Partner)."
+            echo " Project doesn't exist. Ready for fresh deployment (Partner)."
           fi
 
       # --- STEP 5: DEPLOY SSIS PACKAGE ---
@@ -528,7 +528,7 @@ jobs:
           echo "Checking for package at: $PACKAGE_PATH"
           
           if [ ! -f "$PACKAGE_PATH" ]; then
-            echo "❌ Error: Package file $PACKAGE_PATH not found!"
+            echo " Error: Package file $PACKAGE_PATH not found!"
             exit 1
           fi
           
@@ -554,12 +554,12 @@ jobs:
             -i /tmp/deploy.sql \
             -C; then
             
-            echo "✅ SSIS package deployed successfully (Partner)!"
+            echo " SSIS package deployed successfully (Partner)!"
             echo "DEPLOYMENT_STATUS=success" >> $GITHUB_OUTPUT
             
           else
             echo ""
-            echo "❌ SSIS deployment failed (Partner) - Authentication Issue."
+            echo " SSIS deployment failed (Partner) - Authentication Issue."
             echo "DEPLOYMENT_STATUS=failed" >> $GITHUB_OUTPUT
           fi
           
@@ -595,9 +595,9 @@ jobs:
             -C | tr -d '[:space:]')
           
           if [ "$PROJECT_EXISTS" -eq "1" ]; then
-            echo "✅ SSIS deployment verified successfully (Partner)!"
+            echo " SSIS deployment verified successfully (Partner)!"
           else
-            echo "❌ SSIS project not found in SSISDB (Partner)."
+            echo " SSIS project not found in SSISDB (Partner)."
             exit 1
           fi
 
@@ -619,9 +619,9 @@ jobs:
               -d msdb \
               -i "scripts/create_job.sql" \
               -C
-            echo "✅ Job created successfully (Partner)."
+            echo " Job created successfully (Partner)."
           else
-            echo "⚠️ create_job.sql not found, skipping job creation (Partner)."
+            echo " create_job.sql not found, skipping job creation (Partner)."
           fi
 
       # --- STEP 8: RUN THE JOB ---
@@ -640,5 +640,5 @@ jobs:
             -P "$PASSWORD" \
             -d msdb \
             -Q "EXEC dbo.sp_start_job N'RunTimesheetDevTestMigrationPK';" \
-            -C || echo "⚠️ Job may not exist or SQL Agent is not running (Partner)"
-          echo "✅ Job started (Partner)."
+            -C || echo " Job may not exist or SQL Agent is not running (Partner)"
+          echo " Job started (Partner)."
