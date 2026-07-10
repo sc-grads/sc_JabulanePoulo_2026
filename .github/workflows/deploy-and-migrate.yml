@@ -54,7 +54,7 @@ jobs:
           PASSWORD: ${{ secrets.SQL_PASSWORD }}
         run: |
           echo "Checking if SSISDB exists..."
-          
+
           SSISDB_EXISTS=$(/opt/mssql-tools18/bin/sqlcmd \
             -S "${SERVER},${PORT:-1433}" \
             -U "$USERNAME" \
@@ -63,7 +63,7 @@ jobs:
             -Q "SET NOCOUNT ON; SELECT COUNT(*) FROM sys.databases WHERE name='SSISDB'" \
             -h-1 \
             -C | tr -d '[:space:]')
-          
+
           if [ "$SSISDB_EXISTS" == "0" ]; then
             echo "Creating SSISDB..."
             /opt/mssql-tools18/bin/sqlcmd \
@@ -88,7 +88,7 @@ jobs:
         run: |
           FOLDER_NAME="TimesheetDevTestMigration"
           echo "Verifying SSIS folder: $FOLDER_NAME"
-          
+
           FOLDER_EXISTS=$(/opt/mssql-tools18/bin/sqlcmd \
             -S "${SERVER},${PORT:-1433}" \
             -U "$USERNAME" \
@@ -97,7 +97,7 @@ jobs:
             -Q "SET NOCOUNT ON; SELECT COUNT(*) FROM [SSISDB].[catalog].[folders] WHERE name='$FOLDER_NAME'" \
             -h-1 \
             -C | tr -d '[:space:]')
-          
+
           if [ "$FOLDER_EXISTS" == "0" ]; then
             echo "Folder '$FOLDER_NAME' not found. Creating..."
             /opt/mssql-tools18/bin/sqlcmd \
@@ -122,9 +122,9 @@ jobs:
         run: |
           FOLDER_NAME="TimesheetDevTestMigration"
           PROJECT_NAME="TimesheetMigration1"
-          
+
           echo "Checking if project '$PROJECT_NAME' exists in folder '$FOLDER_NAME'..."
-          
+
           PROJECT_EXISTS=$(/opt/mssql-tools18/bin/sqlcmd \
             -S "${SERVER},${PORT:-1433}" \
             -U "$USERNAME" \
@@ -138,10 +138,10 @@ jobs:
                   AND p.name = '$PROJECT_NAME'" \
             -h-1 \
             -C | tr -d '[:space:]')
-          
+
           if [ "$PROJECT_EXISTS" -eq "1" ]; then
             echo "  Project exists. Deleting to force clean deployment..."
-            
+
             /opt/mssql-tools18/bin/sqlcmd \
               -S "${SERVER},${PORT:-1433}" \
               -U "$USERNAME" \
@@ -180,9 +180,9 @@ jobs:
           PACKAGE_PATH="ssis-packages/TimesheetMigration1.ispac"
           FOLDER_NAME="TimesheetDevTestMigration"
           PROJECT_NAME="TimesheetMigration1"
-          
+
           echo "Checking for package at: $PACKAGE_PATH"
-          
+
           if [ ! -f "$PACKAGE_PATH" ]; then
             echo " Error: Package file $PACKAGE_PATH not found!"
             echo "Current directory contents:"
@@ -192,12 +192,12 @@ jobs:
             ls -la ssis-packages/ 2>/dev/null || echo "ssis-packages directory not found"
             exit 1
           fi
-          
+
           echo "Encoding package to Base64..."
           PACKAGE_BASE64=$(base64 -w 0 "$PACKAGE_PATH")
-          
+
           echo "Deploying Project to folder: $FOLDER_NAME"
-          
+
           # Create deployment SQL using echo with escaped quotes
           echo "SET QUOTED_IDENTIFIER ON;" > /tmp/deploy.sql
           echo "SET ANSI_NULLS ON;" >> /tmp/deploy.sql
@@ -205,19 +205,23 @@ jobs:
           echo "DECLARE @base64 varchar(max) = '${PACKAGE_BASE64}';" >> /tmp/deploy.sql
           echo "SET @project_binary = CAST(N'' AS XML).value('xs:base64Binary(sql:variable(\"@base64\"))', 'varbinary(max)');" >> /tmp/deploy.sql
           echo "EXEC [SSISDB].[catalog].[deploy_project] @folder_name = '${FOLDER_NAME}', @project_name = '${PROJECT_NAME}', @project_stream = @project_binary;" >> /tmp/deploy.sql
-          
+
           # Execute the deployment
+          # NOTE (Fix 1): added -b so sqlcmd returns a non-zero exit code when the
+          # T-SQL batch raises an error (e.g. Msg 27123 Integrated Auth requirement),
+          # instead of silently reporting the deployment as successful.
           if /opt/mssql-tools18/bin/sqlcmd \
             -S "${SERVER},${PORT:-1433}" \
             -U "$USERNAME" \
             -P "$PASSWORD" \
             -d SSISDB \
             -i /tmp/deploy.sql \
+            -b \
             -C; then
-            
+
             echo " SSIS package deployed successfully!"
             echo "DEPLOYMENT_STATUS=success" >> $GITHUB_OUTPUT
-            
+
           else
             echo ""
             echo " SSIS deployment failed with SQL Authentication."
@@ -237,7 +241,7 @@ jobs:
             echo "  The workflow will continue but SSIS deployment has failed."
             echo "DEPLOYMENT_STATUS=failed" >> $GITHUB_OUTPUT
           fi
-          
+
           # Clean up
           rm -f /tmp/deploy.sql
 
@@ -251,10 +255,10 @@ jobs:
           PASSWORD: ${{ secrets.SQL_PASSWORD }}
         run: |
           echo "Verifying SSIS deployment..."
-          
+
           FOLDER_NAME="TimesheetDevTestMigration"
           PROJECT_NAME="TimesheetMigration1"
-          
+
           PROJECT_EXISTS=$(/opt/mssql-tools18/bin/sqlcmd \
             -S "${SERVER},${PORT:-1433}" \
             -U "$USERNAME" \
@@ -268,10 +272,10 @@ jobs:
                   AND p.name = '$PROJECT_NAME'" \
             -h-1 \
             -C | tr -d '[:space:]')
-          
+
           if [ "$PROJECT_EXISTS" -eq "1" ]; then
             echo " SSIS deployment verified successfully!"
-            
+
             echo ""
             echo " Packages in project:"
             /opt/mssql-tools18/bin/sqlcmd \
@@ -291,7 +295,7 @@ jobs:
             exit 1
           fi
 
-      
+
       # --- STEP 8: CREATE JOB ---
       - name: Create DevTest SQL Agent Job
         if: always()  # Run regardless of SSIS deployment status
@@ -382,7 +386,7 @@ jobs:
           PASSWORD: ${{ secrets.PARTNER_SQL_PASSWORD }}
         run: |
           echo "Checking if SSISDB exists (Partner)..."
-          
+
           SSISDB_EXISTS=$(/opt/mssql-tools18/bin/sqlcmd \
             -S "${SERVER},${PORT:-1433}" \
             -U "$USERNAME" \
@@ -391,7 +395,7 @@ jobs:
             -Q "SET NOCOUNT ON; SELECT COUNT(*) FROM sys.databases WHERE name='SSISDB'" \
             -h-1 \
             -C | tr -d '[:space:]')
-          
+
           if [ "$SSISDB_EXISTS" == "0" ]; then
             echo "Creating SSISDB (Partner)..."
             /opt/mssql-tools18/bin/sqlcmd \
@@ -416,7 +420,7 @@ jobs:
         run: |
           FOLDER_NAME="TimesheetDevTestMigration"
           echo "Verifying SSIS folder: $FOLDER_NAME (Partner)"
-          
+
           FOLDER_EXISTS=$(/opt/mssql-tools18/bin/sqlcmd \
             -S "${SERVER},${PORT:-1433}" \
             -U "$USERNAME" \
@@ -425,7 +429,7 @@ jobs:
             -Q "SET NOCOUNT ON; SELECT COUNT(*) FROM [SSISDB].[catalog].[folders] WHERE name='$FOLDER_NAME'" \
             -h-1 \
             -C | tr -d '[:space:]')
-          
+
           if [ "$FOLDER_EXISTS" == "0" ]; then
             echo "Creating SSIS folder '$FOLDER_NAME' (Partner)..."
             /opt/mssql-tools18/bin/sqlcmd \
@@ -450,9 +454,9 @@ jobs:
         run: |
           FOLDER_NAME="TimesheetDevTestMigration"
           PROJECT_NAME="TimesheetMigration1"
-          
+
           echo "Checking if project exists (Partner)..."
-          
+
           PROJECT_EXISTS=$(/opt/mssql-tools18/bin/sqlcmd \
             -S "${SERVER},${PORT:-1433}" \
             -U "$USERNAME" \
@@ -466,10 +470,10 @@ jobs:
                   AND p.name = '$PROJECT_NAME'" \
             -h-1 \
             -C | tr -d '[:space:]')
-          
+
           if [ "$PROJECT_EXISTS" -eq "1" ]; then
             echo "  Project exists. Deleting for clean deployment (Partner)..."
-            
+
             /opt/mssql-tools18/bin/sqlcmd \
               -S "${SERVER},${PORT:-1433}" \
               -U "$USERNAME" \
@@ -508,19 +512,19 @@ jobs:
           PACKAGE_PATH="ssis-packages/TimesheetMigration1.ispac"
           FOLDER_NAME="TimesheetDevTestMigration"
           PROJECT_NAME="TimesheetMigration1"
-          
+
           echo "Checking for package at: $PACKAGE_PATH"
-          
+
           if [ ! -f "$PACKAGE_PATH" ]; then
             echo " Error: Package file $PACKAGE_PATH not found!"
             exit 1
           fi
-          
+
           echo "Encoding package to Base64..."
           PACKAGE_BASE64=$(base64 -w 0 "$PACKAGE_PATH")
-          
+
           echo "Deploying Project to folder: $FOLDER_NAME (Partner)"
-          
+
           # Create deployment SQL using echo with escaped quotes
           echo "SET QUOTED_IDENTIFIER ON;" > /tmp/deploy.sql
           echo "SET ANSI_NULLS ON;" >> /tmp/deploy.sql
@@ -528,25 +532,29 @@ jobs:
           echo "DECLARE @base64 varchar(max) = '${PACKAGE_BASE64}';" >> /tmp/deploy.sql
           echo "SET @project_binary = CAST(N'' AS XML).value('xs:base64Binary(sql:variable(\"@base64\"))', 'varbinary(max)');" >> /tmp/deploy.sql
           echo "EXEC [SSISDB].[catalog].[deploy_project] @folder_name = '${FOLDER_NAME}', @project_name = '${PROJECT_NAME}', @project_stream = @project_binary;" >> /tmp/deploy.sql
-          
+
           # Execute the deployment
+          # NOTE (Fix 1): added -b so sqlcmd returns a non-zero exit code when the
+          # T-SQL batch raises an error (e.g. Msg 27123 Integrated Auth requirement),
+          # instead of silently reporting the deployment as successful.
           if /opt/mssql-tools18/bin/sqlcmd \
             -S "${SERVER},${PORT:-1433}" \
             -U "$USERNAME" \
             -P "$PASSWORD" \
             -d SSISDB \
             -i /tmp/deploy.sql \
+            -b \
             -C; then
-            
+
             echo " SSIS package deployed successfully (Partner)!"
             echo "DEPLOYMENT_STATUS=success" >> $GITHUB_OUTPUT
-            
+
           else
             echo ""
             echo " SSIS deployment failed (Partner) - Authentication Issue."
             echo "DEPLOYMENT_STATUS=failed" >> $GITHUB_OUTPUT
           fi
-          
+
           # Clean up
           rm -f /tmp/deploy.sql
 
@@ -560,10 +568,10 @@ jobs:
           PASSWORD: ${{ secrets.PARTNER_SQL_PASSWORD }}
         run: |
           echo "Verifying SSIS deployment (Partner)..."
-          
+
           FOLDER_NAME="TimesheetDevTestMigration"
           PROJECT_NAME="TimesheetMigration1"
-          
+
           PROJECT_EXISTS=$(/opt/mssql-tools18/bin/sqlcmd \
             -S "${SERVER},${PORT:-1433}" \
             -U "$USERNAME" \
@@ -577,7 +585,7 @@ jobs:
                   AND p.name = '$PROJECT_NAME'" \
             -h-1 \
             -C | tr -d '[:space:]')
-          
+
           if [ "$PROJECT_EXISTS" -eq "1" ]; then
             echo " SSIS deployment verified successfully (Partner)!"
           else
