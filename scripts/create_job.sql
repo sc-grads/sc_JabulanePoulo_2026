@@ -26,7 +26,7 @@ EXEC msdb.dbo.sp_add_job
     @delete_level = 0,
     @description = N'Timesheet Migration SSIS Package - DevTest',
     @category_name = N'[Uncategorized (Local)]',
-    @owner_login_name = N'sa',
+    @owner_login_name = N'LAPTOP-7LSAQSR0\Jabulane Poulo',
     @job_id = @jobId OUTPUT;
 
 -- Add job step with CORRECT package path
