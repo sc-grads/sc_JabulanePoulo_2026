@@ -199,31 +199,7 @@ jobs:
             exit 1
           }
           
-          try {
-            # Load SSIS assemblies
-            Write-Host "Loading SSIS assemblies..."
-            $ssisAssemblyPath = "C:\Program Files\Microsoft SQL Server\150\SDK\Assemblies\Microsoft.SqlServer.Management.IntegrationServices.dll"
-            
-            # Try different SQL Server versions if 150 doesn't exist
-            if (-not (Test-Path $ssisAssemblyPath)) {
-              $versions = @("160", "150", "140", "130", "120")
-              foreach ($version in $versions) {
-                $testPath = "C:\Program Files\Microsoft SQL Server\$version\SDK\Assemblies\Microsoft.SqlServer.Management.IntegrationServices.dll"
-                if (Test-Path $testPath) {
-                  $ssisAssemblyPath = $testPath
-                  break
-                }
-              }
-            }
-            
-            if (-not (Test-Path $ssisAssemblyPath)) {
-              Write-Host "❌ SSIS assemblies not found!"
-              echo "DEPLOYMENT_STATUS=failed" >> $env:GITHUB_OUTPUT
-              exit 1
-            }
-            
-            Write-Host "Loading assembly from: $ssisAssemblyPath"
-            Add-Type -Path $ssisAssemblyPath
+          
             
             # Connect using Windows Authentication
             $connectionString = "Data Source=$env:SERVER,$env:PORT;Initial Catalog=master;Integrated Security=SSPI;"
