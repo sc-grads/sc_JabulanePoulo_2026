@@ -9,7 +9,7 @@
         <WinAuthUserName />
         <WinAuthDomain />
         <ServerName>LAPTOP-7LSAQSR0</ServerName>
-        <PathOnServer>/SSISDB/TimesheetM/TimesheetMigration1</PathOnServer>
+        <PathOnServer>/SSISDB/TimesheetDevTestMigration/TimesheetMigration1</PathOnServer>
         <UserIDs />
         <UserPasswords />
         <OfflineMode>false</OfflineMode>
