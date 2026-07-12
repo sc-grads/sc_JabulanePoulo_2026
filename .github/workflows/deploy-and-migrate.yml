@@ -1,628 +1,274 @@
-name: Pinggys SSIS Deployment
-
+name: Deploy SSIS via Pinggy Tunnel
+ 
 on:
   push:
     branches:
       - main
-  workflow_dispatch:
-
+ 
 jobs:
-  # ==========================================
-  # 1. Stage: DevTest/Deploy
-  # ==========================================
-  DevTest_Deploy:
-    name: DevTest/Deploy
-    runs-on: ubuntu-latest
+ 
+  # =========================================================================
+  # JOB 1: DEPLOY TO LOCAL LAPTOP
+  # =========================================================================
+  deploy-local:
+    name: Tunnel Deployment to Local Laptop
+    runs-on: windows-latest
     environment: local-sql
-    continue-on-error: false  # Set to true if you want to continue even if SSIS fails
+ 
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Install SQLCMD
-        run: |
-          curl https://packages.microsoft.com/keys/microsoft.asc | sudo tee /etc/apt/trusted.gpg.d/microsoft.asc
-          curl https://packages.microsoft.com/config/ubuntu/22.04/prod.list | sudo tee /etc/apt/sources.list.d/mssql-release.list
-          sudo apt-get update
-          sudo ACCEPT_EULA=Y apt-get install -y mssql-tools18
-
-      # --- STEP 1: DEPLOY DATABASE ---
-      - name: Deploy SQL Database Script
-        env:
-          SERVER: ${{ secrets.SQL_SERVER }}
-          PORT: ${{ secrets.SQL_PORT }}
-          USERNAME: ${{ secrets.SQL_USERNAME }}
-          PASSWORD: ${{ secrets.SQL_PASSWORD }}
-        run: |
-          echo "Deploying TimesheetsDB to DevTest..."
-          /opt/mssql-tools18/bin/sqlcmd \
-            -S "${SERVER},${PORT:-1433}" \
-            -U "$USERNAME" \
-            -P "$PASSWORD" \
-            -d master \
-            -i "scripts/create_database.sql" \
-            -b \
-            -C
-          echo " Database deployment completed."
-
-      # --- STEP 2: SSIS CATALOG ---
-      - name: Initialize SSIS Catalog (SSISDB) if Missing
-        env:
-          SERVER: ${{ secrets.SQL_SERVER }}
-          PORT: ${{ secrets.SQL_PORT }}
-          USERNAME: ${{ secrets.SQL_USERNAME }}
-          PASSWORD: ${{ secrets.SQL_PASSWORD }}
-        run: |
-          echo "Checking if SSISDB exists..."
-          
-          SSISDB_EXISTS=$(/opt/mssql-tools18/bin/sqlcmd \
-            -S "${SERVER},${PORT:-1433}" \
-            -U "$USERNAME" \
-            -P "$PASSWORD" \
-            -d master \
-            -Q "SET NOCOUNT ON; SELECT COUNT(*) FROM sys.databases WHERE name='SSISDB'" \
-            -h-1 \
-            -C | tr -d '[:space:]')
-          
-          if [ "$SSISDB_EXISTS" == "0" ]; then
-            echo "Creating SSISDB..."
-            /opt/mssql-tools18/bin/sqlcmd \
-              -S "${SERVER},${PORT:-1433}" \
-              -U "$USERNAME" \
-              -P "$PASSWORD" \
-              -d master \
-              -Q "EXEC [SSISDB].[catalog].[create_catalog] @password = '${{ secrets.SQL_PASSWORD }}';" \
-              -C
-            echo " SSISDB created successfully."
-          else
-            echo " SSISDB already exists."
-          fi
-
-      # --- STEP 3: CREATE SSIS FOLDER ---
-      - name: Create SSIS Folder
-        env:
-          SERVER: ${{ secrets.SQL_SERVER }}
-          PORT: ${{ secrets.SQL_PORT }}
-          USERNAME: ${{ secrets.SQL_USERNAME }}
-          PASSWORD: ${{ secrets.SQL_PASSWORD }}
-        run: |
-          FOLDER_NAME="TimesheetDevTestMigration"
-          echo "Verifying SSIS folder: $FOLDER_NAME"
-          
-          FOLDER_EXISTS=$(/opt/mssql-tools18/bin/sqlcmd \
-            -S "${SERVER},${PORT:-1433}" \
-            -U "$USERNAME" \
-            -P "$PASSWORD" \
-            -d SSISDB \
-            -Q "SET NOCOUNT ON; SELECT COUNT(*) FROM [SSISDB].[catalog].[folders] WHERE name='$FOLDER_NAME'" \
-            -h-1 \
-            -C | tr -d '[:space:]')
-          
-          if [ "$FOLDER_EXISTS" == "0" ]; then
-            echo "Folder '$FOLDER_NAME' not found. Creating..."
-            /opt/mssql-tools18/bin/sqlcmd \
-              -S "${SERVER},${PORT:-1433}" \
-              -U "$USERNAME" \
-              -P "$PASSWORD" \
-              -d SSISDB \
-              -Q "EXEC [SSISDB].[catalog].[create_folder] @folder_name=N'$FOLDER_NAME', @folder_id=0;" \
-              -C
-            echo " Folder '$FOLDER_NAME' created successfully."
-          else
-            echo " Folder '$FOLDER_NAME' already exists."
-          fi
-
-      # --- STEP 4: DELETE EXISTING PROJECT (FOR CLEAN DEPLOYMENT) ---
-      - name: Delete Existing Project (if exists)
-        env:
-          SERVER: ${{ secrets.SQL_SERVER }}
-          PORT: ${{ secrets.SQL_PORT }}
-          USERNAME: ${{ secrets.SQL_USERNAME }}
-          PASSWORD: ${{ secrets.SQL_PASSWORD }}
-        run: |
-          FOLDER_NAME="TimesheetDevTestMigration"
-          PROJECT_NAME="TimesheetMigration1"
-          
-          echo "Checking if project '$PROJECT_NAME' exists in folder '$FOLDER_NAME'..."
-          
-          PROJECT_EXISTS=$(/opt/mssql-tools18/bin/sqlcmd \
-            -S "${SERVER},${PORT:-1433}" \
-            -U "$USERNAME" \
-            -P "$PASSWORD" \
-            -d SSISDB \
-            -Q "SET NOCOUNT ON; 
-                SELECT COUNT(*) 
-                FROM [SSISDB].[catalog].[projects] p
-                INNER JOIN [SSISDB].[catalog].[folders] f ON p.folder_id = f.folder_id
-                WHERE f.name = '$FOLDER_NAME' 
-                  AND p.name = '$PROJECT_NAME'" \
-            -h-1 \
-            -C | tr -d '[:space:]')
-          
-          if [ "$PROJECT_EXISTS" -eq "1" ]; then
-            echo "  Project exists. Deleting to force clean deployment..."
-            
-            /opt/mssql-tools18/bin/sqlcmd \
-              -S "${SERVER},${PORT:-1433}" \
-              -U "$USERNAME" \
-              -P "$PASSWORD" \
-              -d SSISDB \
-              -Q "DECLARE @project_id bigint;
-                  SELECT @project_id = p.project_id 
-                  FROM [SSISDB].[catalog].[projects] p
-                  INNER JOIN [SSISDB].[catalog].[folders] f ON p.folder_id = f.folder_id
-                  WHERE f.name = '$FOLDER_NAME' AND p.name = '$PROJECT_NAME';
-                  
-                  IF @project_id IS NOT NULL
-                  BEGIN
-                    EXEC [SSISDB].[catalog].[delete_project] @project_id = @project_id;
-                    PRINT ' Project deleted successfully.';
-                  END
-                  ELSE
-                  BEGIN
-                    PRINT '  Project not found.';
-                  END" \
-              -C
-            echo " Project deletion completed."
-          else
-            echo " Project doesn't exist. Ready for fresh deployment."
-          fi
-
-      # --- STEP 5: DEPLOY SSIS PACKAGE ---
-      - name: Deploy SSIS Package (.ispac) to DevTest
-        id: deploy_ssis
-        env:
-          SERVER: ${{ secrets.SQL_SERVER }}
-          PORT: ${{ secrets.SQL_PORT }}
-          USERNAME: ${{ secrets.SQL_USERNAME }}
-          PASSWORD: ${{ secrets.SQL_PASSWORD }}
-        run: |
-          PACKAGE_PATH="ssis-packages/TimesheetMigration1.ispac"
-          FOLDER_NAME="TimesheetDevTestMigration"
-          PROJECT_NAME="TimesheetMigration1"
-          
-          echo "Checking for package at: $PACKAGE_PATH"
-          
-          if [ ! -f "$PACKAGE_PATH" ]; then
-            echo " Error: Package file $PACKAGE_PATH not found!"
-            echo "Current directory contents:"
-            ls -la
-            echo ""
-            echo "Checking for ssis-packages directory:"
-            ls -la ssis-packages/ 2>/dev/null || echo "ssis-packages directory not found"
+    - name: Checkout Repository Code
+      uses: actions/checkout@v4
+ 
+    - name: Deploy SSIS and Create Execution Job
+      shell: powershell
+      run: |
+ 
+        # STEP 1: LOCATE THE SSIS DEPLOYMENT FILE
+        $ispacPath = "${{ github.workspace }}\ssis-packages\TimesheetMigration1.ispac"
+ 
+        if (-not (Test-Path -Path $ispacPath)) {
+            Write-Host "Primary path not found. Testing alternate path..."
+            $ispacPath = "${{ github.workspace }}\..\ssis-packages\TimesheetMigration1.ispac"
+            $ispacPath = [System.IO.Path]::GetFullPath($ispacPath)
+        }
+ 
+        if (-not (Test-Path -Path $ispacPath)) {
+            Write-Error "CRITICAL ERROR: Could not locate ProjectTime.ispac file."
             exit 1
-          fi
-          
-          echo "Encoding package to Base64..."
-          PACKAGE_BASE64=$(base64 -w 0 "$PACKAGE_PATH")
-          
-          echo "Deploying Project to folder: $FOLDER_NAME"
-          
-          # Create deployment SQL using echo with escaped quotes
-          echo "SET QUOTED_IDENTIFIER ON;" > /tmp/deploy.sql
-          echo "SET ANSI_NULLS ON;" >> /tmp/deploy.sql
-          echo "DECLARE @project_binary varbinary(max);" >> /tmp/deploy.sql
-          echo "DECLARE @base64 varchar(max) = '${PACKAGE_BASE64}';" >> /tmp/deploy.sql
-          echo "SET @project_binary = CAST(N'' AS XML).value('xs:base64Binary(sql:variable(\"@base64\"))', 'varbinary(max)');" >> /tmp/deploy.sql
-          echo "EXEC [SSISDB].[catalog].[deploy_project] @folder_name = '${FOLDER_NAME}', @project_name = '${PROJECT_NAME}', @project_stream = @project_binary;" >> /tmp/deploy.sql
-          
-          # Execute the deployment
-          if /opt/mssql-tools18/bin/sqlcmd \
-            -S "${SERVER},${PORT:-1433}" \
-            -U "$USERNAME" \
-            -P "$PASSWORD" \
-            -d SSISDB \
-            -i /tmp/deploy.sql \
-            -C; then
-            
-            echo " SSIS package deployed successfully!"
-            echo "DEPLOYMENT_STATUS=success" >> $GITHUB_OUTPUT
-            
-          else
-            echo ""
-            echo " SSIS deployment failed with SQL Authentication."
-            echo "  SSISDB operations require Windows Authentication (Integrated Security)."
-            echo " SQL Server Authentication is not supported for SSIS deployment."
-            echo ""
-            echo " To fix this issue, you have several options:"
-            echo "  1. Use a Windows self-hosted runner with Integrated Security"
-            echo "  2. Configure SQL Server for Mixed Mode Authentication"
-            echo "  3. Use Azure Data Factory with SSIS IR for deployment"
-            echo "  4. Use PowerShell with SSIS assemblies on a Windows runner"
-            echo ""
-            echo " For GitHub Actions, consider using:"
-            echo "  runs-on: windows-latest"
-            echo "  And use -E flag for Windows Authentication"
-            echo ""
-            echo "  The workflow will continue but SSIS deployment has failed."
-            echo "DEPLOYMENT_STATUS=failed" >> $GITHUB_OUTPUT
-          fi
-          
-          # Clean up
-          rm -f /tmp/deploy.sql
-
-      # --- STEP 6: VERIFY DEPLOYMENT (Only if deployment succeeded) ---
-      - name: Verify SSIS Deployment
-        if: steps.deploy_ssis.outputs.DEPLOYMENT_STATUS == 'success'
-        env:
-          SERVER: ${{ secrets.SQL_SERVER }}
-          PORT: ${{ secrets.SQL_PORT }}
-          USERNAME: ${{ secrets.SQL_USERNAME }}
-          PASSWORD: ${{ secrets.SQL_PASSWORD }}
-        run: |
-          echo "Verifying SSIS deployment..."
-          
-          FOLDER_NAME="TimesheetDevTestMigration"
-          PROJECT_NAME="TimesheetMigration1"
-          
-          PROJECT_EXISTS=$(/opt/mssql-tools18/bin/sqlcmd \
-            -S "${SERVER},${PORT:-1433}" \
-            -U "$USERNAME" \
-            -P "$PASSWORD" \
-            -d SSISDB \
-            -Q "SET NOCOUNT ON; 
-                SELECT COUNT(*) 
-                FROM [SSISDB].[catalog].[projects] p
-                INNER JOIN [SSISDB].[catalog].[folders] f ON p.folder_id = f.folder_id
-                WHERE f.name = '$FOLDER_NAME' 
-                  AND p.name = '$PROJECT_NAME'" \
-            -h-1 \
-            -C | tr -d '[:space:]')
-          
-          if [ "$PROJECT_EXISTS" -eq "1" ]; then
-            echo " SSIS deployment verified successfully!"
-            
-            echo ""
-            echo " Packages in project:"
-            /opt/mssql-tools18/bin/sqlcmd \
-              -S "${SERVER},${PORT:-1433}" \
-              -U "$USERNAME" \
-              -P "$PASSWORD" \
-              -d SSISDB \
-              -Q "SET NOCOUNT ON; 
-                  SELECT f.name as FolderName, p.name as ProjectName, pk.name as PackageName
-                  FROM [SSISDB].[catalog].[packages] pk
-                  INNER JOIN [SSISDB].[catalog].[projects] p ON pk.project_id = p.project_id
-                  INNER JOIN [SSISDB].[catalog].[folders] f ON p.folder_id = f.folder_id
-                  WHERE f.name = '$FOLDER_NAME' AND p.name = '$PROJECT_NAME'" \
-              -C
-          else
-            echo " SSIS project not found in SSISDB."
+        }
+        # STEP 2: DEFINE TARGET CONFIGURATIONS FROM YOUR ENVIRONMENT
+        $tunnelAddress = "${{ secrets.SQL_SERVER }},${{ secrets.SQL_PORT }}"
+        $dbUser        = "${{ secrets.SQL_USERNAME }}"
+        $dbPassword    = "${{ secrets.SQL_PASSWORD }}"
+        $initialDb     = "master"
+        $targetFolder     = "TimesheetDevTestMigration"
+        $projectName      = "ProjectTime"
+        $executionJobName = "RunTimesheetDevTestMigrationPK"
+        # STEP 3: CONVERT ISPAC FILE INTO BINARY DATA STREAM
+        $fileBytes = [System.IO.File]::ReadAllBytes($ispacPath)
+        $hexString = "0x" + [System.BitConverter]::ToString($fileBytes).Replace("-", "")
+        # STEP 4: INITIALIZE SQL SERVER DATABASE CONNECTION
+        Write-Host "Establishing local tunnel connection..."
+ 
+        $connStr = "Data Source=$tunnelAddress;Initial Catalog=$initialDb;User ID=$dbUser;Password=$dbPassword;TrustServerCertificate=True;Encrypt=False;"
+        $connection = New-Object System.Data.SqlClient.SqlConnection($connStr)
+ 
+        try {
+            $connection.Open()
+            # Using a single-quoted Here-String so PowerShell treats $ServerOption as pure literal text
+            $sqlQuery = @'
+            SET NOCOUNT ON;
+            USE [msdb];
+ 
+            IF EXISTS (SELECT job_id FROM msdb.dbo.sysjobs WHERE name = N'RunTimesheetDevTestMigrationPK')
+            BEGIN
+                EXEC dbo.sp_delete_job @job_name = N'RunTimesheetDevTestMigrationPK', @delete_unused_schedule=1;
+            END
+ 
+            EXEC dbo.sp_add_job @job_name = N'RunTimesheetDevTestMigrationPK', @enabled = 1, @start_step_id = 1;
+            DECLARE @deploy_script NVARCHAR(MAX);
+            SET @deploy_script = N'USE [SSISDB]; IF NOT EXISTS (SELECT 1 FROM [catalog].[folders] WHERE name = ''$targetFolder'') BEGIN EXEC [catalog].[create_folder] @folder_name = N''$targetFolder''; END DECLARE @project_stream VARBINARY(MAX) = $hexString; EXEC [catalog].[deploy_project] @folder_name = N''$targetFolder'', @project_name = N''$projectName'', @project_stream = @project_stream;';
+            -- FIX: Cleaned up duplicate jobstep statement that caused the validation failure
+            EXEC dbo.sp_add_jobstep @job_name = N'RunTimesheetDevTestMigrationPK', @step_name = N'Run Deploy', @subsystem = N'TSQL', @command = @deploy_script, @retry_attempts = 0;
+            EXEC dbo.sp_add_jobserver @job_name = N'RunTimesheetDevTestMigrationPK', @server_name = N'(local)';
+            DECLARE @deploy_job_id UNIQUEIDENTIFIER;
+            SELECT @deploy_job_id = job_id FROM msdb.dbo.sysjobs WHERE name = N'RunTimesheetDevTestMigrationPK';
+            EXEC dbo.sp_start_job @job_name = N'RunTimesheetDevTestMigrationPK';
+            -- Dynamic Polling Loop: Safely wait for deployment execution to complete
+            WHILE EXISTS (
+                SELECT 1 FROM msdb.dbo.sysjobactivity 
+                WHERE job_id = @deploy_job_id AND start_execution_date IS NOT NULL AND stop_execution_date IS NULL
+            )
+            BEGIN
+                WAITFOR DELAY '00:00:02';
+            END
+            EXEC dbo.sp_delete_job @job_name = N'RunTimesheetDevTestMigrationPK';
+            IF EXISTS (SELECT job_id FROM msdb.dbo.sysjobs WHERE name = N'$executionJobName')
+            BEGIN
+                EXEC dbo.sp_delete_job @job_name = N'$executionJobName', @delete_unused_schedule=1;
+            END
+ 
+            EXEC dbo.sp_add_job @job_name = N'$executionJobName', @enabled = 1, @description = N'Automated execution tracking for $projectName.', @start_step_id = 1;
+            DECLARE @TargetServer NVARCHAR(128) = CAST(SERVERPROPERTY('ServerName') AS NVARCHAR(128));
+            DECLARE @run_command NVARCHAR(MAX);
+            SET @run_command = N'/ISSERVER ' + CHAR(34) + N'\SSISDB\$targetFolder\$projectName\Package.dtsx' + CHAR(34) + N' /SERVER ' + CHAR(34) + @TargetServer + CHAR(34) + N' /Par ' + CHAR(34) + N'$ServerOption::LOGGING_LEVEL(Int16)' + CHAR(34) + N';1 /CALLERINFO SQLAGENT /REPORTING E';
+            EXEC dbo.sp_add_jobstep @job_name = N'$executionJobName', @step_name = N'Execute SSIS Package', @subsystem = N'SSIS', @command = @run_command, @retry_attempts = 0;
+            EXEC dbo.sp_add_jobserver @job_name = N'$executionJobName', @server_name = N'(local)';
+            EXEC dbo.sp_add_jobschedule 
+                @job_name = N'$executionJobName', 
+                @name = N'Every_1_Minute_8AM_to_5PM', 
+                @enabled = 1, 
+                @freq_type = 4, 
+                @freq_interval = 1, 
+                @freq_subday_type = 4, 
+                @freq_subday_interval = 1, 
+                @active_start_time = 080000, 
+                @active_end_time = 170000;
+ 
+            EXEC dbo.sp_start_job @job_name = N'$executionJobName';
+            WAITFOR DELAY '00:00:05';'@
+            # Safe string replacements handled strictly at execution runtime
+            $sqlQuery = $sqlQuery.Replace('$targetFolder', $targetFolder)
+            $sqlQuery = $sqlQuery.Replace('$projectName', $projectName)
+            $sqlQuery = $sqlQuery.Replace('$executionJobName', $executionJobName)
+            $sqlQuery = $sqlQuery.Replace('$hexString', $hexString)
+ 
+            $command = $connection.CreateCommand()
+            $command.CommandText = $sqlQuery
+            $command.ExecuteNonQuery() | Out-Null
+ 
+            Write-Host "SUCCESS: Local SSIS Project deployed, job triggered, and execution delay finalized!"
+ 
+        } catch {
+            Write-Error "Local Deployment Failed: $_"
             exit 1
-          fi
-
-      
-      # --- STEP 8: CREATE JOB ---
-      - name: Create DevTest SQL Agent Job
-        if: always()  # Run regardless of SSIS deployment status
-        env:
-          SERVER: ${{ secrets.SQL_SERVER }}
-          PORT: ${{ secrets.SQL_PORT }}
-          USERNAME: ${{ secrets.SQL_USERNAME }}
-          PASSWORD: ${{ secrets.SQL_PASSWORD }}
-        run: |
-          if [ -f "scripts/create_job.sql" ]; then
-            echo "Creating SQL Agent Job..."
-            /opt/mssql-tools18/bin/sqlcmd \
-              -S "${SERVER},${PORT:-1433}" \
-              -U "$USERNAME" \
-              -P "$PASSWORD" \
-              -d msdb \
-              -i "scripts/create_job.sql" \
-              -C
-            echo " Job created successfully."
-          else
-            echo " create_job.sql not found, skipping job creation."
-          fi
-
-      # --- STEP 9: RUN THE JOB ---
-      - name: Run DevTest Migration Job
-        if: always()  # Run regardless of SSIS deployment status
-        env:
-          SERVER: ${{ secrets.SQL_SERVER }}
-          PORT: ${{ secrets.SQL_PORT }}
-          USERNAME: ${{ secrets.SQL_USERNAME }}
-          PASSWORD: ${{ secrets.SQL_PASSWORD }}
-        run: |
-          echo "Starting SQL Agent Job..."
-          /opt/mssql-tools18/bin/sqlcmd \
-            -S "${SERVER},${PORT:-1433}" \
-            -U "$USERNAME" \
-            -P "$PASSWORD" \
-            -d msdb \
-            -Q "EXEC dbo.sp_start_job N'RunTimesheetDevTestMigrationPK';" \
-            -C || echo " Job may not exist or SQL Agent is not running"
-          echo " Job started."
-
-  # ==========================================
-  # 2. Stage: Production/Deploy
-  # ==========================================
-  Production_Deploy:
-    name: Production/Deploy
-    runs-on: ubuntu-latest
-    needs: DevTest_Deploy
+        } finally {
+            $connection.Close()
+        }
+ 
+  # =========================================================================
+  # JOB 2: DEPLOY TO PARTNER SERVER
+  # =========================================================================
+  deploy-partner:
+    name: 2. Deploy to Partner Server
+    runs-on: windows-latest
+    needs: deploy-local
     environment: partner-sql
-    if: success()
+ 
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Install SQLCMD
-        run: |
-          curl https://packages.microsoft.com/keys/microsoft.asc | sudo tee /etc/apt/trusted.gpg.d/microsoft.asc
-          curl https://packages.microsoft.com/config/ubuntu/22.04/prod.list | sudo tee /etc/apt/sources.list.d/mssql-release.list
-          sudo apt-get update
-          sudo ACCEPT_EULA=Y apt-get install -y mssql-tools18
-
-      # --- STEP 1: DEPLOY DATABASE ---
-      - name: Deploy SQL Database Script (Partner)
-        env:
-          SERVER: ${{ secrets.PARTNER_SQL_SERVER }}
-          PORT: ${{ secrets.PARTNER_SQL_PORT }}
-          USERNAME: ${{ secrets.PARTNER_SQL_USERNAME }}
-          PASSWORD: ${{ secrets.PARTNER_SQL_PASSWORD }}
-        run: |
-          echo "Deploying TimesheetsDB to Production (Partner)..."
-          /opt/mssql-tools18/bin/sqlcmd \
-            -S "${SERVER},${PORT:-1433}" \
-            -U "$USERNAME" \
-            -P "$PASSWORD" \
-            -d master \
-            -i "scripts/create_database.sql" \
-            -b \
-            -C
-          echo " Database deployment completed."
-
-      # --- STEP 2: SSIS CATALOG ---
-      - name: Initialize SSIS Catalog (SSISDB) if Missing (Partner)
-        env:
-          SERVER: ${{ secrets.PARTNER_SQL_SERVER }}
-          PORT: ${{ secrets.PARTNER_SQL_PORT }}
-          USERNAME: ${{ secrets.PARTNER_SQL_USERNAME }}
-          PASSWORD: ${{ secrets.PARTNER_SQL_PASSWORD }}
-        run: |
-          echo "Checking if SSISDB exists (Partner)..."
-          
-          SSISDB_EXISTS=$(/opt/mssql-tools18/bin/sqlcmd \
-            -S "${SERVER},${PORT:-1433}" \
-            -U "$USERNAME" \
-            -P "$PASSWORD" \
-            -d master \
-            -Q "SET NOCOUNT ON; SELECT COUNT(*) FROM sys.databases WHERE name='SSISDB'" \
-            -h-1 \
-            -C | tr -d '[:space:]')
-          
-          if [ "$SSISDB_EXISTS" == "0" ]; then
-            echo "Creating SSISDB (Partner)..."
-            /opt/mssql-tools18/bin/sqlcmd \
-              -S "${SERVER},${PORT:-1433}" \
-              -U "$USERNAME" \
-              -P "$PASSWORD" \
-              -d master \
-              -Q "EXEC [SSISDB].[catalog].[create_catalog] @password = '${{ secrets.PARTNER_SQL_PASSWORD }}';" \
-              -C
-            echo " SSISDB created successfully (Partner)."
-          else
-            echo " SSISDB already exists (Partner)."
-          fi
-
-      # --- STEP 3: CREATE SSIS FOLDER ---
-      - name: Create SSIS Folder (Partner)
-        env:
-          SERVER: ${{ secrets.PARTNER_SQL_SERVER }}
-          PORT: ${{ secrets.PARTNER_SQL_PORT }}
-          USERNAME: ${{ secrets.PARTNER_SQL_USERNAME }}
-          PASSWORD: ${{ secrets.PARTNER_SQL_PASSWORD }}
-        run: |
-          FOLDER_NAME="TimesheetDevTestMigration"
-          echo "Verifying SSIS folder: $FOLDER_NAME (Partner)"
-          
-          FOLDER_EXISTS=$(/opt/mssql-tools18/bin/sqlcmd \
-            -S "${SERVER},${PORT:-1433}" \
-            -U "$USERNAME" \
-            -P "$PASSWORD" \
-            -d SSISDB \
-            -Q "SET NOCOUNT ON; SELECT COUNT(*) FROM [SSISDB].[catalog].[folders] WHERE name='$FOLDER_NAME'" \
-            -h-1 \
-            -C | tr -d '[:space:]')
-          
-          if [ "$FOLDER_EXISTS" == "0" ]; then
-            echo "Creating SSIS folder '$FOLDER_NAME' (Partner)..."
-            /opt/mssql-tools18/bin/sqlcmd \
-              -S "${SERVER},${PORT:-1433}" \
-              -U "$USERNAME" \
-              -P "$PASSWORD" \
-              -d SSISDB \
-              -Q "EXEC [SSISDB].[catalog].[create_folder] @folder_name=N'$FOLDER_NAME', @folder_id=0;" \
-              -C
-            echo " Folder '$FOLDER_NAME' created successfully (Partner)."
-          else
-            echo " Folder '$FOLDER_NAME' already exists (Partner)."
-          fi
-
-      # --- STEP 4: DELETE EXISTING PROJECT (FOR CLEAN DEPLOYMENT) ---
-      - name: Delete Existing Project (if exists) - Partner
-        env:
-          SERVER: ${{ secrets.PARTNER_SQL_SERVER }}
-          PORT: ${{ secrets.PARTNER_SQL_PORT }}
-          USERNAME: ${{ secrets.PARTNER_SQL_USERNAME }}
-          PASSWORD: ${{ secrets.PARTNER_SQL_PASSWORD }}
-        run: |
-          FOLDER_NAME="TimesheetDevTestMigration"
-          PROJECT_NAME="TimesheetMigration1"
-          
-          echo "Checking if project exists (Partner)..."
-          
-          PROJECT_EXISTS=$(/opt/mssql-tools18/bin/sqlcmd \
-            -S "${SERVER},${PORT:-1433}" \
-            -U "$USERNAME" \
-            -P "$PASSWORD" \
-            -d SSISDB \
-            -Q "SET NOCOUNT ON; 
-                SELECT COUNT(*) 
-                FROM [SSISDB].[catalog].[projects] p
-                INNER JOIN [SSISDB].[catalog].[folders] f ON p.folder_id = f.folder_id
-                WHERE f.name = '$FOLDER_NAME' 
-                  AND p.name = '$PROJECT_NAME'" \
-            -h-1 \
-            -C | tr -d '[:space:]')
-          
-          if [ "$PROJECT_EXISTS" -eq "1" ]; then
-            echo "  Project exists. Deleting for clean deployment (Partner)..."
-            
-            /opt/mssql-tools18/bin/sqlcmd \
-              -S "${SERVER},${PORT:-1433}" \
-              -U "$USERNAME" \
-              -P "$PASSWORD" \
-              -d SSISDB \
-              -Q "DECLARE @project_id bigint;
-                  SELECT @project_id = p.project_id 
-                  FROM [SSISDB].[catalog].[projects] p
-                  INNER JOIN [SSISDB].[catalog].[folders] f ON p.folder_id = f.folder_id
-                  WHERE f.name = '$FOLDER_NAME' AND p.name = '$PROJECT_NAME';
-                  
-                  IF @project_id IS NOT NULL
-                  BEGIN
-                    EXEC [SSISDB].[catalog].[delete_project] @project_id = @project_id;
-                    PRINT ' Project deleted successfully.';
-                  END
-                  ELSE
-                  BEGIN
-                    PRINT '  Project not found.';
-                  END" \
-              -C
-            echo " Project deletion completed (Partner)."
-          else
-            echo " Project doesn't exist. Ready for fresh deployment (Partner)."
-          fi
-
-      # --- STEP 5: DEPLOY SSIS PACKAGE ---
-      - name: Deploy SSIS Package (.ispac) to Partner
-        id: deploy_ssis_partner
-        env:
-          SERVER: ${{ secrets.PARTNER_SQL_SERVER }}
-          PORT: ${{ secrets.PARTNER_SQL_PORT }}
-          USERNAME: ${{ secrets.PARTNER_SQL_USERNAME }}
-          PASSWORD: ${{ secrets.PARTNER_SQL_PASSWORD }}
-        run: |
-          PACKAGE_PATH="ssis-packages/TimesheetMigration1.ispac"
-          FOLDER_NAME="TimesheetDevTestMigration"
-          PROJECT_NAME="TimesheetMigration1"
-          
-          echo "Checking for package at: $PACKAGE_PATH"
-          
-          if [ ! -f "$PACKAGE_PATH" ]; then
-            echo " Error: Package file $PACKAGE_PATH not found!"
+    - name: Checkout Repository Code
+      uses: actions/checkout@v4
+ 
+    - name: Deploy SSIS and Create Execution Job (Partner)
+      shell: powershell
+      run: |
+ 
+        # STEP 1: LOCATE THE SSIS DEPLOYMENT FILE
+        $ispacPath = "${{ github.workspace }}\ssis-packages\TimesheetMigration1.ispac"
+ 
+        if (-not (Test-Path -Path $ispacPath)) {
+            Write-Host "Primary path not found. Testing alternate path..."
+            $ispacPath = "${{ github.workspace }}\..\ssis-packages\TimesheetMigration1.ispac"
+            $ispacPath = [System.IO.Path]::GetFullPath($ispacPath)
+        }
+ 
+        if (-not (Test-Path -Path $ispacPath)) {
+            Write-Error "CRITICAL ERROR: Could not locate ProjectTime.ispac file."
             exit 1
-          fi
-          
-          echo "Encoding package to Base64..."
-          PACKAGE_BASE64=$(base64 -w 0 "$PACKAGE_PATH")
-          
-          echo "Deploying Project to folder: $FOLDER_NAME (Partner)"
-          
-          # Create deployment SQL using echo with escaped quotes
-          echo "SET QUOTED_IDENTIFIER ON;" > /tmp/deploy.sql
-          echo "SET ANSI_NULLS ON;" >> /tmp/deploy.sql
-          echo "DECLARE @project_binary varbinary(max);" >> /tmp/deploy.sql
-          echo "DECLARE @base64 varchar(max) = '${PACKAGE_BASE64}';" >> /tmp/deploy.sql
-          echo "SET @project_binary = CAST(N'' AS XML).value('xs:base64Binary(sql:variable(\"@base64\"))', 'varbinary(max)');" >> /tmp/deploy.sql
-          echo "EXEC [SSISDB].[catalog].[deploy_project] @folder_name = '${FOLDER_NAME}', @project_name = '${PROJECT_NAME}', @project_stream = @project_binary;" >> /tmp/deploy.sql
-          
-          # Execute the deployment
-          if /opt/mssql-tools18/bin/sqlcmd \
-            -S "${SERVER},${PORT:-1433}" \
-            -U "$USERNAME" \
-            -P "$PASSWORD" \
-            -d SSISDB \
-            -i /tmp/deploy.sql \
-            -C; then
-            
-            echo " SSIS package deployed successfully (Partner)!"
-            echo "DEPLOYMENT_STATUS=success" >> $GITHUB_OUTPUT
-            
-          else
-            echo ""
-            echo " SSIS deployment failed (Partner) - Authentication Issue."
-            echo "DEPLOYMENT_STATUS=failed" >> $GITHUB_OUTPUT
-          fi
-          
-          # Clean up
-          rm -f /tmp/deploy.sql
-
-      # --- STEP 6: VERIFY DEPLOYMENT (Only if deployment succeeded) ---
-      - name: Verify SSIS Deployment (Partner)
-        if: steps.deploy_ssis_partner.outputs.DEPLOYMENT_STATUS == 'success'
-        env:
-          SERVER: ${{ secrets.PARTNER_SQL_SERVER }}
-          PORT: ${{ secrets.PARTNER_SQL_PORT }}
-          USERNAME: ${{ secrets.PARTNER_SQL_USERNAME }}
-          PASSWORD: ${{ secrets.PARTNER_SQL_PASSWORD }}
-        run: |
-          echo "Verifying SSIS deployment (Partner)..."
-          
-          FOLDER_NAME="TimesheetDevTestMigration"
-          PROJECT_NAME="TimesheetMigration1"
-          
-          PROJECT_EXISTS=$(/opt/mssql-tools18/bin/sqlcmd \
-            -S "${SERVER},${PORT:-1433}" \
-            -U "$USERNAME" \
-            -P "$PASSWORD" \
-            -d SSISDB \
-            -Q "SET NOCOUNT ON; 
-                SELECT COUNT(*) 
-                FROM [SSISDB].[catalog].[projects] p
-                INNER JOIN [SSISDB].[catalog].[folders] f ON p.folder_id = f.folder_id
-                WHERE f.name = '$FOLDER_NAME' 
-                  AND p.name = '$PROJECT_NAME'" \
-            -h-1 \
-            -C | tr -d '[:space:]')
-          
-          if [ "$PROJECT_EXISTS" -eq "1" ]; then
-            echo " SSIS deployment verified successfully (Partner)!"
-          else
-            echo " SSIS project not found in SSISDB (Partner)."
+        }
+ 
+        # STEP 2: DEFINE TARGET CONFIGURATIONS FROM YOUR ENVIRONMENT
+        $tunnelAddress = "${{ secrets.SQL_SERVER }},${{ secrets.SQL_PORT }}"
+        $dbUser        = "${{ secrets.SQL_USERNAME }}"
+        $dbPassword    = "${{ secrets.SQL_PASSWORD }}"
+        $initialDb     = "master"
+ 
+        $targetFolder     = "TimesheetProductionMigration"
+        $projectName      = "ProjectTime"
+        $executionJobName = "RunTimesheetProductionMigrationPK"
+        # Partner specific configuration overrides
+        $partnerServer    = "DESKTOP-DBA1BPB\SQLSERVER2025"
+ 
+        # STEP 3: CONVERT ISPAC FILE INTO BINARY DATA STREAM
+        $fileBytes = [System.IO.File]::ReadAllBytes($ispacPath)
+        $hexString = "0x" + [System.BitConverter]::ToString($fileBytes).Replace("-", "")
+ 
+        # STEP 4: INITIALIZE SQL SERVER DATABASE CONNECTION VIA TUNNEL
+        Write-Host "Establishing tunnel connection to partner environment..."
+ 
+        $connStr = "Data Source=$tunnelAddress;Initial Catalog=$initialDb;User ID=$dbUser;Password=$dbPassword;TrustServerCertificate=True;Encrypt=False;"
+        $connection = New-Object System.Data.SqlClient.SqlConnection($connStr)
+ 
+        try {
+            $connection.Open()
+ 
+            # Using a single-quoted Here-String so PowerShell treats $ServerOption as pure literal text
+            $sqlQuery = @'
+            SET NOCOUNT ON;
+            USE [msdb];
+ 
+            IF EXISTS (SELECT job_id FROM msdb.dbo.sysjobs WHERE name = N'RunTimesheetDevTestMigrationPK')
+            BEGIN
+                EXEC dbo.sp_delete_job @job_name = N'RunTimesheetDevTestMigrationPK', @delete_unused_schedule=1;
+            END
+ 
+            EXEC dbo.sp_add_job @job_name = N'RunTimesheetDevTestMigrationPK', @enabled = 1, @start_step_id = 1;
+ 
+            DECLARE @deploy_script NVARCHAR(MAX);
+            SET @deploy_script = N'USE [SSISDB];
+            IF NOT EXISTS (SELECT 1 FROM [catalog].[folders] WHERE name = ''$targetFolder'')
+            BEGIN
+                EXEC [catalog].[create_folder] @folder_name = N''$targetFolder'';
+            END
+            DECLARE @project_stream VARBINARY(MAX) = $hexString;
+            EXEC [catalog].[deploy_project] @folder_name = N''$targetFolder'', @project_name = N''$projectName'', @project_stream = @project_stream;
+ 
+            -- Environment parameter package fixes (Scope 30)
+            EXEC SSISDB.catalog.set_object_parameter_value @object_type = 30, @folder_name = N''$targetFolder'', @project_name = N''$projectName'', @object_name = N''Package.dtsx'', @parameter_name = N''CM.DESKTOP-DBA1BPB\SQLSERVER2025.master1.ServerName'', @parameter_value = N''$partnerServer'';
+            EXEC SSISDB.catalog.set_object_parameter_value @object_type = 30, @folder_name = N''$targetFolder'', @project_name = N''$projectName'', @object_name = N''Package.dtsx'', @parameter_name = N''CM.DESKTOP-DBA1BPB\SQLSERVER2025.TimesheetDB1.ServerName'', @parameter_value = N''$partnerServer'';
+            EXEC SSISDB.catalog.set_object_parameter_value @object_type = 30, @folder_name = N''$targetFolder'', @project_name = N''$projectName'', @object_name = N''Package.dtsx'', @parameter_name = N''CM.DESKTOP-DBA1BPB\SQLSERVER2025.master1.InitialCatalog'', @parameter_value = N''master'';
+            EXEC SSISDB.catalog.set_object_parameter_value @object_type = 30, @folder_name = N''$targetFolder'', @project_name = N''$projectName'', @object_name = N''Package.dtsx'', @parameter_name = N''CM.DESKTOP-DBA1BPB\SQLSERVER2025.TimesheetDB1.InitialCatalog'', @parameter_value = N''TimesheetDB1'';';
+ 
+            EXEC dbo.sp_add_jobstep @job_name = N'RunTimesheetDevTestMigrationPK', @step_name = N'Run Deploy', @subsystem = N'TSQL', @command = @deploy_script, @retry_attempts = 0;
+            EXEC dbo.sp_add_jobserver @job_name = N'RunTimesheetDevTestMigrationPK', @server_name = N'(local)';
+            DECLARE @deploy_job_id UNIQUEIDENTIFIER;
+            SELECT @deploy_job_id = job_id FROM msdb.dbo.sysjobs WHERE name = N'RunTimesheetDevTestMigrationPK';
+            EXEC dbo.sp_start_job @job_name = N'RunTimesheetDevTestMigrationPK';
+ 
+            -- Dynamic Polling Loop: Safely wait for deployment execution to complete
+            WHILE EXISTS (
+                SELECT 1 FROM msdb.dbo.sysjobactivity 
+                WHERE job_id = @deploy_job_id AND start_execution_date IS NOT NULL AND stop_execution_date IS NULL
+            )
+            BEGIN
+                WAITFOR DELAY '00:00:02';
+            END
+            EXEC dbo.sp_delete_job @job_name = N'RunTimesheetDevTestMigrationPK';
+ 
+            IF EXISTS (SELECT job_id FROM msdb.dbo.sysjobs WHERE name = N'$executionJobName')
+            BEGIN
+                EXEC dbo.sp_delete_job @job_name = N'$executionJobName', @delete_unused_schedule=1;
+            END
+ 
+            EXEC dbo.sp_add_job @job_name = N'$executionJobName', @enabled = 1, @description = N'Automated execution tracking for $projectName.', @start_step_id = 1;
+ 
+            DECLARE @TargetServer NVARCHAR(128) = CAST(SERVERPROPERTY('ServerName') AS NVARCHAR(128));
+            DECLARE @run_command NVARCHAR(MAX);
+            SET @run_command = N'/ISSERVER ' + CHAR(34) + N'\SSISDB\$targetFolder\$projectName\Package.dtsx' + CHAR(34) + N' /SERVER ' + CHAR(34) + @TargetServer + CHAR(34) + N' /Par ' + CHAR(34) + N'$ServerOption::LOGGING_LEVEL(Int16)' + CHAR(34) + N';1 /CALLERINFO SQLAGENT /REPORTING E';
+ 
+            EXEC dbo.sp_add_jobstep @job_name = N'$executionJobName', @step_name = N'Execute SSIS Package', @subsystem = N'SSIS', @command = @run_command, @retry_attempts = 0;
+            EXEC dbo.sp_add_jobserver @job_name = N'$executionJobName', @server_name = N'(local)';
+            EXEC dbo.sp_add_jobschedule
+                @job_name = N'$executionJobName',
+                @name = N'Every_1_Minute_8AM_to_5PM',
+                @enabled = 1,
+                @freq_type = 4,
+                @freq_interval = 1,
+                @freq_subday_type = 4,
+                @freq_subday_interval = 1,
+                @active_start_time = 080000,
+                @active_end_time = 170000;
+ 
+            EXEC dbo.sp_start_job @job_name = N'$executionJobName';
+            WAITFOR DELAY '00:00:05';
+            '@
+ 
+            # Safe string replacements handled strictly at execution runtime
+            $sqlQuery = $sqlQuery.Replace('$targetFolder', $targetFolder)
+            $sqlQuery = $sqlQuery.Replace('$projectName', $projectName)
+            $sqlQuery = $sqlQuery.Replace('$executionJobName', $executionJobName)
+            $sqlQuery = $sqlQuery.Replace('$partnerServer', $partnerServer)
+            $sqlQuery = $sqlQuery.Replace('$hexString', $hexString)
+ 
+            $command = $connection.CreateCommand()
+            $command.CommandText = $sqlQuery
+            $command.ExecuteNonQuery() | Out-Null
+ 
+            Write-Host "SUCCESS: Partner deployment completed, configuration overrides applied, and task triggered!"
+ 
+        } catch {
+            Write-Error "Partner Execution Failed: $_"
             exit 1
-          fi
-
-      # --- STEP 7: CREATE JOB ---
-      - name: Create Partner SQL Agent Job
-        if: always()
-        env:
-          SERVER: ${{ secrets.PARTNER_SQL_SERVER }}
-          PORT: ${{ secrets.PARTNER_SQL_PORT }}
-          USERNAME: ${{ secrets.PARTNER_SQL_USERNAME }}
-          PASSWORD: ${{ secrets.PARTNER_SQL_PASSWORD }}
-        run: |
-          if [ -f "scripts/create_job.sql" ]; then
-            echo "Creating SQL Agent Job (Partner)..."
-            /opt/mssql-tools18/bin/sqlcmd \
-              -S "${SERVER},${PORT:-1433}" \
-              -U "$USERNAME" \
-              -P "$PASSWORD" \
-              -d msdb \
-              -i "scripts/create_job.sql" \
-              -C
-            echo " Job created successfully (Partner)."
-          else
-            echo " create_job.sql not found, skipping job creation (Partner)."
-          fi
-
-      # --- STEP 8: RUN THE JOB ---
-      - name: Run Partner Migration Job
-        if: always()
-        env:
-          SERVER: ${{ secrets.PARTNER_SQL_SERVER }}
-          PORT: ${{ secrets.PARTNER_SQL_PORT }}
-          USERNAME: ${{ secrets.PARTNER_SQL_USERNAME }}
-          PASSWORD: ${{ secrets.PARTNER_SQL_PASSWORD }}
-        run: |
-          echo "Starting Partner SQL Agent Job..."
-          /opt/mssql-tools18/bin/sqlcmd \
-            -S "${SERVER},${PORT:-1433}" \
-            -U "$USERNAME" \
-            -P "$PASSWORD" \
-            -d msdb \
-            -Q "EXEC dbo.sp_start_job N'RunTimesheetDevTestMigrationPK';" \
-            -C || echo " Job may not exist or SQL Agent is not running (Partner)"
-          echo " Job started (Partner)."
+        } finally {
+            $connection.Close()
+        } 
