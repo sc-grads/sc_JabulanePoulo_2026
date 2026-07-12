@@ -23,11 +23,11 @@ jobs:
       shell: powershell
       run: |
         # STEP 1: LOCATE THE SSIS DEPLOYMENT FILE
-        $ispacPath = "${{ github.workspace }}\ssis-packages\TimesheetMigration1.ispac"
+        $ispacPath = "${{ github.workspace }}\Projects\TimesheetMigration1\TimesheetMigration1\bin\Development\TimesheetMigration1.ispac"
 
         if (-not (Test-Path -Path $ispacPath)) {
             Write-Host "Primary path not found. Testing alternate path..."
-            $ispacPath = "${{ github.workspace }}\..\ssis-packages\TimesheetMigration1.ispac"
+            $ispacPath = "${{ github.workspace }}\..\Projects\TimesheetMigration1\TimesheetMigration1\bin\Development\TimesheetMigration1.ispac"
             $ispacPath = [System.IO.Path]::GetFullPath($ispacPath)
         }
 
@@ -151,11 +151,11 @@ jobs:
       shell: powershell
       run: |
         # STEP 1: LOCATE THE SSIS DEPLOYMENT FILE
-        $ispacPath = "${{ github.workspace }}\ssis-packages\TimesheetMigration1.ispac"
+        $ispacPath = "${{ github.workspace }}\Projects\TimesheetMigration1\TimesheetMigration1\bin\Development\TimesheetMigration1.ispac"
 
         if (-not (Test-Path -Path $ispacPath)) {
             Write-Host "Primary path not found. Testing alternate path..."
-            $ispacPath = "${{ github.workspace }}\..\ssis-packages\TimesheetMigration1.ispac"
+            $ispacPath = "${{ github.workspace }}\..\Projects\TimesheetMigration1\TimesheetMigration1\bin\Development\TimesheetMigration1.ispac"
             $ispacPath = [System.IO.Path]::GetFullPath($ispacPath)
         }
 
