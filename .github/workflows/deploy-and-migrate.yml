@@ -19,6 +19,63 @@ jobs:
     - name: Checkout Repository Code
       uses: actions/checkout@v4
 
+    - name: Create Database and Tables
+      shell: powershell
+      run: |
+        # STEP 1: LOCATE THE DATABASE SCRIPT
+        $scriptPath = "${{ github.workspace }}\scripts\create_database.sql"
+        
+        if (-not (Test-Path -Path $scriptPath)) {
+            Write-Host "Primary path not found. Testing alternate path..."
+            $scriptPath = "${{ github.workspace }}\..\scripts\create_database.sql"
+            $scriptPath = [System.IO.Path]::GetFullPath($scriptPath)
+        }
+
+        if (-not (Test-Path -Path $scriptPath)) {
+            Write-Error "CRITICAL ERROR: Could not locate create_database.sql file."
+            exit 1
+        }
+
+        # STEP 2: DEFINE TARGET CONFIGURATIONS FROM YOUR ENVIRONMENT
+        $tunnelAddress = "${{ secrets.SQL_SERVER }},${{ secrets.SQL_PORT }}"
+        $dbUser        = "${{ secrets.SQL_USERNAME }}"
+        $dbPassword    = "${{ secrets.SQL_PASSWORD }}"
+        $initialDb     = "master"
+
+        # STEP 3: READ THE SCRIPT FILE
+        Write-Host "Reading database creation script..."
+        $scriptContent = Get-Content -Path $scriptPath -Raw
+
+        # STEP 4: EXECUTE THE DATABASE SCRIPT
+        Write-Host "Establishing tunnel connection to create database..."
+
+        $connStr = "Data Source=$tunnelAddress;Initial Catalog=$initialDb;User ID=$dbUser;Password=$dbPassword;TrustServerCertificate=True;Encrypt=False;"
+        $connection = New-Object System.Data.SqlClient.SqlConnection($connStr)
+
+        try {
+            $connection.Open()
+            
+            # Split the script by GO statements
+            $scriptParts = $scriptContent -split "`r`nGO`r`n|`nGO`n|`r`nGO`n|`nGO`r`n"
+            
+            foreach ($part in $scriptParts) {
+                if ($part.Trim() -ne "") {
+                    $command = $connection.CreateCommand()
+                    $command.CommandText = $part
+                    $command.ExecuteNonQuery() | Out-Null
+                    Write-Host "Executed SQL block successfully."
+                }
+            }
+
+            Write-Host "SUCCESS: Database and tables created successfully!"
+
+        } catch {
+            Write-Error "Database Creation Failed: $_"
+            exit 1
+        } finally {
+            $connection.Close()
+        }
+
     - name: Deploy SSIS and Create Execution Job
       shell: powershell
       run: |
@@ -143,10 +200,66 @@ jobs:
     needs: deploy-local
     environment: partner-sql
 
-
     steps:
     - name: Checkout Repository Code
       uses: actions/checkout@v4
+
+    - name: Create Database and Tables on Partner Server
+      shell: powershell
+      run: |
+        # STEP 1: LOCATE THE DATABASE SCRIPT
+        $scriptPath = "${{ github.workspace }}\scripts\create_database.sql"
+        
+        if (-not (Test-Path -Path $scriptPath)) {
+            Write-Host "Primary path not found. Testing alternate path..."
+            $scriptPath = "${{ github.workspace }}\..\scripts\create_database.sql"
+            $scriptPath = [System.IO.Path]::GetFullPath($scriptPath)
+        }
+
+        if (-not (Test-Path -Path $scriptPath)) {
+            Write-Error "CRITICAL ERROR: Could not locate create_database.sql file."
+            exit 1
+        }
+
+        # STEP 2: DEFINE TARGET CONFIGURATIONS FROM YOUR ENVIRONMENT
+        $tunnelAddress = "${{ secrets.SQL_SERVER }},${{ secrets.SQL_PORT }}"
+        $dbUser        = "${{ secrets.SQL_USERNAME }}"
+        $dbPassword    = "${{ secrets.SQL_PASSWORD }}"
+        $initialDb     = "master"
+
+        # STEP 3: READ THE SCRIPT FILE
+        Write-Host "Reading database creation script..."
+        $scriptContent = Get-Content -Path $scriptPath -Raw
+
+        # STEP 4: EXECUTE THE DATABASE SCRIPT
+        Write-Host "Establishing tunnel connection to create database on partner server..."
+
+        $connStr = "Data Source=$tunnelAddress;Initial Catalog=$initialDb;User ID=$dbUser;Password=$dbPassword;TrustServerCertificate=True;Encrypt=False;"
+        $connection = New-Object System.Data.SqlClient.SqlConnection($connStr)
+
+        try {
+            $connection.Open()
+            
+            # Split the script by GO statements
+            $scriptParts = $scriptContent -split "`r`nGO`r`n|`nGO`n|`r`nGO`n|`nGO`r`n"
+            
+            foreach ($part in $scriptParts) {
+                if ($part.Trim() -ne "") {
+                    $command = $connection.CreateCommand()
+                    $command.CommandText = $part
+                    $command.ExecuteNonQuery() | Out-Null
+                    Write-Host "Executed SQL block successfully on partner server."
+                }
+            }
+
+            Write-Host "SUCCESS: Database and tables created successfully on partner server!"
+
+        } catch {
+            Write-Error "Database Creation Failed on partner server: $_"
+            exit 1
+        } finally {
+            $connection.Close()
+        }
 
     - name: Deploy SSIS and Create Execution Job (Partner)
       shell: powershell
