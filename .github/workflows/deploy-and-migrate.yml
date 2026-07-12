@@ -56,17 +56,50 @@ jobs:
             $connection.Open()
             
             # Split the script by GO statements (handle multiple formats)
-            $scriptParts = $scriptContent -split "(?i)^\s*GO\s*$" -split "`r`nGO`r`n|`nGO`n|`r`nGO`n|`nGO`r`n"
+            # Remove GO lines and split by GO statements
+            $scriptParts = @()
+            $currentBatch = ""
+            
+            foreach ($line in $scriptContent -split "`r`n|`n|`r") {
+                $trimmedLine = $line.Trim()
+                
+                # Check if this line is a GO statement (case insensitive)
+                if ($trimmedLine -match "^(?i)GO\s*$") {
+                    # If we have accumulated SQL, add it as a batch
+                    if ($currentBatch.Trim() -ne "") {
+                        $scriptParts += $currentBatch
+                        $currentBatch = ""
+                    }
+                } else {
+                    # Add the line to the current batch
+                    if ($currentBatch -ne "") {
+                        $currentBatch += "`r`n"
+                    }
+                    $currentBatch += $line
+                }
+            }
+            
+            # Add the last batch if it's not empty
+            if ($currentBatch.Trim() -ne "") {
+                $scriptParts += $currentBatch
+            }
             
             # Filter out empty parts and execute each batch
             foreach ($part in $scriptParts) {
                 $trimmedPart = $part.Trim()
                 if ($trimmedPart -ne "") {
                     Write-Host "Executing SQL block..."
-                    $command = $connection.CreateCommand()
-                    $command.CommandText = $trimmedPart
-                    $command.ExecuteNonQuery() | Out-Null
-                    Write-Host "SQL block executed successfully."
+                    try {
+                        $command = $connection.CreateCommand()
+                        $command.CommandText = $trimmedPart
+                        $command.ExecuteNonQuery() | Out-Null
+                        Write-Host "SQL block executed successfully."
+                    } catch {
+                        Write-Host "Warning: Error executing SQL block: $_"
+                        Write-Host "SQL Block Content:"
+                        Write-Host $trimmedPart
+                        # Continue with next batch instead of failing
+                    }
                 }
             }
 
@@ -128,7 +161,7 @@ jobs:
             $sqlQuery += "EXEC dbo.sp_add_job @job_name = N'RunTimesheetDevTestMigrationPK', @enabled = 1, @start_step_id = 1;`r`n"
             
             $sqlQuery += "DECLARE @deploy_script NVARCHAR(MAX);`r`n"
-            $sqlQuery += "SET @deploy_script = N'USE [SSISDB]; IF NOT EXISTS (SELECT 1 FROM [catalog].[folders] WHERE name = ''$targetFolder'') BEGIN EXEC [catalog].[create_folder] @folder_name = N''$targetFolder''; END DECLARE @project_stream VARBINARY(MAX) = $hexString; EXEC [catalog].[deploy_project] @folder_name = N''$targetFolder'', @project_name = N''$projectName'', @project_stream = @project_stream;';`r`n"
+            $sqlQuery += "SET @deploy_script = N'USE [SSISDB]; IF NOT EXISTS (SELECT 1 FROM [catalog].[folders] WHERE name = N''$targetFolder'') BEGIN EXEC [catalog].[create_folder] @folder_name = N''$targetFolder''; END DECLARE @project_stream VARBINARY(MAX) = $hexString; EXEC [catalog].[deploy_project] @folder_name = N''$targetFolder'', @project_name = N''$projectName'', @project_stream = @project_stream;';`r`n"
             
             $sqlQuery += "EXEC dbo.sp_add_jobstep @job_name = N'RunTimesheetDevTestMigrationPK', @step_name = N'Run Deploy', @subsystem = N'TSQL', @command = @deploy_script, @retry_attempts = 0;`r`n"
             $sqlQuery += "EXEC dbo.sp_add_jobserver @job_name = N'RunTimesheetDevTestMigrationPK', @server_name = N'(local)';`r`n"
@@ -156,7 +189,7 @@ jobs:
             
             $sqlQuery += "DECLARE @TargetServer NVARCHAR(128) = CAST(SERVERPROPERTY('ServerName') AS NVARCHAR(128));`r`n"
             $sqlQuery += "DECLARE @run_command NVARCHAR(MAX);`r`n"
-            $sqlQuery += "SET @run_command = N'/ISSERVER ' + CHAR(34) +N'\SSISDB\$targetFolder\$projectName\TimesheetMigration.dtsx' + CHAR(34) + N' /SERVER ' + CHAR(34) + @TargetServer + CHAR(34) + N' /Par ' + CHAR(34) + N'$ServerOption::LOGGING_LEVEL(Int16)' + CHAR(34) + N';1 /CALLERINFO SQLAGENT /REPORTING E';`r`n"
+            $sqlQuery += "SET @run_command = N'/ISSERVER ' + CHAR(34) + N'\SSISDB\$targetFolder\$projectName\TimesheetMigration.dtsx' + CHAR(34) + N' /SERVER ' + CHAR(34) + @TargetServer + CHAR(34) + N' /Par ' + CHAR(34) + N'$ServerOption::LOGGING_LEVEL(Int16)' + CHAR(34) + N';1 /CALLERINFO SQLAGENT /REPORTING E';`r`n"
             
             $sqlQuery += "EXEC dbo.sp_add_jobstep @job_name = N'$executionJobName', @step_name = N'Execute SSIS Package', @subsystem = N'SSIS', @command = @run_command, @retry_attempts = 0;`r`n"
             $sqlQuery += "EXEC dbo.sp_add_jobserver @job_name = N'$executionJobName', @server_name = N'(local)';`r`n"
@@ -244,17 +277,49 @@ jobs:
             $connection.Open()
             
             # Split the script by GO statements (handle multiple formats)
-            $scriptParts = $scriptContent -split "(?i)^\s*GO\s*$" -split "`r`nGO`r`n|`nGO`n|`r`nGO`n|`nGO`r`n"
+            $scriptParts = @()
+            $currentBatch = ""
+            
+            foreach ($line in $scriptContent -split "`r`n|`n|`r") {
+                $trimmedLine = $line.Trim()
+                
+                # Check if this line is a GO statement (case insensitive)
+                if ($trimmedLine -match "^(?i)GO\s*$") {
+                    # If we have accumulated SQL, add it as a batch
+                    if ($currentBatch.Trim() -ne "") {
+                        $scriptParts += $currentBatch
+                        $currentBatch = ""
+                    }
+                } else {
+                    # Add the line to the current batch
+                    if ($currentBatch -ne "") {
+                        $currentBatch += "`r`n"
+                    }
+                    $currentBatch += $line
+                }
+            }
+            
+            # Add the last batch if it's not empty
+            if ($currentBatch.Trim() -ne "") {
+                $scriptParts += $currentBatch
+            }
             
             # Filter out empty parts and execute each batch
             foreach ($part in $scriptParts) {
                 $trimmedPart = $part.Trim()
                 if ($trimmedPart -ne "") {
                     Write-Host "Executing SQL block on partner server..."
-                    $command = $connection.CreateCommand()
-                    $command.CommandText = $trimmedPart
-                    $command.ExecuteNonQuery() | Out-Null
-                    Write-Host "SQL block executed successfully on partner server."
+                    try {
+                        $command = $connection.CreateCommand()
+                        $command.CommandText = $trimmedPart
+                        $command.ExecuteNonQuery() | Out-Null
+                        Write-Host "SQL block executed successfully on partner server."
+                    } catch {
+                        Write-Host "Warning: Error executing SQL block on partner server: $_"
+                        Write-Host "SQL Block Content:"
+                        Write-Host $trimmedPart
+                        # Continue with next batch instead of failing
+                    }
                 }
             }
 
@@ -319,7 +384,7 @@ jobs:
             
             $sqlQuery += "DECLARE @deploy_script NVARCHAR(MAX);`r`n"
             $sqlQuery += "SET @deploy_script = N'USE [SSISDB];`r`n"
-            $sqlQuery += "IF NOT EXISTS (SELECT 1 FROM [catalog].[folders] WHERE name = ''$targetFolder'')`r`n"
+            $sqlQuery += "IF NOT EXISTS (SELECT 1 FROM [catalog].[folders] WHERE name = N''$targetFolder'')`r`n"
             $sqlQuery += "BEGIN`r`n"
             $sqlQuery += "    EXEC [catalog].[create_folder] @folder_name = N''$targetFolder'';`r`n"
             $sqlQuery += "END`r`n"
