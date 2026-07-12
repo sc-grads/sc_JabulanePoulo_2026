@@ -375,7 +375,7 @@ jobs:
             $sqlQuery += "EXEC dbo.sp_start_job @job_name = N'$executionJobName';`r`n"
             $sqlQuery += "WAITFOR DELAY '00:00:05';"
 
-            # Replace placeholders
+            # Replace placeholder
             $sqlQuery = $sqlQuery.Replace('$targetFolder', $targetFolder)
             $sqlQuery = $sqlQuery.Replace('$projectName', $projectName)
             $sqlQuery = $sqlQuery.Replace('$executionJobName', $executionJobName)
