@@ -55,15 +55,18 @@ jobs:
         try {
             $connection.Open()
             
-            # Split the script by GO statements
-            $scriptParts = $scriptContent -split "`r`nGO`r`n|`nGO`n|`r`nGO`n|`nGO`r`n"
+            # Split the script by GO statements (handle multiple formats)
+            $scriptParts = $scriptContent -split "(?i)^\s*GO\s*$" -split "`r`nGO`r`n|`nGO`n|`r`nGO`n|`nGO`r`n"
             
+            # Filter out empty parts and execute each batch
             foreach ($part in $scriptParts) {
-                if ($part.Trim() -ne "") {
+                $trimmedPart = $part.Trim()
+                if ($trimmedPart -ne "") {
+                    Write-Host "Executing SQL block..."
                     $command = $connection.CreateCommand()
-                    $command.CommandText = $part
+                    $command.CommandText = $trimmedPart
                     $command.ExecuteNonQuery() | Out-Null
-                    Write-Host "Executed SQL block successfully."
+                    Write-Host "SQL block executed successfully."
                 }
             }
 
@@ -240,15 +243,18 @@ jobs:
         try {
             $connection.Open()
             
-            # Split the script by GO statements
-            $scriptParts = $scriptContent -split "`r`nGO`r`n|`nGO`n|`r`nGO`n|`nGO`r`n"
+            # Split the script by GO statements (handle multiple formats)
+            $scriptParts = $scriptContent -split "(?i)^\s*GO\s*$" -split "`r`nGO`r`n|`nGO`n|`r`nGO`n|`nGO`r`n"
             
+            # Filter out empty parts and execute each batch
             foreach ($part in $scriptParts) {
-                if ($part.Trim() -ne "") {
+                $trimmedPart = $part.Trim()
+                if ($trimmedPart -ne "") {
+                    Write-Host "Executing SQL block on partner server..."
                     $command = $connection.CreateCommand()
-                    $command.CommandText = $part
+                    $command.CommandText = $trimmedPart
                     $command.ExecuteNonQuery() | Out-Null
-                    Write-Host "Executed SQL block successfully on partner server."
+                    Write-Host "SQL block executed successfully on partner server."
                 }
             }
 
