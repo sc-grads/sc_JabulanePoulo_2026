@@ -42,7 +42,7 @@ jobs:
         $dbPassword    = "${{ secrets.SQL_PASSWORD }}"
         $initialDb     = "master"
         $targetFolder     = "TimesheetDevTestMigration"
-        $projectName      = "ProjectTime"
+        $projectName      = "TimesheetMigration1"
         $executionJobName = "RunTimesheetDevTestMigrationPK"
 
         # STEP 3: CONVERT ISPAC FILE INTO BINARY DATA STREAM
