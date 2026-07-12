@@ -91,7 +91,7 @@ jobs:
             EXEC dbo.sp_add_job @job_name = N'$executionJobName', @enabled = 1, @description = N'Automated execution tracking for $projectName.', @start_step_id = 1;
             DECLARE @TargetServer NVARCHAR(128) = CAST(SERVERPROPERTY('ServerName') AS NVARCHAR(128));
             DECLARE @run_command NVARCHAR(MAX);
-            SET @run_command = N'/ISSERVER ' + CHAR(34) + N'\SSISDB\$targetFolder\$projectName\Package.dtsx' + CHAR(34) + N' /SERVER ' + CHAR(34) + @TargetServer + CHAR(34) + N' /Par ' + CHAR(34) + N'$ServerOption::LOGGING_LEVEL(Int16)' + CHAR(34) + N';1 /CALLERINFO SQLAGENT /REPORTING E';
+            SET @run_command = N'/ISSERVER ' + CHAR(34) + N'\SSISDB\$targetFolder\$projectName\TimesheetMigration1.dtsx' + CHAR(34) + N' /SERVER ' + CHAR(34) + @TargetServer + CHAR(34) + N' /Par ' + CHAR(34) + N'$ServerOption::LOGGING_LEVEL(Int16)' + CHAR(34) + N';1 /CALLERINFO SQLAGENT /REPORTING E';
             EXEC dbo.sp_add_jobstep @job_name = N'$executionJobName', @step_name = N'Execute SSIS Package', @subsystem = N'SSIS', @command = @run_command, @retry_attempts = 0;
             EXEC dbo.sp_add_jobserver @job_name = N'$executionJobName', @server_name = N'(local)';
             EXEC dbo.sp_add_jobschedule 
