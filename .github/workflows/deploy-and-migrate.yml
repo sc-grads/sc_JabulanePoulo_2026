@@ -7,7 +7,7 @@ on:
 
 jobs:
 
-  # ========================================================================
+  # =========================================================================
   # JOB 1: DEPLOY TO LOCAL LAPTOP
   # =========================================================================
   deploy-local:
@@ -19,80 +19,7 @@ jobs:
       - name: Checkout Repository Code
         uses: actions/checkout@v4
 
-      - name: Ensure SSISDB Catalog Exists
-        shell: powershell
-        run: |
-          $tunnelAddress = "${{ secrets.SQL_SERVER }},${{ secrets.SQL_PORT }}"
-          $dbUser        = "${{ secrets.SQL_USERNAME }}"
-          $dbPassword    = "${{ secrets.SQL_PASSWORD }}"
-          
-          $connStr = "Data Source=$tunnelAddress;Initial Catalog=master;User ID=$dbUser;Password=$dbPassword;TrustServerCertificate=True;Encrypt=False;"
-          $connection = New-Object System.Data.SqlClient.SqlConnection($connStr)
-          
-          try {
-              $connection.Open()
-              Write-Host "Connected to SQL Server successfully."
-              
-              # Check if SSISDB exists
-              $checkCmd = $connection.CreateCommand()
-              $checkCmd.CommandText = "SELECT COUNT(*) FROM sys.databases WHERE name = 'SSISDB'"
-              $exists = $checkCmd.ExecuteScalar()
-              
-              if ($exists -eq 0) {
-                  Write-Host "SSISDB does not exist. Creating SSISDB catalog..."
-                  
-                  # Check if Integration Services is installed
-                  $checkSsisCmd = $connection.CreateCommand()
-                  $checkSsisCmd.CommandText = @"
-          IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[sp_ssis_addcatalog]') AND type in (N'P', N'PC'))
-          BEGIN
-              SELECT 1 AS HasSSIS
-          END
-          ELSE
-          BEGIN
-              SELECT 0 AS HasSSIS
-          END
-          "@
-                  $hasSSIS = $checkSsisCmd.ExecuteScalar()
-                  
-                  if ($hasSSIS -eq 0) {
-                      Write-Warning "Integration Services is not installed or sp_ssis_addcatalog is missing."
-                      Write-Warning "The SSISDB catalog cannot be created programmatically."
-                      Write-Warning "Please install SQL Server Integration Services and try again."
-                      exit 1
-                  }
-                  
-                  # Create SSISDB catalog
-                  $createCmd = $connection.CreateCommand()
-                  $createCmd.CommandText = @"
-          USE [master];
-          DECLARE @return_value int;
-          EXEC @return_value = [dbo].[sp_ssis_addcatalog];
-          SELECT 'Catalog Creation Return Code: ' + CAST(@return_value AS VARCHAR) AS Result;
-          "@
-                  
-                  try {
-                      $result = $createCmd.ExecuteScalar()
-                      Write-Host "SSISDB catalog created successfully! Result: $result"
-                      
-                      # Wait for catalog to be fully initialized
-                      Write-Host "Waiting for SSISDB to initialize..."
-                      Start-Sleep -Seconds 10
-                  } catch {
-                      Write-Error "Failed to create SSISDB catalog: $_"
-                      Write-Error "You may need to create it manually with: EXEC [dbo].[sp_ssis_addcatalog];"
-                      exit 1
-                  }
-              } else {
-                  Write-Host "SSISDB catalog already exists."
-              }
-              
-          } catch {
-              Write-Error "Failed to check/create SSISDB: $_"
-              exit 1
-          } finally {
-              $connection.Close()
-          }
+     
 
       - name: Create Database and Tables
         shell: powershell
