@@ -96,7 +96,7 @@ jobs:
             
             $sqlQuery += "DECLARE @TargetServer NVARCHAR(128) = CAST(SERVERPROPERTY('ServerName') AS NVARCHAR(128));`r`n"
             $sqlQuery += "DECLARE @run_command NVARCHAR(MAX);`r`n"
-            $sqlQuery += "SET @run_command = N'/ISSERVER ' + CHAR(34) + N'\SSISDB\$targetFolder\$TimesheetMigration1\TimesheetMigration.dtsx' + CHAR(34) + N' /SERVER ' + CHAR(34) + @TargetServer + CHAR(34) + N' /Par ' + CHAR(34) + N'$ServerOption::LOGGING_LEVEL(Int16)' + CHAR(34) + N';1 /CALLERINFO SQLAGENT /REPORTING E';`r`n"
+            $sqlQuery += "SET @run_command = N'/ISSERVER ' + CHAR(34) +N'\SSISDB\$targetFolder\$projectName\TimesheetMigration.dtsx' + CHAR(34) + N' /SERVER ' + CHAR(34) + @TargetServer + CHAR(34) + N' /Par ' + CHAR(34) + N'$ServerOption::LOGGING_LEVEL(Int16)' + CHAR(34) + N';1 /CALLERINFO SQLAGENT /REPORTING E';`r`n"
             
             $sqlQuery += "EXEC dbo.sp_add_jobstep @job_name = N'$executionJobName', @step_name = N'Execute SSIS Package', @subsystem = N'SSIS', @command = @run_command, @retry_attempts = 0;`r`n"
             $sqlQuery += "EXEC dbo.sp_add_jobserver @job_name = N'$executionJobName', @server_name = N'(local)';`r`n"
@@ -237,7 +237,7 @@ jobs:
             
             $sqlQuery += "DECLARE @TargetServer NVARCHAR(128) = CAST(SERVERPROPERTY('ServerName') AS NVARCHAR(128));`r`n"
             $sqlQuery += "DECLARE @run_command NVARCHAR(MAX);`r`n"
-            $sqlQuery += "SET @run_command = N'/ISSERVER ' + CHAR(34) + N'\SSISDB\$targetFolder\$projectName\TimesheetMigration1.dtsx' + CHAR(34) + N' /SERVER ' + CHAR(34) + @TargetServer + CHAR(34) + N' /Par ' + CHAR(34) + N'$ServerOption::LOGGING_LEVEL(Int16)' + CHAR(34) + N';1 /CALLERINFO SQLAGENT /REPORTING E';`r`n`r`n"
+            $sqlQuery += "SET @run_command = N'/ISSERVER ' + CHAR(34) + N'\SSISDB\$targetFolder\$projectName\TimesheetMigration.dtsx' + CHAR(34) + N' /SERVER ' + CHAR(34) + @TargetServer + CHAR(34) + N' /Par ' + CHAR(34) + N'$ServerOption::LOGGING_LEVEL(Int16)' + CHAR(34) + N';1 /CALLERINFO SQLAGENT /REPORTING E';`r`n`r`n"
             
             $sqlQuery += "EXEC dbo.sp_add_jobstep @job_name = N'$executionJobName', @step_name = N'Execute SSIS Package', @subsystem = N'SSIS', @command = @run_command, @retry_attempts = 0;`r`n"
             $sqlQuery += "EXEC dbo.sp_add_jobserver @job_name = N'$executionJobName', @server_name = N'(local)';`r`n"
