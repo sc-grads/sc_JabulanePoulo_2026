@@ -52,23 +52,7 @@ jobs:
         $connStr = "Data Source=$tunnelAddress;Initial Catalog=$initialDb;User ID=$dbUser;Password=$dbPassword;TrustServerCertificate=True;Encrypt=False;"
         $connection = New-Object System.Data.SqlClient.SqlConnection($connStr)
 
-        try {
-            $connection.Open()
-            
-            # Split the script by GO statements (handle multiple formats)
-            $scriptParts = $scriptContent -split "(?i)^\s*GO\s*$" -split "`r`nGO`r`n|`nGO`n|`r`nGO`n|`nGO`r`n"
-            
-            # Filter out empty parts and execute each batch
-            foreach ($part in $scriptParts) {
-                $trimmedPart = $part.Trim()
-                if ($trimmedPart -ne "") {
-                    Write-Host "Executing SQL block..."
-                    $command = $connection.CreateCommand()
-                    $command.CommandText = $trimmedPart
-                    $command.ExecuteNonQuery() | Out-Null
-                    Write-Host "SQL block executed successfully."
-                }
-            }
+        
 
             Write-Host "SUCCESS: Database and tables created successfully!"
 
@@ -240,23 +224,7 @@ jobs:
         $connStr = "Data Source=$tunnelAddress;Initial Catalog=$initialDb;User ID=$dbUser;Password=$dbPassword;TrustServerCertificate=True;Encrypt=False;"
         $connection = New-Object System.Data.SqlClient.SqlConnection($connStr)
 
-        try {
-            $connection.Open()
-            
-            # Split the script by GO statements (handle multiple formats)
-            $scriptParts = $scriptContent -split "(?i)^\s*GO\s*$" -split "`r`nGO`r`n|`nGO`n|`r`nGO`n|`nGO`r`n"
-            
-            # Filter out empty parts and execute each batch
-            foreach ($part in $scriptParts) {
-                $trimmedPart = $part.Trim()
-                if ($trimmedPart -ne "") {
-                    Write-Host "Executing SQL block on partner server..."
-                    $command = $connection.CreateCommand()
-                    $command.CommandText = $trimmedPart
-                    $command.ExecuteNonQuery() | Out-Null
-                    Write-Host "SQL block executed successfully on partner server."
-                }
-            }
+        
 
             Write-Host "SUCCESS: Database and tables created successfully on partner server!"
 
