@@ -32,7 +32,7 @@ jobs:
         }
 
         if (-not (Test-Path -Path $ispacPath)) {
-            Write-Error "CRITICAL ERROR: Could not locate ProjectTime.ispac file."
+            Write-Error "CRITICAL ERROR: Could not locate TimesheetMigration1.ispac file."
             exit 1
         }
 
@@ -160,7 +160,7 @@ jobs:
         }
 
         if (-not (Test-Path -Path $ispacPath)) {
-            Write-Error "CRITICAL ERROR: Could not locate ProjectTime.ispac file."
+            Write-Error "CRITICAL ERROR: Could not locate TimesheetMigration1.ispac file."
             exit 1
         }
 
@@ -171,7 +171,7 @@ jobs:
         $initialDb     = "master"
 
         $targetFolder     = "TimesheetProductionMigration"
-        $projectName      = "ProjectTime"
+        $projectName      = "TimesheetMigration1"
         $executionJobName = "RunTimesheetProductionMigrationPK"
         $partnerServer    = "DESKTOP-DBA1BPB\SQLSERVER2025"
 
@@ -190,7 +190,7 @@ jobs:
 
             # Build the SQL command string step by step
             $sqlQuery = "SET NOCOUNT ON; USE [msdb];`r`n"
-            $sqlQuery += "IF EXISTS (SELECT job_id FROM msdb.dbo.sysjobs WHERE name = N'RunTimesheetDevTestMigrationPK')`r`n"
+            $sqlQuery += "IF EXISTS (SELECT job_id FROM msdb.dbo.sysjobs WHERE name = N'RunTimesheetProductionMigrationPK')`r`n"
             $sqlQuery += "BEGIN`r`n"
             $sqlQuery += "    EXEC dbo.sp_delete_job @job_name = N'RunTimesheetDevTestMigrationPK', @delete_unused_schedule=1;`r`n"
             $sqlQuery += "END`r`n`r`n"
