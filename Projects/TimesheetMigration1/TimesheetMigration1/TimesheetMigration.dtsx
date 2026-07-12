@@ -11,8 +11,8 @@
   DTS:LocaleID="7177"
   DTS:ObjectName="TimesheetMigration"
   DTS:PackageType="5"
-  DTS:VersionBuild="279"
-  DTS:VersionGUID="{A8D5B73B-837C-4899-86D4-FFD7EE77D427}">
+  DTS:VersionBuild="281"
+  DTS:VersionGUID="{B9BB44FB-9818-4745-AD19-A929A6C6485C}">
   <DTS:Property
     DTS:Name="PackageFormatVersion">8</DTS:Property>
   <DTS:ConnectionManagers>
@@ -152,23 +152,6 @@
     </DTS:Variable>
   </DTS:Variables>
   <DTS:Executables>
-    <DTS:Executable
-      DTS:refId="Package\Create Database"
-      DTS:CreationName="Microsoft.ExecuteSQLTask"
-      DTS:Description="Execute SQL Task"
-      DTS:DTSID="{97AB564E-70E4-4743-90F5-566A079AD64B}"
-      DTS:ExecutableType="Microsoft.ExecuteSQLTask"
-      DTS:LocaleID="-1"
-      DTS:ObjectName="Create Database"
-      DTS:TaskContact="Execute SQL Task; Microsoft Corporation; SQL Server 2025; © 2025 Microsoft Corporation; All Rights Reserved;http://www.microsoft.com/sql/support/default.asp;1"
-      DTS:ThreadHint="1">
-      <DTS:Variables />
-      <DTS:ObjectData>
-        <SQLTask:SqlTaskData
-          SQLTask:Connection="{12C26D31-71E3-4084-85A3-C3363301A0C8}"
-          SQLTask:SqlStatementSource="-- =============================================&#xA;-- Database: TimesheetsDB&#xA;-- Description: Complete database creation script with job execution&#xA;-- =============================================&#xA;&#xA;-- Check if database exists and drop it&#xA;IF EXISTS (SELECT name FROM sys.databases WHERE name = N'TimesheetsDB')&#xA;BEGIN&#xA;    ALTER DATABASE TimesheetsDB SET SINGLE_USER WITH ROLLBACK IMMEDIATE;&#xA;    DROP DATABASE TimesheetsDB;&#xA;END&#xA;GO&#xA;&#xA;&#xA;-- Create the database&#xA;CREATE DATABASE TimesheetsDB;&#xA;GO&#xA;&#xA;-- Use the database&#xA;USE TimesheetsDB;&#xA;GO&#xA;&#xA;&#xA;&#xA;-- =============================================&#xA;-- Create Schemas&#xA;-- =============================================&#xA;&#xA;-- Audit schema&#xA;IF NOT EXISTS (SELECT * FROM sys.schemas WHERE name = N'audit')&#xA;BEGIN&#xA;    EXEC('CREATE SCHEMA [audit]')&#xA;END&#xA;GO&#xA;&#xA;-- Staging schema&#xA;IF NOT EXISTS (SELECT * FROM sys.schemas WHERE name = N'staging')&#xA;BEGIN&#xA;    EXEC('CREATE SCHEMA [staging]')&#xA;END&#xA;GO&#xA;&#xA;-- Timesheet schema&#xA;IF NOT EXISTS (SELECT * FROM sys.schemas WHERE name = N'timesheet')&#xA;BEGIN&#xA;    EXEC('CREATE SCHEMA [timesheet]')&#xA;END&#xA;GO&#xA;&#xA;-- =============================================&#xA;-- Table: audit.AuditLog&#xA;-- =============================================&#xA;SET ANSI_NULLS ON&#xA;GO&#xA;SET QUOTED_IDENTIFIER ON&#xA;GO&#xA;&#xA;CREATE TABLE [audit].[AuditLog](&#xA;&#x9;[LogID] [bigint] IDENTITY(1,1) NOT NULL,&#xA;&#x9;[LogDateTime] [datetime] NULL,&#xA;&#x9;[RunNumber] [int] NULL,&#xA;&#x9;[LogSource] [nvarchar](500) NULL,&#xA;&#x9;[TaskName] [nvarchar](200) NULL,&#xA;&#x9;[LogStatus] [varchar](50) NULL,&#xA;&#x9;[RowsInserted] [int] NULL,&#xA;&#x9;[RowsUpdated] [int] NULL,&#xA;&#x9;[RowsDeleted] [int] NULL,&#xA;&#x9;[ExecutedBy] [nvarchar](100) NULL,&#xA;&#x9;[TargetTable] [nvarchar](100) NULL,&#xA;&#x9;[ExecutionDurationMs] [int] NULL,&#xA;&#x9;[Message] [nvarchar](max) NULL,&#xA;PRIMARY KEY CLUSTERED &#xA;(&#xA;&#x9;[LogID] ASC&#xA;)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]&#xA;) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]&#xA;GO&#xA;&#xA;ALTER TABLE [audit].[AuditLog] ADD  DEFAULT (getdate()) FOR [LogDateTime]&#xA;GO&#xA;ALTER TABLE [audit].[AuditLog] ADD  DEFAULT ((0)) FOR [RowsInserted]&#xA;GO&#xA;ALTER TABLE [audit].[AuditLog] ADD  DEFAULT ((0)) FOR [RowsUpdated]&#xA;GO&#xA;ALTER TABLE [audit].[AuditLog] ADD  DEFAULT ((0)) FOR [RowsDeleted]&#xA;GO&#xA;&#xA;&#xA;&#xA;&#xA;-- =============================================&#xA;-- Table: staging.Timesheet&#xA;-- =============================================&#xA;SET ANSI_NULLS ON&#xA;GO&#xA;SET QUOTED_IDENTIFIER ON&#xA;GO&#xA;&#xA;CREATE TABLE [staging].[Timesheet](&#xA;&#x9;[StagingID] [int] IDENTITY(1,1) NOT NULL,&#xA;&#x9;[EmployeeID] [int] NULL,&#xA;&#x9;[WorkDate] [date] NULL,&#xA;&#x9;[ClientName] [varchar](255) NULL,&#xA;&#x9;[ProjectName] [varchar](255) NULL,&#xA;&#x9;[WorkDescription] [varchar](500) NULL,&#xA;&#x9;[BillableStatus] [varchar](50) NULL,&#xA;&#x9;[Comments] [varchar](max) NULL,&#xA;&#x9;[HoursWorked] [decimal](5, 2) NULL,&#xA;&#x9;[StartTime] [time](7) NULL,&#xA;&#x9;[EndTime] [time](7) NULL,&#xA;&#x9;[SourceFile] [varchar](255) NULL,&#xA;&#x9;[Processed] [bit] NULL,&#xA;&#x9;[ProcessedAt] [datetime2](7) NULL,&#xA;&#x9;[DayOfWeek] [varchar](20) NULL,&#xA;PRIMARY KEY CLUSTERED &#xA;(&#xA;&#x9;[StagingID] ASC&#xA;)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]&#xA;) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]&#xA;GO&#xA;&#xA;ALTER TABLE [staging].[Timesheet] ADD  DEFAULT ((0)) FOR [Processed]&#xA;GO&#xA;&#xA;-- =============================================&#xA;-- Table: timesheet.Client&#xA;-- =============================================&#xA;SET ANSI_NULLS ON&#xA;GO&#xA;SET QUOTED_IDENTIFIER ON&#xA;GO&#xA;&#xA;CREATE TABLE [timesheet].[Client](&#xA;&#x9;[ClientID] [int] IDENTITY(1,1) NOT NULL,&#xA;&#x9;[ClientName] [nvarchar](200) NOT NULL,&#xA;PRIMARY KEY CLUSTERED &#xA;(&#xA;&#x9;[ClientID] ASC&#xA;)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY],&#xA;UNIQUE NONCLUSTERED &#xA;(&#xA;&#x9;[ClientName] ASC&#xA;)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]&#xA;) ON [PRIMARY]&#xA;GO&#xA;&#xA;-- =============================================&#xA;-- Table: timesheet.Employee&#xA;-- =============================================&#xA;SET ANSI_NULLS ON&#xA;GO&#xA;SET QUOTED_IDENTIFIER ON&#xA;GO&#xA;&#xA;CREATE TABLE [timesheet].[Employee](&#xA;&#x9;[EmployeeID] [int] IDENTITY(1,1) NOT NULL,&#xA;&#x9;[FirstName] [nvarchar](100) NULL,&#xA;&#x9;[LastName] [nvarchar](100) NULL,&#xA;PRIMARY KEY CLUSTERED &#xA;(&#xA;&#x9;[EmployeeID] ASC&#xA;)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]&#xA;) ON [PRIMARY]&#xA;GO&#xA;-- =============================================&#xA;-- Table: timesheet.EMployeeLeave&#xA;-- =============================================&#xA;CREATE TABLE [timesheet].[EmployeeLeave](&#xA;&#x9;[LeaveID] [int] IDENTITY(1,1) NOT NULL,&#xA;&#x9;[EmployeeID] [int] NOT NULL,&#xA;&#x9;[LeaveType] [varchar](100) NULL,&#xA;&#x9;[StartDate] [date] NULL,&#xA;&#x9;[EndDate] [date] NULL,&#xA;&#x9;[NumberOfDays] [decimal](5, 2) NULL,&#xA;PRIMARY KEY CLUSTERED &#xA;(&#xA;&#x9;[LeaveID] ASC&#xA;)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]&#xA;) ON [PRIMARY]&#xA;GO&#xA;&#xA;&#xA;&#xA;ALTER TABLE [timesheet].[EmployeeLeave]  WITH CHECK ADD FOREIGN KEY([EmployeeID])&#xA;REFERENCES [timesheet].[Employee] ([EmployeeID])&#xA;GO&#xA;&#xA;&#xA;-- =============================================&#xA;-- Table: timesheet.Timesheet&#xA;-- =============================================&#xA;SET ANSI_NULLS ON&#xA;GO&#xA;SET QUOTED_IDENTIFIER ON&#xA;GO&#xA;&#xA;CREATE TABLE [timesheet].[Timesheet](&#xA;&#x9;[TimesheetID] [bigint] IDENTITY(1,1) NOT NULL,&#xA;&#x9;[EmployeeID] [int] NOT NULL,&#xA;&#x9;[WorkDate] [date] NOT NULL,&#xA;&#x9;[DayOfWeek] [varchar](20) NULL,&#xA;&#x9;[WorkDescription] [varchar](500) NULL,&#xA;&#x9;[Comments] [varchar](max) NULL,&#xA;&#x9;[HoursWorked] [decimal](5, 2) NOT NULL,&#xA;&#x9;[StartTime] [time](7) NULL,&#xA;&#x9;[EndTime] [time](7) NULL,&#xA;&#x9;[ClientID] [int] NULL,&#xA;&#x9;[BillableStatus] [varchar](50) NULL,&#xA;PRIMARY KEY CLUSTERED &#xA;(&#xA;&#x9;[TimesheetID] ASC&#xA;)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]&#xA;) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]&#xA;GO&#xA;&#xA;&#xA;ALTER TABLE [timesheet].[Timesheet] WITH CHECK ADD CONSTRAINT [FK_Timesheet_Client] FOREIGN KEY([ClientID])&#xA;REFERENCES [timesheet].[Client] ([ClientID])&#xA;GO&#xA;&#xA;&#xA;ALTER TABLE [timesheet].[Timesheet] CHECK CONSTRAINT [FK_Timesheet_Client]&#xA;GO&#xA;&#xA;ALTER TABLE [timesheet].[Timesheet] WITH CHECK ADD CONSTRAINT [FK_Timesheet_Employee] FOREIGN KEY([EmployeeID])&#xA;REFERENCES [timesheet].[Employee] ([EmployeeID])&#xA;GO&#xA;&#xA;&#xA;ALTER TABLE [timesheet].[Timesheet] CHECK CONSTRAINT [FK_Timesheet_Employee]&#xA;GO&#xA;&#xA;&#xA;-- =============================================&#xA;-- Populate Data&#xA;-- =============================================&#xA;-- Insert Employee data&#xA;INSERT INTO [timesheet].[Employee] (FirstName, LastName) &#xA;VALUES &#xA;    ('Buhle', 'Mkubha'),&#xA;    ('Charmane', 'Mchunu'),&#xA;    ('Jabulane', 'Poulo'),&#xA;    ('Kayden', 'Padayachee'),&#xA;    ('Lwazisile', 'Mhlambi'),&#xA;    ('Rushil', 'Jivan'),&#xA;    ('Shriya', 'Hariparsad'),&#xA;    ('Teolan', 'Govender');&#xA;&#xA;-- Insert Client data&#xA;INSERT INTO [timesheet].[Client] (ClientName) &#xA;VALUES &#xA;    ('Internal Sambe'),&#xA;    ('Discovery');&#xA;&#xA;&#xA;-- =============================================&#xA;-- Verification Queries&#xA;-- =============================================&#xA;&#xA;-- Verify the data was inserted&#xA;SELECT 'Employee Count' as [Check], COUNT(*) as [Count] FROM [timesheet].[Employee]&#xA;UNION ALL&#xA;SELECT 'Client Count', COUNT(*) FROM [timesheet].[Client];&#xA;&#xA;-- Show the inserted data&#xA;SELECT 'Employees' as [Table], EmployeeID, FirstName, LastName FROM [timesheet].[Employee]&#xA;UNION ALL&#xA;SELECT 'Clients', ClientID, ClientName, '' FROM [timesheet].[Client];&#xA;GO" xmlns:SQLTask="www.microsoft.com/sqlserver/dts/tasks/sqltask" />
-      </DTS:ObjectData>
-    </DTS:Executable>
     <DTS:Executable
       DTS:refId="Package\Expression Task"
       DTS:CreationName="Microsoft.ExpressionTask"
@@ -3834,14 +3817,6 @@ where [refTable].[EmployeeID] = ?</property>
       DTS:LogicalAnd="True"
       DTS:ObjectName="Constraint 4"
       DTS:To="Package\Leave" />
-    <DTS:PrecedenceConstraint
-      DTS:refId="Package.PrecedenceConstraints[Constraint 5]"
-      DTS:CreationName=""
-      DTS:DTSID="{0FC4D164-BAE1-4F1B-B6B8-573CD4698D42}"
-      DTS:From="Package\Create Database"
-      DTS:LogicalAnd="True"
-      DTS:ObjectName="Constraint 5"
-      DTS:To="Package\Get Run Number" />
   </DTS:PrecedenceConstraints>
   <DTS:DesignTimeProperties><![CDATA[<?xml version="1.0"?>
 <!--This CDATA section contains the layout information of the package. The section includes information such as (x,y) coordinates, width, and height.-->
@@ -4080,32 +4055,6 @@ where [refTable].[EmployeeID] = ?</property>
             <EdgeLabelCollection />
           </EdgeLayout.Labels>
         </EdgeLayout>
-        <NodeLayout
-          Size="164.8,41.6"
-          Id="Package\Create Database"
-          TopLeft="330.833315257398,25.1333331585592" />
-        <EdgeLayout
-          Id="Package.PrecedenceConstraints[Constraint 5]"
-          TopLeft="412.483315189101,66.7333331585592">
-          <EdgeLayout.Curve>
-            <mssgle:Curve
-              StartConnector="{assembly:Null}"
-              EndConnector="0,38.9999994395177"
-              Start="0,0"
-              End="0,31.4999994395177">
-              <mssgle:Curve.Segments>
-                <mssgle:SegmentCollection
-                  Capacity="5">
-                  <mssgle:LineSegment
-                    End="0,31.4999994395177" />
-                </mssgle:SegmentCollection>
-              </mssgle:Curve.Segments>
-            </mssgle:Curve>
-          </EdgeLayout.Curve>
-          <EdgeLayout.Labels>
-            <EdgeLabelCollection />
-          </EdgeLayout.Labels>
-        </EdgeLayout>
       </GraphLayout>
     </LayoutInfo>
   </Package>
@@ -4229,9 +4178,7 @@ where [refTable].[EmployeeID] = ?</property>
             </mssgle:Curve>
           </EdgeLayout.Curve>
           <EdgeLayout.Labels>
-            <mssgm:EdgeLabel
-              BoundingBox="0,0,0,0"
-              RelativePosition="Any" />
+            <EdgeLabelCollection />
           </EdgeLayout.Labels>
         </EdgeLayout>
         <EdgeLayout
@@ -4253,9 +4200,7 @@ where [refTable].[EmployeeID] = ?</property>
             </mssgle:Curve>
           </EdgeLayout.Curve>
           <EdgeLayout.Labels>
-            <mssgm:EdgeLabel
-              BoundingBox="0,0,0,0"
-              RelativePosition="Any" />
+            <EdgeLabelCollection />
           </EdgeLayout.Labels>
         </EdgeLayout>
         <EdgeLayout
@@ -4289,9 +4234,7 @@ where [refTable].[EmployeeID] = ?</property>
             </mssgle:Curve>
           </EdgeLayout.Curve>
           <EdgeLayout.Labels>
-            <mssgm:EdgeLabel
-              BoundingBox="0,0,0,0"
-              RelativePosition="Any" />
+            <EdgeLabelCollection />
           </EdgeLayout.Labels>
         </EdgeLayout>
       </GraphLayout>
@@ -4466,7 +4409,9 @@ where [refTable].[EmployeeID] = ?</property>
             </mssgle:Curve>
           </EdgeLayout.Curve>
           <EdgeLayout.Labels>
-            <EdgeLabelCollection />
+            <mssgm:EdgeLabel
+              BoundingBox="0,0,0,0"
+              RelativePosition="Any" />
           </EdgeLayout.Labels>
         </EdgeLayout>
         <EdgeLayout
@@ -4488,7 +4433,9 @@ where [refTable].[EmployeeID] = ?</property>
             </mssgle:Curve>
           </EdgeLayout.Curve>
           <EdgeLayout.Labels>
-            <EdgeLabelCollection />
+            <mssgm:EdgeLabel
+              BoundingBox="0,0,0,0"
+              RelativePosition="Any" />
           </EdgeLayout.Labels>
         </EdgeLayout>
         <EdgeLayout
@@ -4522,7 +4469,9 @@ where [refTable].[EmployeeID] = ?</property>
             </mssgle:Curve>
           </EdgeLayout.Curve>
           <EdgeLayout.Labels>
-            <EdgeLabelCollection />
+            <mssgm:EdgeLabel
+              BoundingBox="0,0,0,0"
+              RelativePosition="Any" />
           </EdgeLayout.Labels>
         </EdgeLayout>
       </GraphLayout>
