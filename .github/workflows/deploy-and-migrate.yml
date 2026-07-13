@@ -114,7 +114,6 @@ jobs:
         $tunnelAddress = "${{ secrets.SQL_SERVER }},${{ secrets.SQL_PORT }}"
         $dbUser        = "${{ secrets.SQL_USERNAME }}"
         $dbPassword    = "${{ secrets.SQL_PASSWORD }}"
-        $initialDb     = "master"
         $targetFolder  = "TimesheetDevTestMigration"
         $projectName   = "TimesheetMigration1"
         $executionJobName = "RunTimesheetDevTestMigrationPK"
@@ -122,116 +121,116 @@ jobs:
         $fileBytes = [System.IO.File]::ReadAllBytes($ispacPath)
         $hexString = "0x" + [System.BitConverter]::ToString($fileBytes).Replace("-", "")
         
+        # Clean T-SQL template using standard single quotes (doubled inside the @deploy_script literal)
+        $sqlTemplate = @'
+        SET NOCOUNT ON;
+        USE [msdb];
+
+        IF EXISTS (SELECT job_id FROM msdb.dbo.sysjobs WHERE name = N'GitHub_SSIS_Deploy_Job')
+        BEGIN
+          EXEC dbo.sp_delete_job @job_name = N'GitHub_SSIS_Deploy_Job', @delete_unused_schedule=1;
+        END
+
+        EXEC dbo.sp_add_job 
+          @job_name = N'GitHub_SSIS_Deploy_Job', 
+          @enabled = 1, 
+          @start_step_id = 1;
+
+        DECLARE @deploy_script NVARCHAR(MAX);
+        SET @deploy_script = N'
+          USE [SSISDB]; 
+          IF NOT EXISTS (SELECT 1 FROM [catalog].[folders] WHERE name = N''{TARGET_FOLDER}'') 
+          BEGIN 
+            EXEC [catalog].[create_folder] @folder_name = N''{TARGET_FOLDER}''; 
+          END 
+          DECLARE @project_stream VARBINARY(MAX) = {HEX_STRING}; 
+          EXEC [catalog].[deploy_project] 
+            @folder_name = N''{TARGET_FOLDER}'', 
+            @project_name = N''{PROJECT_NAME}'', 
+            @project_stream = @project_stream;
+        ';
+          
+        EXEC dbo.sp_add_jobstep 
+          @job_name = N'GitHub_SSIS_Deploy_Job', 
+          @step_name = N'Run Deploy', 
+          @subsystem = N'TSQL', 
+          @command = @deploy_script, 
+          @retry_attempts = 0;
+          
+        EXEC dbo.sp_add_jobserver 
+          @job_name = N'GitHub_SSIS_Deploy_Job', 
+          @server_name = N'(local)';
+          
+        DECLARE @deploy_job_id UNIQUEIDENTIFIER;
+        SELECT @deploy_job_id = job_id FROM msdb.dbo.sysjobs WHERE name = N'GitHub_SSIS_Deploy_Job';
+        EXEC dbo.sp_start_job @job_name = N'GitHub_SSIS_Deploy_Job';
+
+        WHILE EXISTS (
+          SELECT 1 FROM msdb.dbo.sysjobactivity
+          WHERE job_id = @deploy_job_id AND start_execution_date IS NOT NULL AND stop_execution_date IS NULL
+        )
+        BEGIN
+          WAITFOR DELAY '00:00:02';
+        END
+
+        IF EXISTS (SELECT job_id FROM msdb.dbo.sysjobs WHERE name = N'{EXECUTION_JOB_NAME}')
+        BEGIN
+          EXEC dbo.sp_delete_job @job_name = N'{EXECUTION_JOB_NAME}', @delete_unused_schedule=1;
+        END
+
+        EXEC dbo.sp_add_job 
+          @job_name = N'{EXECUTION_JOB_NAME}', 
+          @enabled = 1, 
+          @description = N'Automated execution tracking for {PROJECT_NAME}.', 
+          @start_step_id = 1;
+          
+        DECLARE @TargetServer NVARCHAR(128) = CAST(SERVERPROPERTY('ServerName') AS NVARCHAR(128));
+        DECLARE @run_command NVARCHAR(MAX);
+        SET @run_command = N'/ISSERVER ' + CHAR(34) + N'\SSISDB\{TARGET_FOLDER}\{PROJECT_NAME}\TimesheetMigration.dtsx' + CHAR(34) + N' /SERVER ' + CHAR(34) + @TargetServer + CHAR(34) + N' /Par ' + CHAR(34) + N'$ServerOption::LOGGING_LEVEL(Int16)' + CHAR(34) + N';1 /CALLERINFO SQLAGENT /REPORTING E';
+          
+        EXEC dbo.sp_add_jobstep 
+          @job_name = N'{EXECUTION_JOB_NAME}', 
+          @step_name = N'Execute SSIS Package', 
+          @subsystem = N'SSIS', 
+          @command = @run_command, 
+          @retry_attempts = 0;
+          
+        EXEC dbo.sp_add_jobserver 
+          @job_name = N'{EXECUTION_JOB_NAME}', 
+          @server_name = N'(local)';
+          
+        EXEC dbo.sp_add_jobschedule
+          @job_name = N'{EXECUTION_JOB_NAME}',
+          @name = N'Every_1_Minute_8AM_to_5PM',
+          @enabled = 1,
+          @freq_type = 4,
+          @freq_interval = 1,
+          @freq_subday_type = 4,
+          @freq_subday_interval = 1,
+          @active_start_time = 080000,
+          @active_end_time = 170000;
+
+        EXEC dbo.sp_start_job @job_name = N'{EXECUTION_JOB_NAME}';
+        WAITFOR DELAY '00:00:05';
+        
+        
+        '@
+
+        # Perform the clean token replacements
+        $sqlQuery = $sqlTemplate.Replace('{TARGET_FOLDER}', $targetFolder)
+        $sqlQuery = $sqlQuery.Replace('{PROJECT_NAME}', $projectName)
+        $sqlQuery = $sqlQuery.Replace('{EXECUTION_JOB_NAME}', $executionJobName)
+        $sqlQuery = $sqlQuery.Replace('{HEX_STRING}', $hexString)
+
+        # Log query to Runner Temp dir for debugging
+        $sqlQuery | Out-File -FilePath "$env:TEMP\deploy_local.sql" -Encoding UTF8
+        
         Write-Host "Establishing local tunnel connection..."
- 
         $connStr = "Data Source=$tunnelAddress;Initial Catalog=SSISDB;User ID=$dbUser;Password=$dbPassword;TrustServerCertificate=True;Encrypt=False;"
         $connection = New-Object System.Data.SqlClient.SqlConnection($connStr)
  
         try {
           $connection.Open()
-          
-          # Build the SQL query using a single-quoted string to avoid PowerShell expansion issues
-          $sqlQuery = '
-            SET NOCOUNT ON;
-            USE [msdb];
- 
-            IF EXISTS (SELECT job_id FROM msdb.dbo.sysjobs WHERE name = N' + "'GitHub_SSIS_Deploy_Job'" + ')
-            BEGIN
-              EXEC dbo.sp_delete_job @job_name = N' + "'GitHub_SSIS_Deploy_Job'" + ', @delete_unused_schedule=1;
-            END
- 
-            EXEC dbo.sp_add_job 
-              @job_name = N' + "'GitHub_SSIS_Deploy_Job'" + ', 
-              @enabled = 1, 
-              @start_step_id = 1;
- 
-            DECLARE @deploy_script NVARCHAR(MAX);
-            SET @deploy_script = N' + "'" + '
-              USE [SSISDB]; 
-              IF NOT EXISTS (SELECT 1 FROM [catalog].[folders] WHERE name = ' + "'" + "'" + '$targetFolder' + "'" + "'" + ') 
-              BEGIN 
-                EXEC [catalog].[create_folder] @folder_name = N' + "'" + "'" + '$targetFolder' + "'" + "'" + '; 
-              END 
-              DECLARE @project_stream VARBINARY(MAX) = $hexString; 
-              EXEC [catalog].[deploy_project] 
-                @folder_name = N' + "'" + "'" + '$targetFolder' + "'" + "'" + ', 
-                @project_name = N' + "'" + "'" + '$projectName' + "'" + "'" + ', 
-                @project_stream = @project_stream; 
-            ' + "'" + ';
-              
-            EXEC dbo.sp_add_jobstep 
-              @job_name = N' + "'GitHub_SSIS_Deploy_Job'" + ', 
-              @step_name = N' + "'Run Deploy'" + ', 
-              @subsystem = N' + "'TSQL'" + ', 
-              @command = @deploy_script, 
-              @retry_attempts = 0;
-              
-            EXEC dbo.sp_add_jobserver 
-              @job_name = N' + "'GitHub_SSIS_Deploy_Job'" + ', 
-              @server_name = N' + "'(local)'" + ';
-              
-            DECLARE @deploy_job_id UNIQUEIDENTIFIER;
-            SELECT @deploy_job_id = job_id FROM msdb.dbo.sysjobs WHERE name = N' + "'GitHub_SSIS_Deploy_Job'" + ';
-            EXEC dbo.sp_start_job @job_name = N' + "'GitHub_SSIS_Deploy_Job'" + ';
- 
-            WHILE EXISTS (
-              SELECT 1 FROM msdb.dbo.sysjobactivity
-              WHERE job_id = @deploy_job_id AND start_execution_date IS NOT NULL AND stop_execution_date IS NULL
-            )
-            BEGIN
-              WAITFOR DELAY ' + "'00:00:02'" + ';
-            END
- 
-            IF EXISTS (SELECT job_id FROM msdb.dbo.sysjobs WHERE name = N' + "'$executionJobName'" + ')
-            BEGIN
-              EXEC dbo.sp_delete_job @job_name = N' + "'$executionJobName'" + ', @delete_unused_schedule=1;
-            END
- 
-            EXEC dbo.sp_add_job 
-              @job_name = N' + "'$executionJobName'" + ', 
-              @enabled = 1, 
-              @description = N' + "'Automated execution tracking for $projectName.'" + ', 
-              @start_step_id = 1;
-              
-            DECLARE @TargetServer NVARCHAR(128) = CAST(SERVERPROPERTY(' + "'ServerName'" + ') AS NVARCHAR(128));
-            DECLARE @run_command NVARCHAR(MAX);
-            SET @run_command = N' + "'/ISSERVER '" + ' + CHAR(34) + N' + "'\SSISDB\$targetFolder\$projectName\TimesheetMigration.dtsx'" + ' + CHAR(34) + N' + "' /SERVER '" + ' + CHAR(34) + @TargetServer + CHAR(34) + N' + "' /Par '" + ' + CHAR(34) + N' + "'$ServerOption::LOGGING_LEVEL(Int16)'" + ' + CHAR(34) + N' + "';1 /CALLERINFO SQLAGENT /REPORTING E'" + ';
-              
-            EXEC dbo.sp_add_jobstep 
-              @job_name = N' + "'$executionJobName'" + ', 
-              @step_name = N' + "'Execute SSIS Package'" + ', 
-              @subsystem = N' + "'SSIS'" + ', 
-              @command = @run_command, 
-              @retry_attempts = 0;
-              
-            EXEC dbo.sp_add_jobserver 
-              @job_name = N' + "'$executionJobName'" + ', 
-              @server_name = N' + "'(local)'" + ';
-              
-            EXEC dbo.sp_add_jobschedule
-              @job_name = N' + "'$executionJobName'" + ',
-              @name = N' + "'Every_1_Minute_8AM_to_5PM'" + ',
-              @enabled = 1,
-              @freq_type = 4,
-              @freq_interval = 1,
-              @freq_subday_type = 4,
-              @freq_subday_interval = 1,
-              @active_start_time = 080000,
-              @active_end_time = 170000;
- 
-            EXEC dbo.sp_start_job @job_name = N' + "'$executionJobName'" + ';
-            WAITFOR DELAY ' + "'00:00:05'" + ';
-          '
-          
-          # Replace placeholders
-          $sqlQuery = $sqlQuery.Replace('$targetFolder', $targetFolder)
-          $sqlQuery = $sqlQuery.Replace('$projectName', $projectName)
-          $sqlQuery = $sqlQuery.Replace('$executionJobName', $executionJobName)
-          $sqlQuery = $sqlQuery.Replace('$hexString', $hexString)
-          
-          # Write the SQL to a temp file for debugging
-          $sqlQuery | Out-File -FilePath "D:\a\deploy.sql" -Encoding ASCII
-          
           $command = $connection.CreateCommand()
           $command.CommandText = $sqlQuery
           $command.ExecuteNonQuery() | Out-Null
@@ -365,133 +364,131 @@ jobs:
         $fileBytes = [System.IO.File]::ReadAllBytes($ispacPath)
         $hexString = "0x" + [System.BitConverter]::ToString($fileBytes).Replace("-", "")
  
-        Write-Host "Establishing tunnel connection to partner environment..."
+        # T-SQL Template for Partner (with clean configuration overrides built in)
+        $sqlTemplate = @'
+        SET NOCOUNT ON;
+        USE [msdb];
+
+        IF EXISTS (SELECT job_id FROM msdb.dbo.sysjobs WHERE name = N'GitHub_SSIS_Deploy_Job')
+        BEGIN
+          EXEC dbo.sp_delete_job @job_name = N'GitHub_SSIS_Deploy_Job', @delete_unused_schedule=1;
+        END
+
+        EXEC dbo.sp_add_job 
+          @job_name = N'GitHub_SSIS_Deploy_Job', 
+          @enabled = 1, 
+          @start_step_id = 1;
+
+        DECLARE @deploy_script NVARCHAR(MAX);
+        SET @deploy_script = N'
+          USE [SSISDB];
+          IF NOT EXISTS (SELECT 1 FROM [catalog].[folders] WHERE name = N''{TARGET_FOLDER}'')
+          BEGIN
+            EXEC [catalog].[create_folder] @folder_name = N''{TARGET_FOLDER}'';
+          END
+          DECLARE @project_stream VARBINARY(MAX) = {HEX_STRING};
+          EXEC [catalog].[deploy_project] 
+            @folder_name = N''{TARGET_FOLDER}'', 
+            @project_name = N''{PROJECT_NAME}'', 
+            @project_stream = @project_stream;
+
+          EXEC SSISDB.catalog.set_object_parameter_value
+            @object_type = 30,
+            @folder_name = N''{TARGET_FOLDER}'',
+            @project_name = N''{PROJECT_NAME}'',
+            @object_name = N''TimesheetMigration.dtsx'',
+            @parameter_name = N''CM.LAPTOP-7LSAQSR0.master1.ServerName'',
+            @parameter_value = N''{PARTNER_SERVER}'';
+
+          EXEC SSISDB.catalog.set_object_parameter_value
+            @object_type = 30,
+            @folder_name = N''{TARGET_FOLDER}'',
+            @project_name = N''{PROJECT_NAME}'',
+            @object_name = N''TimesheetMigration.dtsx'',
+            @parameter_name = N''CM.LAPTOP-7LSAQSR0.master1.InitialCatalog'',
+            @parameter_value = N''TimesheetsDB'';
+        ';
+          
+        EXEC dbo.sp_add_jobstep 
+          @job_name = N'GitHub_SSIS_Deploy_Job', 
+          @step_name = N'Run Deploy', 
+          @subsystem = N'TSQL', 
+          @command = @deploy_script, 
+          @retry_attempts = 0;
+          
+        EXEC dbo.sp_add_jobserver 
+          @job_name = N'GitHub_SSIS_Deploy_Job', 
+          @server_name = N'(local)';
+          
+        DECLARE @deploy_job_id UNIQUEIDENTIFIER;
+        SELECT @deploy_job_id = job_id FROM msdb.dbo.sysjobs WHERE name = N'GitHub_SSIS_Deploy_Job';
+        EXEC dbo.sp_start_job @job_name = N'GitHub_SSIS_Deploy_Job';
+
+        WHILE EXISTS (
+          SELECT 1 FROM msdb.dbo.sysjobactivity
+          WHERE job_id = @deploy_job_id AND start_execution_date IS NOT NULL AND stop_execution_date IS NULL
+        )
+        BEGIN
+          WAITFOR DELAY '00:00:02';
+        END
+
+        IF EXISTS (SELECT job_id FROM msdb.dbo.sysjobs WHERE name = N'{EXECUTION_JOB_NAME}')
+        BEGIN
+          EXEC dbo.sp_delete_job @job_name = N'{EXECUTION_JOB_NAME}', @delete_unused_schedule=1;
+        END
+
+        EXEC dbo.sp_add_job 
+          @job_name = N'{EXECUTION_JOB_NAME}', 
+          @enabled = 1, 
+          @description = N'Automated execution tracking for {PROJECT_NAME}.', 
+          @start_step_id = 1;
+
+        DECLARE @TargetServer NVARCHAR(128) = CAST(SERVERPROPERTY('ServerName') AS NVARCHAR(128));
+        DECLARE @run_command NVARCHAR(MAX);
+        SET @run_command = N'/ISSERVER ' + CHAR(34) + N'\SSISDB\{TARGET_FOLDER}\{PROJECT_NAME}\TimesheetMigration.dtsx' + CHAR(34) + N' /SERVER ' + CHAR(34) + @TargetServer + CHAR(34) + N' /Par ' + CHAR(34) + N'$ServerOption::LOGGING_LEVEL(Int16)' + CHAR(34) + N';1 /CALLERINFO SQLAGENT /REPORTING E';
+
+        EXEC dbo.sp_add_jobstep 
+          @job_name = N'{EXECUTION_JOB_NAME}', 
+          @step_name = N'Execute SSIS Package', 
+          @subsystem = N'SSIS', 
+          @command = @run_command, 
+          @retry_attempts = 0;
+          
+        EXEC dbo.sp_add_jobserver 
+          @job_name = N'{EXECUTION_JOB_NAME}', 
+          @server_name = N'(local)';
+          
+        EXEC dbo.sp_add_jobschedule
+          @job_name = N'{EXECUTION_JOB_NAME}',
+          @name = N'Every_1_Minute_8AM_to_5PM',
+          @enabled = 1,
+          @freq_type = 4,
+          @freq_interval = 1,
+          @freq_subday_type = 4,
+          @freq_subday_interval = 1,
+          @active_start_time = 080000,
+          @active_end_time = 170000;
+
+        EXEC dbo.sp_start_job @job_name = N'{EXECUTION_JOB_NAME}';
+        WAITFOR DELAY '00:00:05';
+'@
+
+        # Perform the clean token replacements
+        $sqlQuery = $sqlTemplate.Replace('{TARGET_FOLDER}', $targetFolder)
+        $sqlQuery = $sqlQuery.Replace('{PROJECT_NAME}', $projectName)
+        $sqlQuery = $sqlQuery.Replace('{EXECUTION_JOB_NAME}', $executionJobName)
+        $sqlQuery = $sqlQuery.Replace('{PARTNER_SERVER}', $partnerServer)
+        $sqlQuery = $sqlQuery.Replace('{HEX_STRING}', $hexString)
  
+        # Log query to Runner Temp dir for debugging
+        $sqlQuery | Out-File -FilePath "$env:TEMP\deploy_partner.sql" -Encoding UTF8
+ 
+        Write-Host "Establishing tunnel connection to partner environment..."
         $connStr = "Data Source=$tunnelAddress;Initial Catalog=$initialDb;User ID=$dbUser;Password=$dbPassword;TrustServerCertificate=True;Encrypt=False;"
         $connection = New-Object System.Data.SqlClient.SqlConnection($connStr)
  
         try {
           $connection.Open()
- 
-          # Build the SQL query using a single-quoted string to avoid PowerShell expansion issues
-          $sqlQuery = '
-            SET NOCOUNT ON;
-            USE [msdb];
- 
-            IF EXISTS (SELECT job_id FROM msdb.dbo.sysjobs WHERE name = N' + "'GitHub_SSIS_Deploy_Job'" + ')
-            BEGIN
-              EXEC dbo.sp_delete_job @job_name = N' + "'GitHub_SSIS_Deploy_Job'" + ', @delete_unused_schedule=1;
-            END
- 
-            EXEC dbo.sp_add_job 
-              @job_name = N' + "'GitHub_SSIS_Deploy_Job'" + ', 
-              @enabled = 1, 
-              @start_step_id = 1;
- 
-            DECLARE @deploy_script NVARCHAR(MAX);
-            SET @deploy_script = N' + "'" + '
-              USE [SSISDB];
-              IF NOT EXISTS (SELECT 1 FROM [catalog].[folders] WHERE name = ' + "'" + "'" + '$targetFolder' + "'" + "'" + ')
-              BEGIN
-                EXEC [catalog].[create_folder] @folder_name = N' + "'" + "'" + '$targetFolder' + "'" + "'" + ';
-              END
-              DECLARE @project_stream VARBINARY(MAX) = $hexString;
-              EXEC [catalog].[deploy_project] 
-                @folder_name = N' + "'" + "'" + '$targetFolder' + "'" + "'" + ', 
-                @project_name = N' + "'" + "'" + '$projectName' + "'" + "'" + ', 
-                @project_stream = @project_stream;
- 
-              EXEC SSISDB.catalog.set_object_parameter_value
-                @object_type = 30,
-                @folder_name = N' + "'" + "'" + '$targetFolder' + "'" + "'" + ',
-                @project_name = N' + "'" + "'" + '$projectName' + "'" + "'" + ',
-                @object_name = N' + "'TimesheetMigration.dtsx'" + ',
-                @parameter_name = N' + "'CM.LAPTOP-7LSAQSR0.master1.ServerName'" + ',
-                @parameter_value = N' + "'$partnerServer'" + ';
- 
-              EXEC SSISDB.catalog.set_object_parameter_value
-                @object_type = 30,
-                @folder_name = N' + "'" + "'" + '$targetFolder' + "'" + "'" + ',
-                @project_name = N' + "'" + "'" + '$projectName' + "'" + "'" + ',
-                @object_name = N' + "'TimesheetMigration.dtsx'" + ',
-                @parameter_name = N' + "'CM.LAPTOP-7LSAQSR0.master1.InitialCatalog'" + ',
-                @parameter_value = N' + "'TimesheetsDB'" + ';
-            ' + "'" + ';
-              
-            EXEC dbo.sp_add_jobstep 
-              @job_name = N' + "'GitHub_SSIS_Deploy_Job'" + ', 
-              @step_name = N' + "'Run Deploy'" + ', 
-              @subsystem = N' + "'TSQL'" + ', 
-              @command = @deploy_script, 
-              @retry_attempts = 0;
-              
-            EXEC dbo.sp_add_jobserver 
-              @job_name = N' + "'GitHub_SSIS_Deploy_Job'" + ', 
-              @server_name = N' + "'(local)'" + ';
-              
-            DECLARE @deploy_job_id UNIQUEIDENTIFIER;
-            SELECT @deploy_job_id = job_id FROM msdb.dbo.sysjobs WHERE name = N' + "'GitHub_SSIS_Deploy_Job'" + ';
-            EXEC dbo.sp_start_job @job_name = N' + "'GitHub_SSIS_Deploy_Job'" + ';
- 
-            WHILE EXISTS (
-              SELECT 1 FROM msdb.dbo.sysjobactivity
-              WHERE job_id = @deploy_job_id AND start_execution_date IS NOT NULL AND stop_execution_date IS NULL
-            )
-            BEGIN
-              WAITFOR DELAY ' + "'00:00:02'" + ';
-            END
- 
-            IF EXISTS (SELECT job_id FROM msdb.dbo.sysjobs WHERE name = N' + "'$executionJobName'" + ')
-            BEGIN
-              EXEC dbo.sp_delete_job @job_name = N' + "'$executionJobName'" + ', @delete_unused_schedule=1;
-            END
- 
-            EXEC dbo.sp_add_job 
-              @job_name = N' + "'$executionJobName'" + ', 
-              @enabled = 1, 
-              @description = N' + "'Automated execution tracking for $projectName.'" + ', 
-              @start_step_id = 1;
- 
-            DECLARE @TargetServer NVARCHAR(128) = CAST(SERVERPROPERTY(' + "'ServerName'" + ') AS NVARCHAR(128));
-            DECLARE @run_command NVARCHAR(MAX);
-            SET @run_command = N' + "'/ISSERVER '" + ' + CHAR(34) + N' + "'\SSISDB\$targetFolder\$projectName\TimesheetMigration.dtsx'" + ' + CHAR(34) + N' + "' /SERVER '" + ' + CHAR(34) + @TargetServer + CHAR(34) + N' + "' /Par '" + ' + CHAR(34) + N' + "'$ServerOption::LOGGING_LEVEL(Int16)'" + ' + CHAR(34) + N' + "';1 /CALLERINFO SQLAGENT /REPORTING E'" + ';
- 
-            EXEC dbo.sp_add_jobstep 
-              @job_name = N' + "'$executionJobName'" + ', 
-              @step_name = N' + "'Execute SSIS Package'" + ', 
-              @subsystem = N' + "'SSIS'" + ', 
-              @command = @run_command, 
-              @retry_attempts = 0;
-              
-            EXEC dbo.sp_add_jobserver 
-              @job_name = N' + "'$executionJobName'" + ', 
-              @server_name = N' + "'(local)'" + ';
-              
-            EXEC dbo.sp_add_jobschedule
-              @job_name = N' + "'$executionJobName'" + ',
-              @name = N' + "'Every_1_Minute_8AM_to_5PM'" + ',
-              @enabled = 1,
-              @freq_type = 4,
-              @freq_interval = 1,
-              @freq_subday_type = 4,
-              @freq_subday_interval = 1,
-              @active_start_time = 080000,
-              @active_end_time = 170000;
- 
-            EXEC dbo.sp_start_job @job_name = N' + "'$executionJobName'" + ';
-            WAITFOR DELAY ' + "'00:00:05'" + ';
-          '
- 
-          # Replace placeholders
-          $sqlQuery = $sqlQuery.Replace('$targetFolder', $targetFolder)
-          $sqlQuery = $sqlQuery.Replace('$projectName', $projectName)
-          $sqlQuery = $sqlQuery.Replace('$executionJobName', $executionJobName)
-          $sqlQuery = $sqlQuery.Replace('$partnerServer', $partnerServer)
-          $sqlQuery = $sqlQuery.Replace('$hexString', $hexString)
-          
-          # Write the SQL to a temp file for debugging
-          $sqlQuery | Out-File -FilePath "D:\a\deploy_partner.sql" -Encoding ASCII
- 
           $command = $connection.CreateCommand()
           $command.CommandText = $sqlQuery
           $command.ExecuteNonQuery() | Out-Null
