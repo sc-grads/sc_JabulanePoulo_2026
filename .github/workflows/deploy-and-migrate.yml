@@ -414,13 +414,7 @@ jobs:
 
               Write-Host "SUCCESS: Connection manager parameters updated."
 
-          } catch {
-              Write-Error "Partner Deployment Failed: $_"
-              exit 1
-          } finally {
-              $connection.Close()
-          }
-
+          
       - name: Create SQL Agent Job on Partner Server
         shell: powershell
         run: |
