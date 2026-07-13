@@ -156,27 +156,7 @@ jobs:
                   exit 1
               }
 
-              Write-Host "Deploying ISPAC..."
-
-              # Build the SQL query as a string
-              $sqlQuery = "USE SSISDB;"
-              $sqlQuery += "IF NOT EXISTS (SELECT 1 FROM catalog.folders WHERE name = N'$targetFolder') BEGIN EXEC catalog.create_folder @folder_name = N'$targetFolder'; END "
-              $sqlQuery += "DECLARE @project_stream VARBINARY(MAX) = $hexString; "
-              $sqlQuery += "EXEC catalog.deploy_project @folder_name = N'$targetFolder', @project_name = N'$projectName', @project_stream = @project_stream;"
-
-              $command = $connection.CreateCommand()
-              $command.CommandTimeout = 0
-              $command.CommandText = $sqlQuery
-              $command.ExecuteNonQuery()
-
-              Write-Host "SUCCESS: SSIS project deployed using SQL Server Authentication."
-
-          } catch {
-              Write-Error "Local Deployment Failed: $_"
-              exit 1
-          } finally {
-              $connection.Close()
-          }
+              
 
       - name: Create SQL Agent Job for Package Execution
         shell: powershell
