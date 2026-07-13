@@ -298,7 +298,7 @@ jobs:
 
          
 
-      - name: Deploy SSIS to Partner Server (SQL Auth)
+      - name: Deploy SSIS to Partner Server
         shell: powershell
         run: |
           # STEP 1: LOCATE THE SSIS DEPLOYMENT FILE
@@ -310,7 +310,7 @@ jobs:
           }
 
           if (-not (Test-Path -Path $ispacPath)) {
-              Write-Error "CRITICAL ERROR: Could not locate ProjectTime.ispac file."
+              Write-Error "CRITICAL ERROR: Could not locate TimesheetMigration1.ispac file."
               exit 1
           }
 
