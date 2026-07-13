@@ -193,7 +193,7 @@ jobs:
   # JOB 2: DEPLOY TO PARTNER SERVER
   # ========================================================================
   deploy-partner:
-    name: DevTest/Deploy
+    name: Production/Deploy
     runs-on: windows-latest
     needs: deploy-local
     environment: partner-sql
