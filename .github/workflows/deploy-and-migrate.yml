@@ -19,6 +19,48 @@ jobs:
       - name: Checkout Repository Code
         uses: actions/checkout@v4
 
+      - name: Create SSISDB Folder Structure on Development Server
+        shell: powershell
+        run: |
+          # STEP 1: DEFINE TARGET CONFIGURATIONS
+          $tunnelAddress = "${{ secrets.SQL_SERVER }},${{ secrets.SQL_PORT }}"
+          $dbUser        = "${{ secrets.SQL_USERNAME }}"
+          $dbPassword    = "${{ secrets.SQL_PASSWORD }}"
+          $targetFolder  = "TimesheetDevMigration"
+          
+          # STEP 2: CONNECT TO SQL SERVER
+          $connStr = "Data Source=$tunnelAddress;Initial Catalog=master;User ID=$dbUser;Password=$dbPassword;TrustServerCertificate=True;Encrypt=False;"
+          $connection = New-Object System.Data.SqlClient.SqlConnection($connStr)
+          
+          try {
+              $connection.Open()
+              Write-Host "Connected to development SQL Server successfully."
+              
+              # Check if SSISDB exists
+              $checkCmd = $connection.CreateCommand()
+              $checkCmd.CommandText = "SELECT COUNT(*) FROM sys.databases WHERE name = 'SSISDB'"
+              $ssisExists = $checkCmd.ExecuteScalar()
+              
+              if ($ssisExists -eq 0) {
+                  Write-Error "SSISDB does not exist on development server. Please install SSIS and create SSISDB catalog."
+                  exit 1
+              }
+              
+              # Create folder in SSISDB
+              Write-Host "Creating SSISDB folder: $targetFolder"
+              $createFolderCmd = $connection.CreateCommand()
+              $createFolderCmd.CommandText = "USE SSISDB; IF NOT EXISTS (SELECT 1 FROM catalog.folders WHERE name = N'$targetFolder') BEGIN EXEC catalog.create_folder @folder_name = N'$targetFolder'; END"
+              $createFolderCmd.ExecuteNonQuery()
+              
+              Write-Host "SUCCESS: SSISDB folder '$targetFolder' created or already exists."
+              
+          } catch {
+              Write-Error "Failed to create SSISDB folder: $_"
+              exit 1
+          } finally {
+              $connection.Close()
+          }
+
       - name: Create Database and Tables
         shell: powershell
         run: |
@@ -105,7 +147,7 @@ jobs:
               $connection.Close()
           }
 
-      - name: Deploy SSIS and Create Execution Job
+      - name: Deploy SSIS Package
         shell: powershell
         run: |
           # STEP 1: LOCATE THE SSIS DEPLOYMENT FILE
@@ -234,13 +276,16 @@ jobs:
       - name: Checkout Repository Code
         uses: actions/checkout@v4
 
-      - name: Ensure SSISDB Catalog Exists on Production Server
+      - name: Create SSISDB Folder Structure on Production Server
         shell: powershell
         run: |
+          # STEP 1: DEFINE TARGET CONFIGURATIONS
           $tunnelAddress = "${{ secrets.SQL_SERVER }},${{ secrets.SQL_PORT }}"
           $dbUser        = "${{ secrets.SQL_USERNAME }}"
           $dbPassword    = "${{ secrets.SQL_PASSWORD }}"
+          $targetFolder  = "TimesheetProductionMigration"
           
+          # STEP 2: CONNECT TO SQL SERVER
           $connStr = "Data Source=$tunnelAddress;Initial Catalog=master;User ID=$dbUser;Password=$dbPassword;TrustServerCertificate=True;Encrypt=False;"
           $connection = New-Object System.Data.SqlClient.SqlConnection($connStr)
           
@@ -251,9 +296,9 @@ jobs:
               # Check if SSISDB exists
               $checkCmd = $connection.CreateCommand()
               $checkCmd.CommandText = "SELECT COUNT(*) FROM sys.databases WHERE name = 'SSISDB'"
-              $exists = $checkCmd.ExecuteScalar()
+              $ssisExists = $checkCmd.ExecuteScalar()
               
-              if ($exists -eq 0) {
+              if ($ssisExists -eq 0) {
                   Write-Host "SSISDB does not exist on production server. Creating SSISDB catalog..."
                   
                   # Check if Integration Services is installed
@@ -288,8 +333,16 @@ jobs:
                   Write-Host "SSISDB catalog already exists on production server."
               }
               
+              # Create folder in SSISDB
+              Write-Host "Creating SSISDB folder: $targetFolder"
+              $createFolderCmd = $connection.CreateCommand()
+              $createFolderCmd.CommandText = "USE SSISDB; IF NOT EXISTS (SELECT 1 FROM catalog.folders WHERE name = N'$targetFolder') BEGIN EXEC catalog.create_folder @folder_name = N'$targetFolder'; END"
+              $createFolderCmd.ExecuteNonQuery()
+              
+              Write-Host "SUCCESS: SSISDB folder '$targetFolder' created or already exists."
+              
           } catch {
-              Write-Error "Failed to check/create SSISDB on production server: $_"
+              Write-Error "Failed to create SSISDB folder on production server: $_"
               exit 1
           } finally {
               $connection.Close()
