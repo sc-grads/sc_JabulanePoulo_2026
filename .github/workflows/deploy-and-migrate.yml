@@ -142,20 +142,7 @@ jobs:
           $connStr = "Data Source=$tunnelAddress;Initial Catalog=$initialDb;User ID=$dbUser;Password=$dbPassword;TrustServerCertificate=True;Encrypt=False;"
           $connection = New-Object System.Data.SqlClient.SqlConnection($connStr)
 
-          try {
-              $connection.Open()
-              Write-Host "Connected successfully with SQL Server Authentication."
-
-              # Check if SSISDB exists
-              $checkCmd = $connection.CreateCommand()
-              $checkCmd.CommandText = "SELECT COUNT(*) FROM sys.databases WHERE name = 'SSISDB'"
-              $ssisExists = $checkCmd.ExecuteScalar()
-              
-              if ($ssisExists -eq 0) {
-                  Write-Error "SSISDB does not exist. Cannot deploy SSIS package."
-                  exit 1
-              }
-
+          
               
 
       - name: Create SQL Agent Job for Package Execution
