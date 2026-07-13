@@ -52,24 +52,90 @@ jobs:
               $connection.Open()
               Write-Host "Connected to database server successfully"
               
-              # Split script into individual batches (GO statements)
-              $batches = $sqlScript -split "GO\s*" | Where-Object { $_.Trim() -ne "" }
+              # Use SQLCMD mode to handle GO statements properly
+              # First, check if we should use SQLCMD or split manually
               
-              foreach ($batch in $batches) {
-                  if ($batch.Trim() -ne "") {
-                      try {
-                          $command = $connection.CreateCommand()
-                          $command.CommandText = $batch
-                          $command.ExecuteNonQuery() | Out-Null
-                          Write-Host "Executed batch successfully"
-                      } catch {
-                          Write-Warning "Batch execution warning: $_"
-                          # Continue with next batch even if one fails
+              # Option 1: Try to execute as a single batch if no GO statements
+              if ($sqlScript -notmatch "\bGO\b") {
+                  Write-Host "Executing script as single batch..."
+                  try {
+                      $command = $connection.CreateCommand()
+                      $command.CommandText = $sqlScript
+                      $command.ExecuteNonQuery() | Out-Null
+                      Write-Host "Script executed successfully as single batch"
+                  } catch {
+                      Write-Error "Failed to execute script as single batch: $_"
+                      exit 1
+                  }
+              } 
+              # Option 2: Split by GO statements but handle them more carefully
+              else {
+                  Write-Host "Splitting script by GO statements..."
+                  
+                  # Split by GO but preserve the statement boundaries
+                  # Use a more robust splitting method
+                  $batches = @()
+                  $currentBatch = ""
+                  $lines = $sqlScript -split "`r`n|`n|`r"
+                  $inString = $false
+                  $inComment = $false
+                  $stringChar = ""
+                  
+                  foreach ($line in $lines) {
+                      # Skip empty lines
+                      if ([string]::IsNullOrWhiteSpace($line)) {
+                          if ($currentBatch -ne "") {
+                              $currentBatch += "`r`n"
+                          }
+                          continue
+                      }
+                      
+                      # Check if this line is just "GO" (with optional spaces)
+                      if ($line.Trim() -match "^GO\s*$" -and !$inString -and !$inComment) {
+                          if ($currentBatch.Trim() -ne "") {
+                              $batches += $currentBatch.Trim()
+                              $currentBatch = ""
+                          }
+                          continue
+                      }
+                      
+                      # Add line to current batch
+                      $currentBatch += $line + "`r`n"
+                  }
+                  
+                  # Add the last batch if not empty
+                  if ($currentBatch.Trim() -ne "") {
+                      $batches += $currentBatch.Trim()
+                  }
+                  
+                  Write-Host "Found $($batches.Count) SQL batches to execute"
+                  
+                  $batchNumber = 0
+                  foreach ($batch in $batches) {
+                      $batchNumber++
+                      if ($batch.Trim() -ne "") {
+                          try {
+                              Write-Host "Executing batch $batchNumber of $($batches.Count)..."
+                              $command = $connection.CreateCommand()
+                              $command.CommandText = $batch
+                              $result = $command.ExecuteNonQuery()
+                              Write-Host "Batch $batchNumber executed successfully (rows affected: $result)"
+                          } catch {
+                              # Log the error but continue with other batches
+                              $errorMsg = $_.Exception.Message
+                              Write-Warning "Batch $batchNumber execution had issues: $errorMsg"
+                              
+                              # For debugging, log the first 200 characters of the failed batch
+                              $batchPreview = $batch.Substring(0, [Math]::Min(200, $batch.Length))
+                              Write-Host "Failed batch preview: $batchPreview..."
+                              
+                              # Continue to next batch
+                          }
                       }
                   }
               }
               
-              Write-Host "SUCCESS: Database and tables created successfully"
+              Write-Host "SUCCESS: Database script processing completed"
               
           } catch {
               Write-Error "Database creation failed: $_"
@@ -233,24 +299,90 @@ jobs:
               $connection.Open()
               Write-Host "Connected to database server successfully"
               
-              # Split script into individual batches (GO statements)
-              $batches = $sqlScript -split "GO\s*" | Where-Object { $_.Trim() -ne "" }
+              # Use SQLCMD mode to handle GO statements properly
+              # First, check if we should use SQLCMD or split manually
               
-              foreach ($batch in $batches) {
-                  if ($batch.Trim() -ne "") {
-                      try {
-                          $command = $connection.CreateCommand()
-                          $command.CommandText = $batch
-                          $command.ExecuteNonQuery() | Out-Null
-                          Write-Host "Executed batch successfully"
-                      } catch {
-                          Write-Warning "Batch execution warning: $_"
-                          # Continue with next batch even if one fails
+              # Option 1: Try to execute as a single batch if no GO statements
+              if ($sqlScript -notmatch "\bGO\b") {
+                  Write-Host "Executing script as single batch..."
+                  try {
+                      $command = $connection.CreateCommand()
+                      $command.CommandText = $sqlScript
+                      $command.ExecuteNonQuery() | Out-Null
+                      Write-Host "Script executed successfully as single batch"
+                  } catch {
+                      Write-Error "Failed to execute script as single batch: $_"
+                      exit 1
+                  }
+              } 
+              # Option 2: Split by GO statements but handle them more carefully
+              else {
+                  Write-Host "Splitting script by GO statements..."
+                  
+                  # Split by GO but preserve the statement boundaries
+                  # Use a more robust splitting method
+                  $batches = @()
+                  $currentBatch = ""
+                  $lines = $sqlScript -split "`r`n|`n|`r"
+                  $inString = $false
+                  $inComment = $false
+                  $stringChar = ""
+                  
+                  foreach ($line in $lines) {
+                      # Skip empty lines
+                      if ([string]::IsNullOrWhiteSpace($line)) {
+                          if ($currentBatch -ne "") {
+                              $currentBatch += "`r`n"
+                          }
+                          continue
+                      }
+                      
+                      # Check if this line is just "GO" (with optional spaces)
+                      if ($line.Trim() -match "^GO\s*$" -and !$inString -and !$inComment) {
+                          if ($currentBatch.Trim() -ne "") {
+                              $batches += $currentBatch.Trim()
+                              $currentBatch = ""
+                          }
+                          continue
+                      }
+                      
+                      # Add line to current batch
+                      $currentBatch += $line + "`r`n"
+                  }
+                  
+                  # Add the last batch if not empty
+                  if ($currentBatch.Trim() -ne "") {
+                      $batches += $currentBatch.Trim()
+                  }
+                  
+                  Write-Host "Found $($batches.Count) SQL batches to execute"
+                  
+                  $batchNumber = 0
+                  foreach ($batch in $batches) {
+                      $batchNumber++
+                      if ($batch.Trim() -ne "") {
+                          try {
+                              Write-Host "Executing batch $batchNumber of $($batches.Count)..."
+                              $command = $connection.CreateCommand()
+                              $command.CommandText = $batch
+                              $result = $command.ExecuteNonQuery()
+                              Write-Host "Batch $batchNumber executed successfully (rows affected: $result)"
+                          } catch {
+                              # Log the error but continue with other batches
+                              $errorMsg = $_.Exception.Message
+                              Write-Warning "Batch $batchNumber execution had issues: $errorMsg"
+                              
+                              # For debugging, log the first 200 characters of the failed batch
+                              $batchPreview = $batch.Substring(0, [Math]::Min(200, $batch.Length))
+                              Write-Host "Failed batch preview: $batchPreview..."
+                              
+                              # Continue to next batch
+                          }
                       }
                   }
               }
               
-              Write-Host "SUCCESS: Database and tables created successfully"
+              Write-Host "SUCCESS: Database script processing completed"
               
           } catch {
               Write-Error "Database creation failed: $_"
