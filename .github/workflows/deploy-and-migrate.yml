@@ -8,10 +8,10 @@ on:
 jobs:
 
   # ========================================================================
-  # JOB 1: DEPLOY TO LOCAL LAPTOP
+  # JOB 1: DEPLOY TO DEVELOPMENT SERVER
   # ========================================================================
-  deploy-local:
-    name: Tunnel Deployment to Local Laptop
+  deploy-dev:
+    name: Tunnel Deployment to Development Server
     runs-on: windows-latest
     environment: local-sql
 
@@ -127,8 +127,8 @@ jobs:
           $dbUser        = "${{ secrets.SQL_USERNAME }}"
           $dbPassword    = "${{ secrets.SQL_PASSWORD }}"
           $initialDb     = "master"
-          $targetFolder  = "TimesheetDevTestMigration"
-          $projectName   = "TimesheetMigration1"
+          $targetFolder  = "TimesheetDevMigration"
+          $projectName   = "TimesheetMigrationDev"
 
           # STEP 3: CONVERT ISPAC FILE INTO BINARY DATA STREAM
           $fileBytes = [System.IO.File]::ReadAllBytes($ispacPath)
@@ -184,9 +184,9 @@ jobs:
           $tunnelAddress = "${{ secrets.SQL_SERVER }},${{ secrets.SQL_PORT }}"
           $dbUser        = "${{ secrets.SQL_USERNAME }}"
           $dbPassword    = "${{ secrets.SQL_PASSWORD }}"
-          $targetFolder  = "TimesheetDevTestMigration"
-          $projectName   = "TimesheetMigration1"
-          $executionJobName = "RunTimesheetDevTestMigrationPK"
+          $targetFolder  = "TimesheetDevMigration"
+          $projectName   = "TimesheetMigrationDev"
+          $executionJobName = "RunTimesheetDevMigration"
 
           # STEP 2: USE SQL SERVER AUTHENTICATION
           $connStr = "Data Source=$tunnelAddress;Initial Catalog=master;User ID=$dbUser;Password=$dbPassword;TrustServerCertificate=True;Encrypt=False;"
@@ -222,19 +222,19 @@ jobs:
           }
 
   # ========================================================================
-  # JOB 2: DEPLOY TO PARTNER SERVER
+  # JOB 2: DEPLOY TO PRODUCTION SERVER
   # ========================================================================
-  deploy-partner:
-    name: Deploy to Partner Server
+  deploy-prod:
+    name: Deploy to Production Server
     runs-on: windows-latest
-    needs: deploy-local
+    needs: deploy-dev
     environment: partner-sql
 
     steps:
       - name: Checkout Repository Code
         uses: actions/checkout@v4
 
-      - name: Ensure SSISDB Catalog Exists on Partner Server
+      - name: Ensure SSISDB Catalog Exists on Production Server
         shell: powershell
         run: |
           $tunnelAddress = "${{ secrets.SQL_SERVER }},${{ secrets.SQL_PORT }}"
@@ -246,7 +246,7 @@ jobs:
           
           try {
               $connection.Open()
-              Write-Host "Connected to partner SQL Server successfully."
+              Write-Host "Connected to production SQL Server successfully."
               
               # Check if SSISDB exists
               $checkCmd = $connection.CreateCommand()
@@ -254,7 +254,7 @@ jobs:
               $exists = $checkCmd.ExecuteScalar()
               
               if ($exists -eq 0) {
-                  Write-Host "SSISDB does not exist on partner server. Creating SSISDB catalog..."
+                  Write-Host "SSISDB does not exist on production server. Creating SSISDB catalog..."
                   
                   # Check if Integration Services is installed
                   $checkSsisCmd = $connection.CreateCommand()
@@ -262,7 +262,7 @@ jobs:
                   $hasSSIS = $checkSsisCmd.ExecuteScalar()
                   
                   if ($hasSSIS -eq 0) {
-                      Write-Warning "Integration Services is not installed or sp_ssis_addcatalog is missing on partner server."
+                      Write-Warning "Integration Services is not installed or sp_ssis_addcatalog is missing on production server."
                       Write-Warning "The SSISDB catalog cannot be created programmatically."
                       Write-Warning "Please install SQL Server Integration Services and try again."
                       exit 1
@@ -274,28 +274,28 @@ jobs:
                   
                   try {
                       $result = $createCmd.ExecuteScalar()
-                      Write-Host "SSISDB catalog created successfully on partner server! Result: $result"
+                      Write-Host "SSISDB catalog created successfully on production server! Result: $result"
                       
                       # Wait for catalog to be fully initialized
                       Write-Host "Waiting for SSISDB to initialize..."
                       Start-Sleep -Seconds 10
                   } catch {
-                      Write-Error "Failed to create SSISDB catalog on partner server: $_"
+                      Write-Error "Failed to create SSISDB catalog on production server: $_"
                       Write-Error "You may need to create it manually with: EXEC [dbo].[sp_ssis_addcatalog];"
                       exit 1
                   }
               } else {
-                  Write-Host "SSISDB catalog already exists on partner server."
+                  Write-Host "SSISDB catalog already exists on production server."
               }
               
           } catch {
-              Write-Error "Failed to check/create SSISDB on partner server: $_"
+              Write-Error "Failed to check/create SSISDB on production server: $_"
               exit 1
           } finally {
               $connection.Close()
           }
 
-      - name: Create Database and Tables on Partner Server
+      - name: Create Database and Tables on Production Server
         shell: powershell
         run: |
           # STEP 1: LOCATE THE DATABASE SCRIPT
@@ -323,7 +323,7 @@ jobs:
           $scriptContent = Get-Content -Path $scriptPath -Raw
 
           # STEP 4: EXECUTE THE DATABASE SCRIPT
-          Write-Host "Establishing tunnel connection to create database on partner server..."
+          Write-Host "Establishing tunnel connection to create database on production server..."
 
           $connStr = "Data Source=$tunnelAddress;Initial Catalog=$initialDb;User ID=$dbUser;Password=$dbPassword;TrustServerCertificate=True;Encrypt=False;"
           $connection = New-Object System.Data.SqlClient.SqlConnection($connStr)
@@ -358,30 +358,30 @@ jobs:
               foreach ($part in $scriptParts) {
                   $trimmedPart = $part.Trim()
                   if ($trimmedPart -ne "") {
-                      Write-Host "Executing SQL block on partner server..."
+                      Write-Host "Executing SQL block on production server..."
                       try {
                           $command = $connection.CreateCommand()
                           $command.CommandText = $trimmedPart
                           $command.ExecuteNonQuery() | Out-Null
-                          Write-Host "SQL block executed successfully on partner server."
+                          Write-Host "SQL block executed successfully on production server."
                       } catch {
-                          Write-Host "Warning: Error executing SQL block on partner server: $_"
+                          Write-Host "Warning: Error executing SQL block on production server: $_"
                           Write-Host "SQL Block Content:"
                           Write-Host $trimmedPart
                       }
                   }
               }
 
-              Write-Host "SUCCESS: Database and tables created successfully on partner server!"
+              Write-Host "SUCCESS: Database and tables created successfully on production server!"
 
           } catch {
-              Write-Error "Database Creation Failed on partner server: $_"
+              Write-Error "Database Creation Failed on production server: $_"
               exit 1
           } finally {
               $connection.Close()
           }
 
-      - name: Deploy SSIS to Partner Server (SQL Auth)
+      - name: Deploy SSIS to Production Server (SQL Auth)
         shell: powershell
         run: |
           # STEP 1: LOCATE THE SSIS DEPLOYMENT FILE
@@ -404,22 +404,22 @@ jobs:
           $dbPassword    = "${{ secrets.SQL_PASSWORD }}"
           $initialDb     = "master"
           $targetFolder  = "TimesheetProductionMigration"
-          $projectName   = "TimesheetMigration"
-          $partnerServer = "DESKTOP-DBA1BPB\SQLSERVER2025"
+          $projectName   = "TimesheetMigrationProd"
+          $prodServer    = "PRODUCTION-SERVER\SQLINSTANCE"
 
           # STEP 3: CONVERT ISPAC FILE INTO BINARY DATA STREAM
           $fileBytes = [System.IO.File]::ReadAllBytes($ispacPath)
           $hexString = "0x" + [System.BitConverter]::ToString($fileBytes).Replace("-", "")
 
           # STEP 4: USE SQL SERVER AUTHENTICATION FOR DEPLOYMENT
-          Write-Host "Establishing tunnel connection to partner environment with SQL Server Authentication..."
+          Write-Host "Establishing tunnel connection to production environment with SQL Server Authentication..."
 
           $connStr = "Data Source=$tunnelAddress;Initial Catalog=$initialDb;User ID=$dbUser;Password=$dbPassword;TrustServerCertificate=True;Encrypt=False;"
           $connection = New-Object System.Data.SqlClient.SqlConnection($connStr)
 
           try {
               $connection.Open()
-              Write-Host "Connected to partner server with SQL Server Authentication."
+              Write-Host "Connected to production server with SQL Server Authentication."
 
               # Check if SSISDB exists
               $checkCmd = $connection.CreateCommand()
@@ -427,12 +427,12 @@ jobs:
               $ssisExists = $checkCmd.ExecuteScalar()
               
               if ($ssisExists -eq 0) {
-                  Write-Error "SSISDB does not exist on partner server. Cannot deploy SSIS package."
+                  Write-Error "SSISDB does not exist on production server. Cannot deploy SSIS package."
                   exit 1
               }
 
               # Deploy the project
-              Write-Host "Deploying SSIS project to partner server..."
+              Write-Host "Deploying SSIS project to production server..."
 
               $sqlQuery = "USE SSISDB; "
               $sqlQuery += "IF NOT EXISTS (SELECT 1 FROM catalog.folders WHERE name = N'$targetFolder') BEGIN EXEC catalog.create_folder @folder_name = N'$targetFolder'; END "
@@ -444,14 +444,14 @@ jobs:
               $command.CommandText = $sqlQuery
               $command.ExecuteNonQuery()
 
-              Write-Host "SUCCESS: SSIS project deployed to partner server using SQL Server Authentication."
+              Write-Host "SUCCESS: SSIS project deployed to production server using SQL Server Authentication."
 
-              # Update connection manager parameters for partner server
+              # Update connection manager parameters for production server
               Write-Host "Updating connection manager parameters..."
 
               $updateParams = "USE SSISDB; "
-              $updateParams += "EXEC catalog.set_object_parameter_value @object_type = 30, @folder_name = N'$targetFolder', @project_name = N'$projectName', @object_name = N'TimesheetMigration.dtsx', @parameter_name = N'CM.SQLSERVER.ServerName', @parameter_value = N'$partnerServer'; "
-              $updateParams += "EXEC catalog.set_object_parameter_value @object_type = 30, @folder_name = N'$targetFolder', @project_name = N'$projectName', @object_name = N'TimesheetMigration.dtsx', @parameter_name = N'CM.TimesheetDB.ServerName', @parameter_value = N'$partnerServer';"
+              $updateParams += "EXEC catalog.set_object_parameter_value @object_type = 30, @folder_name = N'$targetFolder', @project_name = N'$projectName', @object_name = N'TimesheetMigration.dtsx', @parameter_name = N'CM.SQLSERVER.ServerName', @parameter_value = N'$prodServer'; "
+              $updateParams += "EXEC catalog.set_object_parameter_value @object_type = 30, @folder_name = N'$targetFolder', @project_name = N'$projectName', @object_name = N'TimesheetMigration.dtsx', @parameter_name = N'CM.TimesheetDB.ServerName', @parameter_value = N'$prodServer';"
 
               $command = $connection.CreateCommand()
               $command.CommandText = $updateParams
@@ -460,13 +460,13 @@ jobs:
               Write-Host "SUCCESS: Connection manager parameters updated."
 
           } catch {
-              Write-Error "Partner Deployment Failed: $_"
+              Write-Error "Production Deployment Failed: $_"
               exit 1
           } finally {
               $connection.Close()
           }
 
-      - name: Create SQL Agent Job on Partner Server
+      - name: Create SQL Agent Job on Production Server
         shell: powershell
         run: |
           # STEP 1: DEFINE CONFIGURATIONS
@@ -474,8 +474,8 @@ jobs:
           $dbUser        = "${{ secrets.SQL_USERNAME }}"
           $dbPassword    = "${{ secrets.SQL_PASSWORD }}"
           $targetFolder  = "TimesheetProductionMigration"
-          $projectName   = "TimesheetMigration"
-          $executionJobName = "RunTimesheetProductionMigrationPK"
+          $projectName   = "TimesheetMigrationProd"
+          $executionJobName = "RunTimesheetProductionMigration"
 
           # STEP 2: USE SQL SERVER AUTHENTICATION
           $connStr = "Data Source=$tunnelAddress;Initial Catalog=master;User ID=$dbUser;Password=$dbPassword;TrustServerCertificate=True;Encrypt=False;"
@@ -483,11 +483,11 @@ jobs:
 
           try {
               $connection.Open()
-              Write-Host "Connected with SQL Server Authentication to create SQL Agent job on partner server."
+              Write-Host "Connected with SQL Server Authentication to create SQL Agent job on production server."
 
               $sqlQuery = "USE [msdb]; "
               $sqlQuery += "IF EXISTS (SELECT job_id FROM msdb.dbo.sysjobs WHERE name = N'$executionJobName') BEGIN EXEC dbo.sp_delete_job @job_name = N'$executionJobName', @delete_unused_schedule=1; END "
-              $sqlQuery += "EXEC dbo.sp_add_job @job_name = N'$executionJobName', @enabled = 1, @description = N'Automated execution of $projectName package on partner server.', @start_step_id = 1; "
+              $sqlQuery += "EXEC dbo.sp_add_job @job_name = N'$executionJobName', @enabled = 1, @description = N'Automated execution of $projectName package on production server.', @start_step_id = 1; "
               $sqlQuery += "DECLARE @TargetServer NVARCHAR(128) = CAST(SERVERPROPERTY('ServerName') AS NVARCHAR(128)); "
               $sqlQuery += "DECLARE @run_command NVARCHAR(MAX); "
               $sqlQuery += "SET @run_command = N'/ISSERVER ' + CHAR(34) + N'\\SSISDB\\$targetFolder\\$projectName\\TimesheetMigration.dtsx' + CHAR(34) + N' /SERVER ' + CHAR(34) + @TargetServer + CHAR(34) + N' /Par ' + CHAR(34) + N'`$ServerOption::LOGGING_LEVEL(Int16)' + CHAR(34) + N';1' + N' /CALLERINFO SQLAGENT /REPORTING E'; "
@@ -500,10 +500,10 @@ jobs:
               $command.CommandText = $sqlQuery
               $command.ExecuteNonQuery() | Out-Null
 
-              Write-Host "SUCCESS: SQL Agent job '$executionJobName' created and started on partner server."
+              Write-Host "SUCCESS: SQL Agent job '$executionJobName' created and started on production server."
 
           } catch {
-              Write-Error "Failed to create SQL Agent job on partner server: $_"
+              Write-Error "Failed to create SQL Agent job on production server: $_"
               exit 1
           } finally {
               $connection.Close()
