@@ -155,26 +155,11 @@ jobs:
 
               Write-Host "Deploying ISPAC..."
 
-              $sqlQuery = @"
-              USE SSISDB;
-
-              IF NOT EXISTS
-              (
-                  SELECT 1
-                  FROM catalog.folders
-                  WHERE name = N'$targetFolder'
-              )
-              BEGIN
-                  EXEC catalog.create_folder
-                      @folder_name = N'$targetFolder';
-              END
-
-              DECLARE @project_stream VARBINARY(MAX) = $hexString;
-
-              EXEC catalog.deploy_project
-                  @folder_name = N'$targetFolder',
-                  @project_name = N'$projectName',
-                  @project_stream = @project_stream;"@
+              # Build the SQL query as a string without using heredoc
+              $sqlQuery = "USE SSISDB;"
+              $sqlQuery += "IF NOT EXISTS (SELECT 1 FROM catalog.folders WHERE name = N'$targetFolder') BEGIN EXEC catalog.create_folder @folder_name = N'$targetFolder'; END "
+              $sqlQuery += "DECLARE @project_stream VARBINARY(MAX) = $hexString; "
+              $sqlQuery += "EXEC catalog.deploy_project @folder_name = N'$targetFolder', @project_name = N'$projectName', @project_stream = @project_stream;"
 
               $command = $connection.CreateCommand()
               $command.CommandTimeout = 0
@@ -207,62 +192,17 @@ jobs:
               $connection.Open()
               Write-Host "Connected with Windows Authentication to create SQL Agent job."
 
-              $sqlQuery = @"
-              USE [msdb];
-
-              -- Delete existing job if it exists
-              IF EXISTS (SELECT job_id FROM msdb.dbo.sysjobs WHERE name = N'$executionJobName')
-              BEGIN
-                  EXEC dbo.sp_delete_job @job_name = N'$executionJobName', @delete_unused_schedule=1;
-              END
-
-              -- Create the execution job
-              EXEC dbo.sp_add_job
-                  @job_name = N'$executionJobName',
-                  @enabled = 1,
-                  @description = N'Automated execution of $projectName package.',
-                  @start_step_id = 1;
-
-              DECLARE @TargetServer NVARCHAR(128) = CAST(SERVERPROPERTY('ServerName') AS NVARCHAR(128));
-              DECLARE @run_command NVARCHAR(MAX);
-
-              SET @run_command = N'/ISSERVER ' +
-                  CHAR(34) + N'\SSISDB\$targetFolder\$projectName\TimesheetMigration.dtsx' + CHAR(34) +
-                  N' /SERVER ' + CHAR(34) + @TargetServer + CHAR(34) +
-                  N' /Par ' + CHAR(34) + N'$ServerOption::LOGGING_LEVEL(Int16)' + CHAR(34) + N';1' +
-                  N' /CALLERINFO SQLAGENT /REPORTING E';
-
-              EXEC dbo.sp_add_jobstep
-                  @job_name = N'$executionJobName',
-                  @step_name = N'Execute SSIS Package',
-                  @subsystem = N'SSIS',
-                  @command = @run_command,
-                  @retry_attempts = 0;
-
-              EXEC dbo.sp_add_jobserver
-                  @job_name = N'$executionJobName',
-                  @server_name = N'(local)';
-
-              -- Schedule the job to run every minute during business hours
-              EXEC dbo.sp_add_jobschedule
-                  @job_name = N'$executionJobName',
-                  @name = N'Every_1_Minute_8AM_to_5PM',
-                  @enabled = 1,
-                  @freq_type = 4,
-                  @freq_interval = 1,
-                  @freq_subday_type = 4,
-                  @freq_subday_interval = 1,
-                  @active_start_time = 080000,
-                  @active_end_time = 170000;
-
-              -- Start the job immediately
-              EXEC dbo.sp_start_job @job_name = N'$executionJobName';
-              WAITFOR DELAY '00:00:05';"@
-
-              # Replace placeholders
-              $sqlQuery = $sqlQuery.Replace('$targetFolder', $targetFolder)
-              $sqlQuery = $sqlQuery.Replace('$projectName', $projectName)
-              $sqlQuery = $sqlQuery.Replace('$executionJobName', $executionJobName)
+              # Build SQL query without heredoc
+              $sqlQuery = "USE [msdb]; "
+              $sqlQuery += "IF EXISTS (SELECT job_id FROM msdb.dbo.sysjobs WHERE name = N'$executionJobName') BEGIN EXEC dbo.sp_delete_job @job_name = N'$executionJobName', @delete_unused_schedule=1; END "
+              $sqlQuery += "EXEC dbo.sp_add_job @job_name = N'$executionJobName', @enabled = 1, @description = N'Automated execution of $projectName package.', @start_step_id = 1; "
+              $sqlQuery += "DECLARE @TargetServer NVARCHAR(128) = CAST(SERVERPROPERTY('ServerName') AS NVARCHAR(128)); "
+              $sqlQuery += "DECLARE @run_command NVARCHAR(MAX); "
+              $sqlQuery += "SET @run_command = N'/ISSERVER ' + CHAR(34) + N'\\SSISDB\\$targetFolder\\$projectName\\TimesheetMigration.dtsx' + CHAR(34) + N' /SERVER ' + CHAR(34) + @TargetServer + CHAR(34) + N' /Par ' + CHAR(34) + N'`$ServerOption::LOGGING_LEVEL(Int16)' + CHAR(34) + N';1' + N' /CALLERINFO SQLAGENT /REPORTING E'; "
+              $sqlQuery += "EXEC dbo.sp_add_jobstep @job_name = N'$executionJobName', @step_name = N'Execute SSIS Package', @subsystem = N'SSIS', @command = @run_command, @retry_attempts = 0; "
+              $sqlQuery += "EXEC dbo.sp_add_jobserver @job_name = N'$executionJobName', @server_name = N'(local)'; "
+              $sqlQuery += "EXEC dbo.sp_add_jobschedule @job_name = N'$executionJobName', @name = N'Every_1_Minute_8AM_to_5PM', @enabled = 1, @freq_type = 4, @freq_interval = 1, @freq_subday_type = 4, @freq_subday_interval = 1, @active_start_time = 080000, @active_end_time = 170000; "
+              $sqlQuery += "EXEC dbo.sp_start_job @job_name = N'$executionJobName'; WAITFOR DELAY '00:00:05';"
 
               $command = $connection.CreateCommand()
               $command.CommandText = $sqlQuery
@@ -314,15 +254,7 @@ jobs:
                   
                   # Check if Integration Services is installed
                   $checkSsisCmd = $connection.CreateCommand()
-                  $checkSsisCmd.CommandText = @"
-                  IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[sp_ssis_addcatalog]') AND type in (N'P', N'PC'))
-                  BEGIN
-                      SELECT 1 AS HasSSIS
-                  END
-                  ELSE
-                  BEGIN
-                      SELECT 0 AS HasSSIS
-                  END"@
+                  $checkSsisCmd.CommandText = "IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[sp_ssis_addcatalog]') AND type in (N'P', N'PC')) BEGIN SELECT 1 AS HasSSIS END ELSE BEGIN SELECT 0 AS HasSSIS END"
                   $hasSSIS = $checkSsisCmd.ExecuteScalar()
                   
                   if ($hasSSIS -eq 0) {
@@ -334,11 +266,7 @@ jobs:
                   
                   # Create SSISDB catalog
                   $createCmd = $connection.CreateCommand()
-                  $createCmd.CommandText = @"
-                  USE [master];
-                  DECLARE @return_value int;
-                  EXEC @return_value = [dbo].[sp_ssis_addcatalog];
-                  SELECT 'Catalog Creation Return Code: ' + CAST(@return_value AS VARCHAR) AS Result;"@
+                  $createCmd.CommandText = "USE [master]; DECLARE @return_value int; EXEC @return_value = [dbo].[sp_ssis_addcatalog]; SELECT 'Catalog Creation Return Code: ' + CAST(@return_value AS VARCHAR) AS Result;"
                   
                   try {
                       $result = $createCmd.ExecuteScalar()
@@ -500,20 +428,10 @@ jobs:
               # Deploy the project
               Write-Host "Deploying SSIS project to partner server..."
 
-              $sqlQuery = @"
-              USE SSISDB;
-
-              IF NOT EXISTS (SELECT 1 FROM catalog.folders WHERE name = N'$targetFolder')
-              BEGIN
-                  EXEC catalog.create_folder @folder_name = N'$targetFolder';
-              END
-
-              DECLARE @project_stream VARBINARY(MAX) = $hexString;
-
-              EXEC catalog.deploy_project
-                  @folder_name = N'$targetFolder',
-                  @project_name = N'$projectName',
-                  @project_stream = @project_stream;"@
+              $sqlQuery = "USE SSISDB; "
+              $sqlQuery += "IF NOT EXISTS (SELECT 1 FROM catalog.folders WHERE name = N'$targetFolder') BEGIN EXEC catalog.create_folder @folder_name = N'$targetFolder'; END "
+              $sqlQuery += "DECLARE @project_stream VARBINARY(MAX) = $hexString; "
+              $sqlQuery += "EXEC catalog.deploy_project @folder_name = N'$targetFolder', @project_name = N'$projectName', @project_stream = @project_stream;"
 
               $command = $connection.CreateCommand()
               $command.CommandTimeout = 0
@@ -525,24 +443,9 @@ jobs:
               # Update connection manager parameters for partner server
               Write-Host "Updating connection manager parameters..."
 
-              $updateParams = @"
-              USE SSISDB;
-
-              EXEC catalog.set_object_parameter_value
-                  @object_type = 30,
-                  @folder_name = N'$targetFolder',
-                  @project_name = N'$projectName',
-                  @object_name = N'TimesheetMigration.dtsx',
-                  @parameter_name = N'CM.SQLSERVER.ServerName',
-                  @parameter_value = N'$partnerServer';
-
-              EXEC catalog.set_object_parameter_value
-                  @object_type = 30,
-                  @folder_name = N'$targetFolder',
-                  @project_name = N'$projectName',
-                  @object_name = N'TimesheetMigration.dtsx',
-                  @parameter_name = N'CM.TimesheetDB.ServerName',
-                  @parameter_value = N'$partnerServer';"@
+              $updateParams = "USE SSISDB; "
+              $updateParams += "EXEC catalog.set_object_parameter_value @object_type = 30, @folder_name = N'$targetFolder', @project_name = N'$projectName', @object_name = N'TimesheetMigration.dtsx', @parameter_name = N'CM.SQLSERVER.ServerName', @parameter_value = N'$partnerServer'; "
+              $updateParams += "EXEC catalog.set_object_parameter_value @object_type = 30, @folder_name = N'$targetFolder', @project_name = N'$projectName', @object_name = N'TimesheetMigration.dtsx', @parameter_name = N'CM.TimesheetDB.ServerName', @parameter_value = N'$partnerServer';"
 
               $command = $connection.CreateCommand()
               $command.CommandText = $updateParams
@@ -574,62 +477,16 @@ jobs:
               $connection.Open()
               Write-Host "Connected with Windows Authentication to create SQL Agent job on partner server."
 
-              $sqlQuery = @"
-              USE [msdb];
-
-              -- Delete existing job if it exists
-              IF EXISTS (SELECT job_id FROM msdb.dbo.sysjobs WHERE name = N'$executionJobName')
-              BEGIN
-                  EXEC dbo.sp_delete_job @job_name = N'$executionJobName', @delete_unused_schedule=1;
-              END
-
-              -- Create the execution job
-              EXEC dbo.sp_add_job
-                  @job_name = N'$executionJobName',
-                  @enabled = 1,
-                  @description = N'Automated execution of $projectName package on partner server.',
-                  @start_step_id = 1;
-
-              DECLARE @TargetServer NVARCHAR(128) = CAST(SERVERPROPERTY('ServerName') AS NVARCHAR(128));
-              DECLARE @run_command NVARCHAR(MAX);
-
-              SET @run_command = N'/ISSERVER ' +
-                  CHAR(34) + N'\SSISDB\$targetFolder\$projectName\TimesheetMigration.dtsx' + CHAR(34) +
-                  N' /SERVER ' + CHAR(34) + @TargetServer + CHAR(34) +
-                  N' /Par ' + CHAR(34) + N'$ServerOption::LOGGING_LEVEL(Int16)' + CHAR(34) + N';1' +
-                  N' /CALLERINFO SQLAGENT /REPORTING E';
-
-              EXEC dbo.sp_add_jobstep
-                  @job_name = N'$executionJobName',
-                  @step_name = N'Execute SSIS Package',
-                  @subsystem = N'SSIS',
-                  @command = @run_command,
-                  @retry_attempts = 0;
-
-              EXEC dbo.sp_add_jobserver
-                  @job_name = N'$executionJobName',
-                  @server_name = N'(local)';
-
-              -- Schedule the job
-              EXEC dbo.sp_add_jobschedule
-                  @job_name = N'$executionJobName',
-                  @name = N'Every_1_Minute_8AM_to_5PM',
-                  @enabled = 1,
-                  @freq_type = 4,
-                  @freq_interval = 1,
-                  @freq_subday_type = 4,
-                  @freq_subday_interval = 1,
-                  @active_start_time = 080000,
-                  @active_end_time = 170000;
-
-              -- Start the job
-              EXEC dbo.sp_start_job @job_name = N'$executionJobName';
-              WAITFOR DELAY '00:00:05';"@
-
-              # Replace placeholders
-              $sqlQuery = $sqlQuery.Replace('$targetFolder', $targetFolder)
-              $sqlQuery = $sqlQuery.Replace('$projectName', $projectName)
-              $sqlQuery = $sqlQuery.Replace('$executionJobName', $executionJobName)
+              $sqlQuery = "USE [msdb]; "
+              $sqlQuery += "IF EXISTS (SELECT job_id FROM msdb.dbo.sysjobs WHERE name = N'$executionJobName') BEGIN EXEC dbo.sp_delete_job @job_name = N'$executionJobName', @delete_unused_schedule=1; END "
+              $sqlQuery += "EXEC dbo.sp_add_job @job_name = N'$executionJobName', @enabled = 1, @description = N'Automated execution of $projectName package on partner server.', @start_step_id = 1; "
+              $sqlQuery += "DECLARE @TargetServer NVARCHAR(128) = CAST(SERVERPROPERTY('ServerName') AS NVARCHAR(128)); "
+              $sqlQuery += "DECLARE @run_command NVARCHAR(MAX); "
+              $sqlQuery += "SET @run_command = N'/ISSERVER ' + CHAR(34) + N'\\SSISDB\\$targetFolder\\$projectName\\TimesheetMigration.dtsx' + CHAR(34) + N' /SERVER ' + CHAR(34) + @TargetServer + CHAR(34) + N' /Par ' + CHAR(34) + N'`$ServerOption::LOGGING_LEVEL(Int16)' + CHAR(34) + N';1' + N' /CALLERINFO SQLAGENT /REPORTING E'; "
+              $sqlQuery += "EXEC dbo.sp_add_jobstep @job_name = N'$executionJobName', @step_name = N'Execute SSIS Package', @subsystem = N'SSIS', @command = @run_command, @retry_attempts = 0; "
+              $sqlQuery += "EXEC dbo.sp_add_jobserver @job_name = N'$executionJobName', @server_name = N'(local)'; "
+              $sqlQuery += "EXEC dbo.sp_add_jobschedule @job_name = N'$executionJobName', @name = N'Every_1_Minute_8AM_to_5PM', @enabled = 1, @freq_type = 4, @freq_interval = 1, @freq_subday_type = 4, @freq_subday_interval = 1, @active_start_time = 080000, @active_end_time = 170000; "
+              $sqlQuery += "EXEC dbo.sp_start_job @job_name = N'$executionJobName'; WAITFOR DELAY '00:00:05';"
 
               $command = $connection.CreateCommand()
               $command.CommandText = $sqlQuery
