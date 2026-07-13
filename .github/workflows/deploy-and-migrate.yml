@@ -328,38 +328,6 @@ jobs:
           $hexString = "0x" + [System.BitConverter]::ToString($fileBytes).Replace("-", "")
 
           
-
-         
-
-              # Deploy the project
-              Write-Host "Deploying SSIS project to partner server..."
-
-              $sqlQuery = "USE SSISDB; "
-              $sqlQuery += "IF NOT EXISTS (SELECT 1 FROM catalog.folders WHERE name = N'$targetFolder') BEGIN EXEC catalog.create_folder @folder_name = N'$targetFolder'; END "
-              $sqlQuery += "DECLARE @project_stream VARBINARY(MAX) = $hexString; "
-              $sqlQuery += "EXEC catalog.deploy_project @folder_name = N'$targetFolder', @project_name = N'$projectName', @project_stream = @project_stream;"
-
-              $command = $connection.CreateCommand()
-              $command.CommandTimeout = 0
-              $command.CommandText = $sqlQuery
-              $command.ExecuteNonQuery()
-
-              Write-Host "SUCCESS: SSIS project deployed to partner server using SQL Server Authentication."
-
-              # Update connection manager parameters for partner server
-              Write-Host "Updating connection manager parameters..."
-
-              $updateParams = "USE SSISDB; "
-              $updateParams += "EXEC catalog.set_object_parameter_value @object_type = 30, @folder_name = N'$targetFolder', @project_name = N'$projectName', @object_name = N'TimesheetMigration.dtsx', @parameter_name = N'CM.SQLSERVER.ServerName', @parameter_value = N'$partnerServer'; "
-              $updateParams += "EXEC catalog.set_object_parameter_value @object_type = 30, @folder_name = N'$targetFolder', @project_name = N'$projectName', @object_name = N'TimesheetMigration.dtsx', @parameter_name = N'CM.TimesheetsDB.ServerName', @parameter_value = N'$partnerServer';"
-
-              $command = $connection.CreateCommand()
-              $command.CommandText = $updateParams
-              $command.ExecuteNonQuery()
-
-              Write-Host "SUCCESS: Connection manager parameters updated."
-
-          
       - name: Create SQL Agent Job on Partner Server
         shell: powershell
         run: |
