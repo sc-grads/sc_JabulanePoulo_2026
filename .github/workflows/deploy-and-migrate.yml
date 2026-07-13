@@ -124,6 +124,8 @@ jobs:
 
           # STEP 2: DEFINE TARGET CONFIGURATIONS FROM YOUR ENVIRONMENT
           $tunnelAddress = "${{ secrets.SQL_SERVER }},${{ secrets.SQL_PORT }}"
+          $dbUser        = "${{ secrets.SQL_USERNAME }}"
+          $dbPassword    = "${{ secrets.SQL_PASSWORD }}"
           $initialDb     = "master"
           $targetFolder  = "TimesheetDevTestMigration"
           $projectName   = "TimesheetMigration1"
@@ -132,16 +134,16 @@ jobs:
           $fileBytes = [System.IO.File]::ReadAllBytes($ispacPath)
           $hexString = "0x" + [System.BitConverter]::ToString($fileBytes).Replace("-", "")
 
-          # STEP 4: USE WINDOWS AUTHENTICATION FOR SSIS DEPLOYMENT
-          Write-Host "Establishing local tunnel connection with Windows Authentication..."
+          # STEP 4: USE SQL SERVER AUTHENTICATION FOR SSIS DEPLOYMENT
+          Write-Host "Establishing local tunnel connection with SQL Server Authentication..."
 
-          # Use Windows Authentication (Integrated Security)
-          $connStr = "Data Source=$tunnelAddress;Initial Catalog=$initialDb;Integrated Security=SSPI;TrustServerCertificate=True;Encrypt=False;"
+          # Use SQL Server Authentication (not Integrated Security)
+          $connStr = "Data Source=$tunnelAddress;Initial Catalog=$initialDb;User ID=$dbUser;Password=$dbPassword;TrustServerCertificate=True;Encrypt=False;"
           $connection = New-Object System.Data.SqlClient.SqlConnection($connStr)
 
           try {
               $connection.Open()
-              Write-Host "Connected successfully with Windows Authentication."
+              Write-Host "Connected successfully with SQL Server Authentication."
 
               # Check if SSISDB exists
               $checkCmd = $connection.CreateCommand()
@@ -166,7 +168,7 @@ jobs:
               $command.CommandText = $sqlQuery
               $command.ExecuteNonQuery()
 
-              Write-Host "SUCCESS: SSIS project deployed using Windows Authentication."
+              Write-Host "SUCCESS: SSIS project deployed using SQL Server Authentication."
 
           } catch {
               Write-Error "Local Deployment Failed: $_"
@@ -180,17 +182,19 @@ jobs:
         run: |
           # STEP 1: DEFINE CONFIGURATIONS
           $tunnelAddress = "${{ secrets.SQL_SERVER }},${{ secrets.SQL_PORT }}"
+          $dbUser        = "${{ secrets.SQL_USERNAME }}"
+          $dbPassword    = "${{ secrets.SQL_PASSWORD }}"
           $targetFolder  = "TimesheetDevTestMigration"
           $projectName   = "TimesheetMigration1"
           $executionJobName = "RunTimesheetDevTestMigrationPK"
 
-          # STEP 2: USE WINDOWS AUTHENTICATION
-          $connStr = "Data Source=$tunnelAddress;Initial Catalog=master;Integrated Security=SSPI;TrustServerCertificate=True;Encrypt=False;"
+          # STEP 2: USE SQL SERVER AUTHENTICATION
+          $connStr = "Data Source=$tunnelAddress;Initial Catalog=master;User ID=$dbUser;Password=$dbPassword;TrustServerCertificate=True;Encrypt=False;"
           $connection = New-Object System.Data.SqlClient.SqlConnection($connStr)
 
           try {
               $connection.Open()
-              Write-Host "Connected with Windows Authentication to create SQL Agent job."
+              Write-Host "Connected with SQL Server Authentication to create SQL Agent job."
 
               # Build SQL query without heredoc
               $sqlQuery = "USE [msdb]; "
@@ -377,7 +381,7 @@ jobs:
               $connection.Close()
           }
 
-      - name: Deploy SSIS to Partner Server (Windows Auth)
+      - name: Deploy SSIS to Partner Server (SQL Auth)
         shell: powershell
         run: |
           # STEP 1: LOCATE THE SSIS DEPLOYMENT FILE
@@ -396,6 +400,8 @@ jobs:
 
           # STEP 2: DEFINE TARGET CONFIGURATIONS FROM YOUR ENVIRONMENT
           $tunnelAddress = "${{ secrets.SQL_SERVER }},${{ secrets.SQL_PORT }}"
+          $dbUser        = "${{ secrets.SQL_USERNAME }}"
+          $dbPassword    = "${{ secrets.SQL_PASSWORD }}"
           $initialDb     = "master"
           $targetFolder  = "TimesheetProductionMigration"
           $projectName   = "TimesheetMigration"
@@ -405,15 +411,15 @@ jobs:
           $fileBytes = [System.IO.File]::ReadAllBytes($ispacPath)
           $hexString = "0x" + [System.BitConverter]::ToString($fileBytes).Replace("-", "")
 
-          # STEP 4: USE WINDOWS AUTHENTICATION FOR DEPLOYMENT
-          Write-Host "Establishing tunnel connection to partner environment with Windows Authentication..."
+          # STEP 4: USE SQL SERVER AUTHENTICATION FOR DEPLOYMENT
+          Write-Host "Establishing tunnel connection to partner environment with SQL Server Authentication..."
 
-          $connStr = "Data Source=$tunnelAddress;Initial Catalog=$initialDb;Integrated Security=SSPI;TrustServerCertificate=True;Encrypt=False;"
+          $connStr = "Data Source=$tunnelAddress;Initial Catalog=$initialDb;User ID=$dbUser;Password=$dbPassword;TrustServerCertificate=True;Encrypt=False;"
           $connection = New-Object System.Data.SqlClient.SqlConnection($connStr)
 
           try {
               $connection.Open()
-              Write-Host "Connected to partner server with Windows Authentication."
+              Write-Host "Connected to partner server with SQL Server Authentication."
 
               # Check if SSISDB exists
               $checkCmd = $connection.CreateCommand()
@@ -438,7 +444,7 @@ jobs:
               $command.CommandText = $sqlQuery
               $command.ExecuteNonQuery()
 
-              Write-Host "SUCCESS: SSIS project deployed to partner server using Windows Authentication."
+              Write-Host "SUCCESS: SSIS project deployed to partner server using SQL Server Authentication."
 
               # Update connection manager parameters for partner server
               Write-Host "Updating connection manager parameters..."
@@ -465,17 +471,19 @@ jobs:
         run: |
           # STEP 1: DEFINE CONFIGURATIONS
           $tunnelAddress = "${{ secrets.SQL_SERVER }},${{ secrets.SQL_PORT }}"
+          $dbUser        = "${{ secrets.SQL_USERNAME }}"
+          $dbPassword    = "${{ secrets.SQL_PASSWORD }}"
           $targetFolder  = "TimesheetProductionMigration"
           $projectName   = "TimesheetMigration"
           $executionJobName = "RunTimesheetProductionMigrationPK"
 
-          # STEP 2: USE WINDOWS AUTHENTICATION
-          $connStr = "Data Source=$tunnelAddress;Initial Catalog=master;Integrated Security=SSPI;TrustServerCertificate=True;Encrypt=False;"
+          # STEP 2: USE SQL SERVER AUTHENTICATION
+          $connStr = "Data Source=$tunnelAddress;Initial Catalog=master;User ID=$dbUser;Password=$dbPassword;TrustServerCertificate=True;Encrypt=False;"
           $connection = New-Object System.Data.SqlClient.SqlConnection($connStr)
 
           try {
               $connection.Open()
-              Write-Host "Connected with Windows Authentication to create SQL Agent job on partner server."
+              Write-Host "Connected with SQL Server Authentication to create SQL Agent job on partner server."
 
               $sqlQuery = "USE [msdb]; "
               $sqlQuery += "IF EXISTS (SELECT job_id FROM msdb.dbo.sysjobs WHERE name = N'$executionJobName') BEGIN EXEC dbo.sp_delete_job @job_name = N'$executionJobName', @delete_unused_schedule=1; END "
