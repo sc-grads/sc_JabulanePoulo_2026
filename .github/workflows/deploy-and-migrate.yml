@@ -11,7 +11,7 @@ jobs:
   # JOB 1: DEPLOY TO LOCAL LAPTOP
   # ========================================================================
   deploy-local:
-    name: Tunnel Deployment to Local Laptop
+    name: DevTest/Deploy
     runs-on: windows-latest
     environment: local-sql
 
@@ -193,7 +193,7 @@ jobs:
   # JOB 2: DEPLOY TO PARTNER SERVER
   # ========================================================================
   deploy-partner:
-    name: Deploy to Partner Server
+    name: DevTest/Deploy
     runs-on: windows-latest
     needs: deploy-local
     environment: partner-sql
