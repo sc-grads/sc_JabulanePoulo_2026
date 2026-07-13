@@ -109,16 +109,16 @@ jobs:
         shell: powershell
         run: |
           # STEP 1: LOCATE THE SSIS DEPLOYMENT FILE
-          $ispacPath = "${{ github.workspace }}\Timesheet\ProjectTime\ProjectTime\bin\Development\ProjectTime.ispac"
+          $ispacPath = "${{ github.workspace }}\Projects\TimesheetMigration1\TimesheetMigration1\bin\Development\TimesheetMigration1.ispac"
 
           if (-not (Test-Path -Path $ispacPath)) {
               Write-Host "Primary path not found. Testing alternate path..."
-              $ispacPath = "${{ github.workspace }}\..\Timesheet\ProjectTime\ProjectTime\bin\Development\ProjectTime.ispac"
+              $ispacPath = "${{ github.workspace }}\..\Projects\TimesheetMigration1\TimesheetMigration1\bin\Development\TimesheetMigration1.ispac" 
               $ispacPath = [System.IO.Path]::GetFullPath($ispacPath)
           }
 
           if (-not (Test-Path -Path $ispacPath)) {
-              Write-Error "CRITICAL ERROR: Could not locate ProjectTime.ispac file."
+              Write-Error "CRITICAL ERROR: Could not locate TimesheetMigration1.ispac file."
               exit 1
           }
 
@@ -126,10 +126,10 @@ jobs:
           $tunnelAddress = "${{ secrets.SQL_SERVER }},${{ secrets.SQL_PORT }}"
           $dbUser        = "${{ secrets.SQL_USERNAME }}"
           $dbPassword    = "${{ secrets.SQL_PASSWORD }}"
-          $initialDb     = "master"
-          $targetFolder  = "ETL"
-          $projectName   = "ProjectTime"
-          $executionJobName = "Run_Timesheet_ETL_Job"
+          $targetFolder  = "TimesheetDevMigration"
+          $projectName   = "TimesheetMigrationDev"
+          $executionJobName = "RunTimesheetDevMigration"
+
 
           # STEP 3: CONVERT ISPAC FILE INTO BINARY DATA STREAM
           $fileBytes = [System.IO.File]::ReadAllBytes($ispacPath)
@@ -185,9 +185,9 @@ jobs:
           $tunnelAddress = "${{ secrets.SQL_SERVER }},${{ secrets.SQL_PORT }}"
           $dbUser        = "${{ secrets.SQL_USERNAME }}"
           $dbPassword    = "${{ secrets.SQL_PASSWORD }}"
-          $targetFolder  = "ETL"
-          $projectName   = "ProjectTime"
-          $executionJobName = "Run_Timesheet_ETL_Job"
+          $targetFolder  = "TimesheetDevMigration"
+          $projectName   = "TimesheetMigrationDev"
+          $executionJobName = "RunTimesheetDevMigration"
 
           # STEP 2: USE SQL SERVER AUTHENTICATION
           $connStr = "Data Source=$tunnelAddress;Initial Catalog=master;User ID=$dbUser;Password=$dbPassword;TrustServerCertificate=True;Encrypt=False;"
@@ -203,7 +203,7 @@ jobs:
               $sqlQuery += "EXEC dbo.sp_add_job @job_name = N'$executionJobName', @enabled = 1, @description = N'Automated execution of $projectName package.', @start_step_id = 1; "
               $sqlQuery += "DECLARE @TargetServer NVARCHAR(128) = CAST(SERVERPROPERTY('ServerName') AS NVARCHAR(128)); "
               $sqlQuery += "DECLARE @run_command NVARCHAR(MAX); "
-              $sqlQuery += "SET @run_command = N'/ISSERVER ' + CHAR(34) + N'\\SSISDB\\$targetFolder\\$projectName\\TimesheetDevTestMigrationKPPK.dtsx' + CHAR(34) + N' /SERVER ' + CHAR(34) + @TargetServer + CHAR(34) + N' /Par ' + CHAR(34) + N'`$ServerOption::LOGGING_LEVEL(Int16)' + CHAR(34) + N';1' + N' /CALLERINFO SQLAGENT /REPORTING E'; "
+              $sqlQuery += "SET @run_command = N'/ISSERVER ' + CHAR(34) + N'\\SSISDB\\$targetFolder\\$projectName\\TimesheetMigration.dtsx' + CHAR(34) + N' /SERVER ' + CHAR(34) + @TargetServer + CHAR(34) + N' /Par ' + CHAR(34) + N'`$ServerOption::LOGGING_LEVEL(Int16)' + CHAR(34) + N';1' + N' /CALLERINFO SQLAGENT /REPORTING E'; "
               $sqlQuery += "EXEC dbo.sp_add_jobstep @job_name = N'$executionJobName', @step_name = N'Execute SSIS Package', @subsystem = N'SSIS', @command = @run_command, @retry_attempts = 0; "
               $sqlQuery += "EXEC dbo.sp_add_jobserver @job_name = N'$executionJobName', @server_name = N'(local)'; "
               $sqlQuery += "EXEC dbo.sp_add_jobschedule @job_name = N'$executionJobName', @name = N'Every_1_Minute_8AM_to_5PM', @enabled = 1, @freq_type = 4, @freq_interval = 1, @freq_subday_type = 4, @freq_subday_interval = 1, @active_start_time = 080000, @active_end_time = 170000; "
@@ -386,11 +386,10 @@ jobs:
         shell: powershell
         run: |
           # STEP 1: LOCATE THE SSIS DEPLOYMENT FILE
-          $ispacPath = "${{ github.workspace }}\Timesheet\ProjectTime\ProjectTime\bin\Development\ProjectTime.ispac"
-
+          $ispacPath = "${{ github.workspace }}\Projects\TimesheetMigration1\TimesheetMigration1\bin\Development\TimesheetMigration1.ispac"
           if (-not (Test-Path -Path $ispacPath)) {
               Write-Host "Primary path not found. Testing alternate path..."
-              $ispacPath = "${{ github.workspace }}\..\Timesheet\ProjectTime\ProjectTime\bin\Development\ProjectTime.ispac"
+              $ispacPath = "${{ github.workspace }}\..\Projects\TimesheetMigration1\TimesheetMigration1\bin\Development\TimesheetMigration1.ispac" 
               $ispacPath = [System.IO.Path]::GetFullPath($ispacPath)
           }
 
