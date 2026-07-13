@@ -102,7 +102,9 @@ jobs:
               Write-Error "Database Creation Failed: $_"
               exit 1
           } finally {
-              $connection.Close()
+              if ($connection.State -eq 'Open') {
+                  $connection.Close()
+              }
           }
 
       - name: Deploy SSIS and Create Execution Job
@@ -126,10 +128,10 @@ jobs:
           $tunnelAddress = "${{ secrets.SQL_SERVER }},${{ secrets.SQL_PORT }}"
           $dbUser        = "${{ secrets.SQL_USERNAME }}"
           $dbPassword    = "${{ secrets.SQL_PASSWORD }}"
+          $initialDb     = "master"
           $targetFolder  = "TimesheetDevMigration"
           $projectName   = "TimesheetMigrationDev"
           $executionJobName = "RunTimesheetDevMigration"
-
 
           # STEP 3: CONVERT ISPAC FILE INTO BINARY DATA STREAM
           $fileBytes = [System.IO.File]::ReadAllBytes($ispacPath)
@@ -138,55 +140,55 @@ jobs:
           # STEP 4: USE SQL SERVER AUTHENTICATION FOR SSIS DEPLOYMENT
           Write-Host "Establishing local tunnel connection with SQL Server Authentication..."
 
-          # Use SQL Server Authentication (not Integrated Security)
           $connStr = "Data Source=$tunnelAddress;Initial Catalog=$initialDb;User ID=$dbUser;Password=$dbPassword;TrustServerCertificate=True;Encrypt=False;"
-          $connection = New-Object System.Data.SqlClient.SqlConnection($connStr)
-
-          
-              
-
-      - name: Create SQL Agent Job for Package Execution
-        shell: powershell
-        run: |
-          # STEP 1: DEFINE CONFIGURATIONS
-          $tunnelAddress = "${{ secrets.SQL_SERVER }},${{ secrets.SQL_PORT }}"
-          $dbUser        = "${{ secrets.SQL_USERNAME }}"
-          $dbPassword    = "${{ secrets.SQL_PASSWORD }}"
-          $targetFolder  = "TimesheetDevMigration"
-          $projectName   = "TimesheetMigrationDev"
-          $executionJobName = "RunTimesheetDevMigration"
-
-          # STEP 2: USE SQL SERVER AUTHENTICATION
-          $connStr = "Data Source=$tunnelAddress;Initial Catalog=master;User ID=$dbUser;Password=$dbPassword;TrustServerCertificate=True;Encrypt=False;"
           $connection = New-Object System.Data.SqlClient.SqlConnection($connStr)
 
           try {
               $connection.Open()
-              Write-Host "Connected with SQL Server Authentication to create SQL Agent job."
+              Write-Host "Connection opened successfully."
 
-              # Build SQL query
-              $sqlQuery = "USE [msdb]; "
-              $sqlQuery += "IF EXISTS (SELECT job_id FROM msdb.dbo.sysjobs WHERE name = N'$executionJobName') BEGIN EXEC dbo.sp_delete_job @job_name = N'$executionJobName', @delete_unused_schedule=1; END "
-              $sqlQuery += "EXEC dbo.sp_add_job @job_name = N'$executionJobName', @enabled = 1, @description = N'Automated execution of $projectName package.', @start_step_id = 1; "
-              $sqlQuery += "DECLARE @TargetServer NVARCHAR(128) = CAST(SERVERPROPERTY('ServerName') AS NVARCHAR(128)); "
-              $sqlQuery += "DECLARE @run_command NVARCHAR(MAX); "
-              $sqlQuery += "SET @run_command = N'/ISSERVER ' + CHAR(34) + N'\\SSISDB\\$targetFolder\\$projectName\\TimesheetMigration.dtsx' + CHAR(34) + N' /SERVER ' + CHAR(34) + @TargetServer + CHAR(34) + N' /Par ' + CHAR(34) + N'`$ServerOption::LOGGING_LEVEL(Int16)' + CHAR(34) + N';1' + N' /CALLERINFO SQLAGENT /REPORTING E'; "
-              $sqlQuery += "EXEC dbo.sp_add_jobstep @job_name = N'$executionJobName', @step_name = N'Execute SSIS Package', @subsystem = N'SSIS', @command = @run_command, @retry_attempts = 0; "
-              $sqlQuery += "EXEC dbo.sp_add_jobserver @job_name = N'$executionJobName', @server_name = N'(local)'; "
-              $sqlQuery += "EXEC dbo.sp_add_jobschedule @job_name = N'$executionJobName', @name = N'Every_1_Minute_8AM_to_5PM', @enabled = 1, @freq_type = 4, @freq_interval = 1, @freq_subday_type = 4, @freq_subday_interval = 1, @active_start_time = 080000, @active_end_time = 170000; "
-              $sqlQuery += "EXEC dbo.sp_start_job @job_name = N'$executionJobName'; WAITFOR DELAY '00:00:05';"
+              # Create folder if it doesn't exist
+              $folderQuery = "USE SSISDB; IF NOT EXISTS (SELECT 1 FROM catalog.folders WHERE name = N'$targetFolder') BEGIN EXEC catalog.create_folder @folder_name = N'$targetFolder'; END"
+              $command = $connection.CreateCommand()
+              $command.CommandText = $folderQuery
+              $command.ExecuteNonQuery()
+
+              # Deploy the project
+              Write-Host "Deploying SSIS project..."
+              $deployQuery = "USE SSISDB; DECLARE @project_stream VARBINARY(MAX) = $hexString; EXEC catalog.deploy_project @folder_name = N'$targetFolder', @project_name = N'$projectName', @project_stream = @project_stream;"
+              $command = $connection.CreateCommand()
+              $command.CommandText = $deployQuery
+              $command.ExecuteNonQuery()
+
+              Write-Host "SUCCESS: SSIS project deployed successfully."
+
+              # Create SQL Agent Job
+              Write-Host "Creating SQL Agent job for package execution..."
+              $jobQuery = "USE [msdb]; "
+              $jobQuery += "IF EXISTS (SELECT job_id FROM msdb.dbo.sysjobs WHERE name = N'$executionJobName') BEGIN EXEC dbo.sp_delete_job @job_name = N'$executionJobName', @delete_unused_schedule=1; END "
+              $jobQuery += "EXEC dbo.sp_add_job @job_name = N'$executionJobName', @enabled = 1, @description = N'Automated execution of $projectName package.', @start_step_id = 1; "
+              $jobQuery += "DECLARE @TargetServer NVARCHAR(128) = CAST(SERVERPROPERTY('ServerName') AS NVARCHAR(128)); "
+              $jobQuery += "DECLARE @run_command NVARCHAR(MAX); "
+              $jobQuery += "SET @run_command = N'/ISSERVER ' + CHAR(34) + N'\\SSISDB\\$targetFolder\\$projectName\\TimesheetMigration.dtsx' + CHAR(34) + N' /SERVER ' + CHAR(34) + @TargetServer + CHAR(34) + N' /Par ' + CHAR(34) + N'`$ServerOption::LOGGING_LEVEL(Int16)' + CHAR(34) + N';1' + N' /CALLERINFO SQLAGENT /REPORTING E'; "
+              $jobQuery += "EXEC dbo.sp_add_jobstep @job_name = N'$executionJobName', @step_name = N'Execute SSIS Package', @subsystem = N'SSIS', @command = @run_command, @retry_attempts = 0; "
+              $jobQuery += "EXEC dbo.sp_add_jobserver @job_name = N'$executionJobName', @server_name = N'(local)'; "
+              $jobQuery += "EXEC dbo.sp_add_jobschedule @job_name = N'$executionJobName', @name = N'Every_1_Minute_8AM_to_5PM', @enabled = 1, @freq_type = 4, @freq_interval = 1, @freq_subday_type = 4, @freq_subday_interval = 1, @active_start_time = 080000, @active_end_time = 170000; "
+              $jobQuery += "EXEC dbo.sp_start_job @job_name = N'$executionJobName'; WAITFOR DELAY '00:00:05';"
 
               $command = $connection.CreateCommand()
-              $command.CommandText = $sqlQuery
+              $command.CommandText = $jobQuery
               $command.ExecuteNonQuery() | Out-Null
 
               Write-Host "SUCCESS: SQL Agent job '$executionJobName' created and started."
 
           } catch {
-              Write-Error "Failed to create SQL Agent job: $_"
+              Write-Error "Failed to deploy SSIS or create job: $_"
               exit 1
           } finally {
-              $connection.Close()
+              if ($connection.State -eq 'Open') {
+                  $connection.Close()
+                  Write-Host "Connection closed."
+              }
           }
 
   # ========================================================================
@@ -260,7 +262,9 @@ jobs:
               Write-Error "Failed to check/create SSISDB on partner server: $_"
               exit 1
           } finally {
-              $connection.Close()
+              if ($connection.State -eq 'Open') {
+                  $connection.Close()
+              }
           }
 
       - name: Create Database and Tables on Partner Server
@@ -346,7 +350,9 @@ jobs:
               Write-Error "Database Creation Failed on partner server: $_"
               exit 1
           } finally {
-              $connection.Close()
+              if ($connection.State -eq 'Open') {
+                  $connection.Close()
+              }
           }
 
       - name: Deploy SSIS to Partner Server (SQL Auth)
@@ -361,7 +367,7 @@ jobs:
           }
 
           if (-not (Test-Path -Path $ispacPath)) {
-              Write-Error "CRITICAL ERROR: Could not locate ProjectTime.ispac file."
+              Write-Error "CRITICAL ERROR: Could not locate TimesheetMigration1.ispac file."
               exit 1
           }
 
@@ -384,19 +390,22 @@ jobs:
           $connStr = "Data Source=$tunnelAddress;Initial Catalog=$initialDb;User ID=$dbUser;Password=$dbPassword;TrustServerCertificate=True;Encrypt=False;"
           $connection = New-Object System.Data.SqlClient.SqlConnection($connStr)
 
-         
+          try {
+              $connection.Open()
+              Write-Host "Connection opened successfully."
+
+              # Create folder if it doesn't exist
+              $folderQuery = "USE SSISDB; IF NOT EXISTS (SELECT 1 FROM catalog.folders WHERE name = N'$targetFolder') BEGIN EXEC catalog.create_folder @folder_name = N'$targetFolder'; END"
+              $command = $connection.CreateCommand()
+              $command.CommandText = $folderQuery
+              $command.ExecuteNonQuery()
 
               # Deploy the project
               Write-Host "Deploying SSIS project to partner server..."
-
-              $sqlQuery = "USE SSISDB; "
-              $sqlQuery += "IF NOT EXISTS (SELECT 1 FROM catalog.folders WHERE name = N'$targetFolder') BEGIN EXEC catalog.create_folder @folder_name = N'$targetFolder'; END "
-              $sqlQuery += "DECLARE @project_stream VARBINARY(MAX) = $hexString; "
-              $sqlQuery += "EXEC catalog.deploy_project @folder_name = N'$targetFolder', @project_name = N'$projectName', @project_stream = @project_stream;"
-
+              $deployQuery = "USE SSISDB; DECLARE @project_stream VARBINARY(MAX) = $hexString; EXEC catalog.deploy_project @folder_name = N'$targetFolder', @project_name = N'$projectName', @project_stream = @project_stream;"
               $command = $connection.CreateCommand()
               $command.CommandTimeout = 0
-              $command.CommandText = $sqlQuery
+              $command.CommandText = $deployQuery
               $command.ExecuteNonQuery()
 
               Write-Host "SUCCESS: SSIS project deployed to partner server using SQL Server Authentication."
@@ -414,7 +423,16 @@ jobs:
 
               Write-Host "SUCCESS: Connection manager parameters updated."
 
-          
+          } catch {
+              Write-Error "Failed to deploy SSIS project to partner server: $_"
+              exit 1
+          } finally {
+              if ($connection.State -eq 'Open') {
+                  $connection.Close()
+                  Write-Host "Connection closed."
+              }
+          }
+
       - name: Create SQL Agent Job on Partner Server
         shell: powershell
         run: |
@@ -455,5 +473,8 @@ jobs:
               Write-Error "Failed to create SQL Agent job on partner server: $_"
               exit 1
           } finally {
-              $connection.Close()
+              if ($connection.State -eq 'Open') {
+                  $connection.Close()
+                  Write-Host "Connection closed."
+              }
           }
