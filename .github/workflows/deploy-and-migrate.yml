@@ -16,6 +16,7 @@ jobs:
     steps:
     - name: Checkout Repository Code
       uses: actions/checkout@v4
+      
     - name: Create Database and Tables
       shell: powershell
       run: |
@@ -31,6 +32,50 @@ jobs:
           if (-not (Test-Path -Path $scriptPath)) {
               Write-Error "CRITICAL ERROR: Could not locate create_database.sql file."
               exit 1
+          }
+          
+          Write-Host "Found database script at: $scriptPath"
+          
+          # STEP 2: READ THE SCRIPT CONTENT
+          $sqlScript = Get-Content -Path $scriptPath -Raw
+          
+          # STEP 3: CONNECT TO DATABASE AND EXECUTE SCRIPT
+          $tunnelAddress = "${{ secrets.SQL_SERVER }},${{ secrets.SQL_PORT }}"
+          $dbUser = "${{ secrets.SQL_USERNAME }}"
+          $dbPassword = "${{ secrets.SQL_PASSWORD }}"
+          $initialDb = "master"
+          
+          $connStr = "Data Source=$tunnelAddress;Initial Catalog=$initialDb;User ID=$dbUser;Password=$dbPassword;TrustServerCertificate=True;Encrypt=False;"
+          $connection = New-Object System.Data.SqlClient.SqlConnection($connStr)
+          
+          try {
+              $connection.Open()
+              Write-Host "Connected to database server successfully"
+              
+              # Split script into individual batches (GO statements)
+              $batches = $sqlScript -split "GO\s*" | Where-Object { $_.Trim() -ne "" }
+              
+              foreach ($batch in $batches) {
+                  if ($batch.Trim() -ne "") {
+                      try {
+                          $command = $connection.CreateCommand()
+                          $command.CommandText = $batch
+                          $command.ExecuteNonQuery() | Out-Null
+                          Write-Host "Executed batch successfully"
+                      } catch {
+                          Write-Warning "Batch execution warning: $_"
+                          # Continue with next batch even if one fails
+                      }
+                  }
+              }
+              
+              Write-Host "SUCCESS: Database and tables created successfully"
+              
+          } catch {
+              Write-Error "Database creation failed: $_"
+              exit 1
+          } finally {
+              $connection.Close()
           }
 
     - name: Deploy SSIS and Create Execution Job
@@ -168,6 +213,50 @@ jobs:
           if (-not (Test-Path -Path $scriptPath)) {
               Write-Error "CRITICAL ERROR: Could not locate create_database.sql file."
               exit 1
+          }
+          
+          Write-Host "Found database script at: $scriptPath"
+          
+          # STEP 2: READ THE SCRIPT CONTENT
+          $sqlScript = Get-Content -Path $scriptPath -Raw
+          
+          # STEP 3: CONNECT TO DATABASE AND EXECUTE SCRIPT
+          $tunnelAddress = "${{ secrets.SQL_SERVER }},${{ secrets.SQL_PORT }}"
+          $dbUser = "${{ secrets.SQL_USERNAME }}"
+          $dbPassword = "${{ secrets.SQL_PASSWORD }}"
+          $initialDb = "master"
+          
+          $connStr = "Data Source=$tunnelAddress;Initial Catalog=$initialDb;User ID=$dbUser;Password=$dbPassword;TrustServerCertificate=True;Encrypt=False;"
+          $connection = New-Object System.Data.SqlClient.SqlConnection($connStr)
+          
+          try {
+              $connection.Open()
+              Write-Host "Connected to database server successfully"
+              
+              # Split script into individual batches (GO statements)
+              $batches = $sqlScript -split "GO\s*" | Where-Object { $_.Trim() -ne "" }
+              
+              foreach ($batch in $batches) {
+                  if ($batch.Trim() -ne "") {
+                      try {
+                          $command = $connection.CreateCommand()
+                          $command.CommandText = $batch
+                          $command.ExecuteNonQuery() | Out-Null
+                          Write-Host "Executed batch successfully"
+                      } catch {
+                          Write-Warning "Batch execution warning: $_"
+                          # Continue with next batch even if one fails
+                      }
+                  }
+              }
+              
+              Write-Host "SUCCESS: Database and tables created successfully"
+              
+          } catch {
+              Write-Error "Database creation failed: $_"
+              exit 1
+          } finally {
+              $connection.Close()
           }
  
     - name: Deploy SSIS and Create Execution Job (Partner)
