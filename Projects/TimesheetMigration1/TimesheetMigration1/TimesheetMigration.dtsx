@@ -11,8 +11,8 @@
   DTS:LocaleID="7177"
   DTS:ObjectName="TimesheetMigration"
   DTS:PackageType="5"
-  DTS:VersionBuild="286"
-  DTS:VersionGUID="{9B27C942-68D5-4A18-8CD7-2C86DC94FFD4}">
+  DTS:VersionBuild="287"
+  DTS:VersionGUID="{28AE8F80-01A6-4F82-B3A7-0E0A703BB51B}">
   <DTS:Property
     DTS:Name="PackageFormatVersion">8</DTS:Property>
   <DTS:ConnectionManagers>
@@ -44,10 +44,10 @@
       </DTS:ObjectData>
     </DTS:ConnectionManager>
     <DTS:ConnectionManager
-      DTS:refId="Package.ConnectionManagers[LocalHost.TimesheetsDB]"
+      DTS:refId="Package.ConnectionManagers[LAPTOP-7LSAQSR0.master1]"
       DTS:CreationName="OLEDB"
       DTS:DTSID="{12C26D31-71E3-4084-85A3-C3363301A0C8}"
-      DTS:ObjectName="LocalHost.TimesheetsDB">
+      DTS:ObjectName="LAPTOP-7LSAQSR0.master1">
       <DTS:ObjectData>
         <DTS:ConnectionManager
           DTS:ConnectRetryCount="1"
@@ -1547,8 +1547,8 @@ where [refTable].[EmployeeID] = ?</property>
                   <connections>
                     <connection
                       refId="Package\Loop Through Excel Files\Leave Days\Lookup.Connections[OleDbConnection]"
-                      connectionManagerID="Package.ConnectionManagers[LocalHost.TimesheetsDB]"
-                      connectionManagerRefId="Package.ConnectionManagers[LocalHost.TimesheetsDB]"
+                      connectionManagerID="Package.ConnectionManagers[LAPTOP-7LSAQSR0.master1]"
+                      connectionManagerRefId="Package.ConnectionManagers[LAPTOP-7LSAQSR0.master1]"
                       description="Connection manager used to access lookup data."
                       name="OleDbConnection" />
                   </connections>
@@ -1694,8 +1694,8 @@ where [refTable].[EmployeeID] = ?</property>
                   <connections>
                     <connection
                       refId="Package\Loop Through Excel Files\Leave Days\OLE DB Destination.Connections[OleDbConnection]"
-                      connectionManagerID="Package.ConnectionManagers[LocalHost.TimesheetsDB]"
-                      connectionManagerRefId="Package.ConnectionManagers[LocalHost.TimesheetsDB]"
+                      connectionManagerID="Package.ConnectionManagers[LAPTOP-7LSAQSR0.master1]"
+                      connectionManagerRefId="Package.ConnectionManagers[LAPTOP-7LSAQSR0.master1]"
                       description="The OLE DB runtime connection used to access the database."
                       name="OleDbConnection" />
                   </connections>
@@ -2756,8 +2756,8 @@ where [refTable].[EmployeeID] = ?</property>
                   <connections>
                     <connection
                       refId="Package\Loop Through Excel Files\Load Timesheet\OLE DB Destination.Connections[OleDbConnection]"
-                      connectionManagerID="Package.ConnectionManagers[LocalHost.TimesheetsDB]"
-                      connectionManagerRefId="Package.ConnectionManagers[LocalHost.TimesheetsDB]"
+                      connectionManagerID="Package.ConnectionManagers[LAPTOP-7LSAQSR0.master1]"
+                      connectionManagerRefId="Package.ConnectionManagers[LAPTOP-7LSAQSR0.master1]"
                       description="The OLE DB runtime connection used to access the database."
                       name="OleDbConnection" />
                   </connections>
