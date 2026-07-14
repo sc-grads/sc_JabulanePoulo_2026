@@ -434,6 +434,7 @@ jobs:
  
             $command = $connection.CreateCommand()
             $command.CommandText = $sqlQuery
+            $command.CommandTimeout = 600
             $command.ExecuteNonQuery() | Out-Null
  
             Write-Host "SUCCESS: Partner deployment completed, configuration overrides applied, and task triggered!"
