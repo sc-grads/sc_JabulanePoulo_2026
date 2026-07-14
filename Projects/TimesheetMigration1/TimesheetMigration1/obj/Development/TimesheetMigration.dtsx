@@ -11,8 +11,8 @@
   DTS:LocaleID="7177"
   DTS:ObjectName="TimesheetMigration"
   DTS:PackageType="5"
-  DTS:VersionBuild="304"
-  DTS:VersionGUID="{623478A3-074A-4FF7-BC14-5A7CCC4004FE}">
+  DTS:VersionBuild="309"
+  DTS:VersionGUID="{1FFA3891-E9E9-4E5A-9367-5776A4F22283}">
   <DTS:Property
     DTS:Name="PackageFormatVersion">8</DTS:Property>
   <DTS:ConnectionManagers>
@@ -52,7 +52,7 @@
         <DTS:ConnectionManager
           DTS:ConnectRetryCount="1"
           DTS:ConnectRetryInterval="5"
-          DTS:ConnectionString="Data Source=.;Initial Catalog=TimesheetsDB;Provider=MSOLEDBSQL19.1;Integrated Security=SSPI;Application Name=SSIS-TimesheetMigration-{12C26D31-71E3-4084-85A3-C3363301A0C8}LocalHost.TimesheetsDB;Use Encryption for Data=False;Trust Server Certificate=True;" />
+          DTS:ConnectionString="Data Source=.;Initial Catalog=TimesheetsDB;Provider=SQLOLEDB.1;Integrated Security=SSPI;Application Name=SSIS-TimesheetMigration-{12C26D31-71E3-4084-85A3-C3363301A0C8}LocalHost.TimesheetsDB;" />
       </DTS:ObjectData>
     </DTS:ConnectionManager>
   </DTS:ConnectionManagers>
@@ -2896,7 +2896,8 @@ where [refTable].[EmployeeID] = ?</property>
                           name="EmployeeID" />
                         <externalMetadataColumn
                           refId="Package\Loop Through Excel Files\Load Timesheet\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[WorkDate]"
-                          dataType="dbDate"
+                          dataType="wstr"
+                          length="10"
                           name="WorkDate" />
                         <externalMetadataColumn
                           refId="Package\Loop Through Excel Files\Load Timesheet\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[ClientName]"
@@ -2929,14 +2930,14 @@ where [refTable].[EmployeeID] = ?</property>
                           name="Comments" />
                         <externalMetadataColumn
                           refId="Package\Loop Through Excel Files\Load Timesheet\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[StartTime]"
-                          dataType="dbTime2"
-                          name="StartTime"
-                          scale="7" />
+                          dataType="wstr"
+                          length="16"
+                          name="StartTime" />
                         <externalMetadataColumn
                           refId="Package\Loop Through Excel Files\Load Timesheet\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[EndTime]"
-                          dataType="dbTime2"
-                          name="EndTime"
-                          scale="7" />
+                          dataType="wstr"
+                          length="16"
+                          name="EndTime" />
                         <externalMetadataColumn
                           refId="Package\Loop Through Excel Files\Load Timesheet\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[SourceFile]"
                           codePage="1252"
@@ -2949,9 +2950,9 @@ where [refTable].[EmployeeID] = ?</property>
                           name="Processed" />
                         <externalMetadataColumn
                           refId="Package\Loop Through Excel Files\Load Timesheet\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[ProcessedAt]"
-                          dataType="dbTimeStamp2"
-                          name="ProcessedAt"
-                          scale="7" />
+                          dataType="wstr"
+                          length="27"
+                          name="ProcessedAt" />
                         <externalMetadataColumn
                           refId="Package\Loop Through Excel Files\Load Timesheet\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[DayOfWeek]"
                           codePage="1252"
@@ -3203,21 +3204,21 @@ where [refTable].[EmployeeID] = ?</property>
         <NodeLayout
           Size="152.8,41.6"
           Id="Package\Loop Through Excel Files\Load Timesheet"
-          TopLeft="41.1666475890421,99.5333313505519" />
+          TopLeft="41.1666475890421,99.533331350552" />
         <EdgeLayout
           Id="Package\Loop Through Excel Files.PrecedenceConstraints[Constraint]"
           TopLeft="115.399981696408,60.2666645452713">
           <EdgeLayout.Curve>
             <mssgle:Curve
               StartConnector="{assembly:Null}"
-              EndConnector="0,39.2666668052806"
+              EndConnector="0,39.2666668052807"
               Start="0,0"
-              End="0,31.7666668052806">
+              End="0,31.7666668052807">
               <mssgle:Curve.Segments>
                 <mssgle:SegmentCollection
                   Capacity="5">
                   <mssgle:LineSegment
-                    End="0,31.7666668052806" />
+                    End="0,31.7666668052807" />
                 </mssgle:SegmentCollection>
               </mssgle:Curve.Segments>
             </mssgle:Curve>
@@ -3232,14 +3233,14 @@ where [refTable].[EmployeeID] = ?</property>
           <EdgeLayout.Curve>
             <mssgle:Curve
               StartConnector="{assembly:Null}"
-              EndConnector="0,51.1333339179221"
+              EndConnector="0,51.133333917922"
               Start="0,0"
-              End="0,43.6333339179221">
+              End="0,43.633333917922">
               <mssgle:Curve.Segments>
                 <mssgle:SegmentCollection
                   Capacity="5">
                   <mssgle:LineSegment
-                    End="0,43.6333339179221" />
+                    End="0,43.633333917922" />
                 </mssgle:SegmentCollection>
               </mssgle:Curve.Segments>
             </mssgle:Curve>
