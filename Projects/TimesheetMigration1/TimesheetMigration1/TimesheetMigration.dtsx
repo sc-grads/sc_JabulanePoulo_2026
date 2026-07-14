@@ -11,8 +11,8 @@
   DTS:LocaleID="7177"
   DTS:ObjectName="TimesheetMigration"
   DTS:PackageType="5"
-  DTS:VersionBuild="293"
-  DTS:VersionGUID="{6047A331-D274-45C7-A8C2-5F90C3E5EEEF}">
+  DTS:VersionBuild="295"
+  DTS:VersionGUID="{5F76D632-3980-4DBF-83A2-04F6ED9CF83A}">
   <DTS:Property
     DTS:Name="PackageFormatVersion">8</DTS:Property>
   <DTS:ConnectionManagers>
@@ -156,6 +156,7 @@
       DTS:refId="Package\Get Run Number"
       DTS:CreationName="Microsoft.ExecuteSQLTask"
       DTS:Description="Execute SQL Task"
+      DTS:Disabled="True"
       DTS:DTSID="{40E78A5F-C40D-470D-80FE-D49E67BCDB4B}"
       DTS:ExecutableType="Microsoft.ExecuteSQLTask"
       DTS:LocaleID="-1"
@@ -178,6 +179,7 @@
       DTS:refId="Package\Initialise Audit Log"
       DTS:CreationName="Microsoft.ExecuteSQLTask"
       DTS:Description="Execute SQL Task"
+      DTS:Disabled="True"
       DTS:DTSID="{4F988619-175B-43C9-85AE-04E54447D645}"
       DTS:ExecutableType="Microsoft.ExecuteSQLTask"
       DTS:LocaleID="-1"
