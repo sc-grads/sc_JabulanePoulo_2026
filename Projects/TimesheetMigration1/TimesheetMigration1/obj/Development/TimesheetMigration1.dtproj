@@ -26,7 +26,7 @@
           <SSIS:Property SSIS:Name="CreatorComputerName">LAPTOP-7LSAQSR0</SSIS:Property>
           <SSIS:Property SSIS:Name="Description">
           </SSIS:Property>
-          <SSIS:Property SSIS:Name="PasswordVerifier" SSIS:Sensitive="1">AQAAANCMnd8BFdERjHoAwE/Cl+sBAAAAv6jtsw7XIEaYbC7kgXsSIgAAAAACAAAAAAAQZgAAAAEAACAAAACh6THl5x+XIntpSeuyRMRv5A5BfNTa2RYeipGumnOgawAAAAAOgAAAAAIAACAAAABuEmzphSUCn/JWBi2M2pX+ZLGUvelFttBbvf11en4sO5AAAADWLTlbWUFl2VtJIeuE7bVn3K37PUp3uL/Cvhz6MMzqtXq0xtm9aJYwLgS/1hOxF5Ggo8MalYxtWcbprQ6L+9zOtxOzjJb72paeun/JvpFs4zf0I8kIs4F6nL+L+eU8bibfmd4vVuumzubbtpMkUPlf+vifHoyLOQk89Yscx/bsc7rmQEAWNhsN+oUV6ltpOm9AAAAA525RiSeZrOo7WFMi7k1F9+yUBht6+L6TajpsA+879I9d1yO786qhf+2qt10NB4QQUuhHb3ZjysQmHOKIVGEAKQ==</SSIS:Property>
+          <SSIS:Property SSIS:Name="PasswordVerifier" SSIS:Sensitive="1">AQAAANCMnd8BFdERjHoAwE/Cl+sBAAAAv6jtsw7XIEaYbC7kgXsSIgAAAAACAAAAAAAQZgAAAAEAACAAAAA215ht7HPrYxhl+BEzSiGUfG2U3HndzPi4gbzve6EWcwAAAAAOgAAAAAIAACAAAADKdcxdkObSfUwdCb7WrsgtuSFzxO7xOmue12fcMJvR0ZAAAAD9QNAm+dhjcnR4/OsP72SFszrTdpJRXuNkP9QyxnLxBTjzsztYQonObCjzUcSebQJs7aID7xoVEZ8rGOMch9LeGLKSKxlfaEjxqyADIKNeq3omq9WOyGj0P+8RFmxxTfkmBcLrIhJk7/5yoxM8USNCH0cFcSr0kSj41if08hWNplI3xMzC6dO9WW1AZ7qLm11AAAAAHrGc+zq9Ew8bpRoa97txpKxExyenmMnjUjc8sWOhXHGxNsRnnxf7Ratq+dDTL2G3p3YwfGUJM6kSYgU5hNG8Pg==</SSIS:Property>
           <SSIS:Property SSIS:Name="FormatVersion">1</SSIS:Property>
         </SSIS:Properties>
         <SSIS:Packages>
@@ -42,10 +42,10 @@
                 <SSIS:Property SSIS:Name="Name">TimesheetMigration</SSIS:Property>
                 <SSIS:Property SSIS:Name="VersionMajor">1</SSIS:Property>
                 <SSIS:Property SSIS:Name="VersionMinor">0</SSIS:Property>
-                <SSIS:Property SSIS:Name="VersionBuild">302</SSIS:Property>
+                <SSIS:Property SSIS:Name="VersionBuild">304</SSIS:Property>
                 <SSIS:Property SSIS:Name="VersionComments">
                 </SSIS:Property>
-                <SSIS:Property SSIS:Name="VersionGUID">{0B8FA79A-06D4-4369-A7DD-6B8DF69AA936}</SSIS:Property>
+                <SSIS:Property SSIS:Name="VersionGUID">{623478A3-074A-4FF7-BC14-5A7CCC4004FE}</SSIS:Property>
                 <SSIS:Property SSIS:Name="PackageFormatVersion">8</SSIS:Property>
                 <SSIS:Property SSIS:Name="Description">
                 </SSIS:Property>
@@ -328,7 +328,7 @@
                     <SSIS:Property SSIS:Name="IncludeInDebugDump">0</SSIS:Property>
                     <SSIS:Property SSIS:Name="Required">0</SSIS:Property>
                     <SSIS:Property SSIS:Name="Sensitive">0</SSIS:Property>
-                    <SSIS:Property SSIS:Name="Value">Data Source=.;Initial Catalog=TimesheetsDB;Provider=MSOLEDBSQL19.1;Integrated Security=SSPI;Application Name=SSIS-TimesheetMigration-{12C26D31-71E3-4084-85A3-C3363301A0C8}LocalHost.TimesheetsDB;Trust Server Certificate=True;</SSIS:Property>
+                    <SSIS:Property SSIS:Name="Value">Data Source=.;Initial Catalog=TimesheetsDB;Provider=MSOLEDBSQL19.1;Integrated Security=SSPI;Application Name=SSIS-TimesheetMigration-{12C26D31-71E3-4084-85A3-C3363301A0C8}LocalHost.TimesheetsDB;Use Encryption for Data=False;Trust Server Certificate=True;</SSIS:Property>
                     <SSIS:Property SSIS:Name="DataType">18</SSIS:Property>
                   </SSIS:Properties>
                 </SSIS:Parameter>
