@@ -11,8 +11,8 @@
   DTS:LocaleID="7177"
   DTS:ObjectName="TimesheetMigration"
   DTS:PackageType="5"
-  DTS:VersionBuild="295"
-  DTS:VersionGUID="{5F76D632-3980-4DBF-83A2-04F6ED9CF83A}">
+  DTS:VersionBuild="299"
+  DTS:VersionGUID="{30209393-5145-428B-9E3D-635A4464BA70}">
   <DTS:Property
     DTS:Name="PackageFormatVersion">8</DTS:Property>
   <DTS:ConnectionManagers>
@@ -52,7 +52,7 @@
         <DTS:ConnectionManager
           DTS:ConnectRetryCount="1"
           DTS:ConnectRetryInterval="5"
-          DTS:ConnectionString="Data Source=.;Initial Catalog=TimesheetsDB;Provider=SQLOLEDB.1;Integrated Security=SSPI;Auto Translate=False;Application Name=SSIS-TimesheetMigration-{12C26D31-71E3-4084-85A3-C3363301A0C8}LocalHost.TimesheetsDB;" />
+          DTS:ConnectionString="Data Source=.;Initial Catalog=TimesheetsDB;Provider=MSOLEDBSQL19.1;Integrated Security=SSPI;Application Name=SSIS-TimesheetMigration-{12C26D31-71E3-4084-85A3-C3363301A0C8}LocalHost.TimesheetsDB;" />
       </DTS:ObjectData>
     </DTS:ConnectionManager>
   </DTS:ConnectionManagers>
@@ -2896,8 +2896,7 @@ where [refTable].[EmployeeID] = ?</property>
                           name="EmployeeID" />
                         <externalMetadataColumn
                           refId="Package\Loop Through Excel Files\Load Timesheet\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[WorkDate]"
-                          dataType="wstr"
-                          length="10"
+                          dataType="dbDate"
                           name="WorkDate" />
                         <externalMetadataColumn
                           refId="Package\Loop Through Excel Files\Load Timesheet\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[ClientName]"
@@ -2930,14 +2929,14 @@ where [refTable].[EmployeeID] = ?</property>
                           name="Comments" />
                         <externalMetadataColumn
                           refId="Package\Loop Through Excel Files\Load Timesheet\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[StartTime]"
-                          dataType="wstr"
-                          length="16"
-                          name="StartTime" />
+                          dataType="dbTime2"
+                          name="StartTime"
+                          scale="7" />
                         <externalMetadataColumn
                           refId="Package\Loop Through Excel Files\Load Timesheet\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[EndTime]"
-                          dataType="wstr"
-                          length="16"
-                          name="EndTime" />
+                          dataType="dbTime2"
+                          name="EndTime"
+                          scale="7" />
                         <externalMetadataColumn
                           refId="Package\Loop Through Excel Files\Load Timesheet\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[SourceFile]"
                           codePage="1252"
@@ -2950,9 +2949,9 @@ where [refTable].[EmployeeID] = ?</property>
                           name="Processed" />
                         <externalMetadataColumn
                           refId="Package\Loop Through Excel Files\Load Timesheet\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[ProcessedAt]"
-                          dataType="wstr"
-                          length="27"
-                          name="ProcessedAt" />
+                          dataType="dbTimeStamp2"
+                          name="ProcessedAt"
+                          scale="7" />
                         <externalMetadataColumn
                           refId="Package\Loop Through Excel Files\Load Timesheet\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[DayOfWeek]"
                           codePage="1252"
@@ -3103,6 +3102,7 @@ where [refTable].[EmployeeID] = ?</property>
       DTS:refId="Package\Update Audit Log"
       DTS:CreationName="Microsoft.ExecuteSQLTask"
       DTS:Description="Execute SQL Task"
+      DTS:Disabled="True"
       DTS:DTSID="{8F538F78-0FCD-4CD8-B9BD-1BF9383B6336}"
       DTS:ExecutableType="Microsoft.ExecuteSQLTask"
       DTS:LocaleID="-1"
@@ -3191,7 +3191,7 @@ where [refTable].[EmployeeID] = ?</property>
         <NodeLayout
           Size="171.2,41.6"
           Id="Package\Leave"
-          TopLeft="347.499981013438,786.999998860955" />
+          TopLeft="583.958301427258,646.166666506959" />
         <NodeLayout
           Size="200.8,41.6"
           Id="Package\Loop Through Excel Files\Extract Employee &amp; Month"
@@ -3343,18 +3343,30 @@ where [refTable].[EmployeeID] = ?</property>
         </EdgeLayout>
         <EdgeLayout
           Id="Package.PrecedenceConstraints[Constraint 4]"
-          TopLeft="435.316647384151,721.199997215669">
+          TopLeft="516.733313754864,700.399997215668">
           <EdgeLayout.Curve>
             <mssgle:Curve
               StartConnector="{assembly:Null}"
-              EndConnector="0,65.8000016452863"
+              EndConnector="67.2249876723941,-33.4333307087098"
               Start="0,0"
-              End="0,58.3000016452863">
+              End="59.7249876723941,-33.4333307087098">
               <mssgle:Curve.Segments>
                 <mssgle:SegmentCollection
                   Capacity="5">
                   <mssgle:LineSegment
-                    End="0,58.3000016452863" />
+                    End="29.6124938361971,0" />
+                  <mssgle:CubicBezierSegment
+                    Point1="29.6124938361971,0"
+                    Point2="33.6124938361971,0"
+                    Point3="33.6124938361971,-4" />
+                  <mssgle:LineSegment
+                    End="33.6124938361971,-29.4333307087098" />
+                  <mssgle:CubicBezierSegment
+                    Point1="33.6124938361971,-29.4333307087098"
+                    Point2="33.6124938361971,-33.4333307087098"
+                    Point3="37.6124938361971,-33.4333307087098" />
+                  <mssgle:LineSegment
+                    End="59.7249876723941,-33.4333307087098" />
                 </mssgle:SegmentCollection>
               </mssgle:Curve.Segments>
             </mssgle:Curve>
@@ -3755,9 +3767,7 @@ where [refTable].[EmployeeID] = ?</property>
             </mssgle:Curve>
           </EdgeLayout.Curve>
           <EdgeLayout.Labels>
-            <mssgm:EdgeLabel
-              BoundingBox="0,0,0,0"
-              RelativePosition="Any" />
+            <EdgeLabelCollection />
           </EdgeLayout.Labels>
         </EdgeLayout>
         <EdgeLayout
@@ -3779,9 +3789,7 @@ where [refTable].[EmployeeID] = ?</property>
             </mssgle:Curve>
           </EdgeLayout.Curve>
           <EdgeLayout.Labels>
-            <mssgm:EdgeLabel
-              BoundingBox="0,0,0,0"
-              RelativePosition="Any" />
+            <EdgeLabelCollection />
           </EdgeLayout.Labels>
         </EdgeLayout>
         <EdgeLayout
@@ -3815,9 +3823,7 @@ where [refTable].[EmployeeID] = ?</property>
             </mssgle:Curve>
           </EdgeLayout.Curve>
           <EdgeLayout.Labels>
-            <mssgm:EdgeLabel
-              BoundingBox="0,0,0,0"
-              RelativePosition="Any" />
+            <EdgeLabelCollection />
           </EdgeLayout.Labels>
         </EdgeLayout>
       </GraphLayout>
