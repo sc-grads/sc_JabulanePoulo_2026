@@ -11,8 +11,8 @@
   DTS:LocaleID="7177"
   DTS:ObjectName="TimesheetMigration"
   DTS:PackageType="5"
-  DTS:VersionBuild="289"
-  DTS:VersionGUID="{D6CB5C38-270A-42D8-95A1-C82DDA20437F}">
+  DTS:VersionBuild="292"
+  DTS:VersionGUID="{22003D20-B6EC-4AF4-9BF9-81A63227CAD7}">
   <DTS:Property
     DTS:Name="PackageFormatVersion">8</DTS:Property>
   <DTS:ConnectionManagers>
@@ -44,15 +44,15 @@
       </DTS:ObjectData>
     </DTS:ConnectionManager>
     <DTS:ConnectionManager
-      DTS:refId="Package.ConnectionManagers[LAPTOP-7LSAQSR0.master1]"
+      DTS:refId="Package.ConnectionManagers[LocalHost.TimesheetsDB]"
       DTS:CreationName="OLEDB"
       DTS:DTSID="{12C26D31-71E3-4084-85A3-C3363301A0C8}"
-      DTS:ObjectName="LAPTOP-7LSAQSR0.master1">
+      DTS:ObjectName="LocalHost.TimesheetsDB">
       <DTS:ObjectData>
         <DTS:ConnectionManager
           DTS:ConnectRetryCount="1"
           DTS:ConnectRetryInterval="5"
-          DTS:ConnectionString="Data Source=.;Initial Catalog=TimesheetsDB;Provider=SQLOLEDB.1;Integrated Security=SSPI;Application Name=SSIS-TimesheetMigration-{12C26D31-71E3-4084-85A3-C3363301A0C8}LocalHost.TimesheetsDB;Auto Translate=False;" />
+          DTS:ConnectionString="Data Source=.;Initial Catalog=TimesheetsDB;Provider=SQLOLEDB.1;Integrated Security=SSPI;Auto Translate=False;Application Name=SSIS-TimesheetMigration-{12C26D31-71E3-4084-85A3-C3363301A0C8}LocalHost.TimesheetsDB;" />
       </DTS:ObjectData>
     </DTS:ConnectionManager>
   </DTS:ConnectionManagers>
@@ -188,7 +188,7 @@
       <DTS:ObjectData>
         <SQLTask:SqlTaskData
           SQLTask:Connection="{12C26D31-71E3-4084-85A3-C3363301A0C8}"
-          SQLTask:SqlStatementSource="INSERT INTO audit.AuditLog&#xA;(&#xA;    LogDateTime,&#xA;    RunNumber,&#xA;    LogSource,&#xA;    TaskName,&#xA;    LogStatus,&#xA;    ExecutedBy,&#xA;    TargetTable&#xA;)&#xA;VALUES&#xA;(&#xA;    GETDATE(),&#xA;    ?,&#xA;    'SSIS package',&#xA;    'Timesheet Migration',&#xA;    'STAGED',&#xA;    SYSTEM_USER,&#xA;    'staging.Timesheet'&#xA;)" xmlns:SQLTask="www.microsoft.com/sqlserver/dts/tasks/sqltask">
+          SQLTask:SqlStatementSource="use [TimesheetsDB];&#xA;INSERT INTO audit.AuditLog&#xA;(&#xA;    LogDateTime,&#xA;    RunNumber,&#xA;    LogSource,&#xA;    TaskName,&#xA;    LogStatus,&#xA;    ExecutedBy,&#xA;    TargetTable&#xA;)&#xA;VALUES&#xA;(&#xA;    GETDATE(),&#xA;    ?,&#xA;    'SSIS package',&#xA;    'Timesheet Migration',&#xA;    'STAGED',&#xA;    SYSTEM_USER,&#xA;    'staging.Timesheet'&#xA;)" xmlns:SQLTask="www.microsoft.com/sqlserver/dts/tasks/sqltask">
           <SQLTask:ParameterBinding
             SQLTask:ParameterName="NewParameterName"
             SQLTask:DtsVariableName="User::RunNumber"
@@ -1569,8 +1569,8 @@ where [refTable].[EmployeeID] = ?</property>
                   <connections>
                     <connection
                       refId="Package\Loop Through Excel Files\Leave Days\Lookup.Connections[OleDbConnection]"
-                      connectionManagerID="Package.ConnectionManagers[LAPTOP-7LSAQSR0.master1]"
-                      connectionManagerRefId="Package.ConnectionManagers[LAPTOP-7LSAQSR0.master1]"
+                      connectionManagerID="Package.ConnectionManagers[LocalHost.TimesheetsDB]"
+                      connectionManagerRefId="Package.ConnectionManagers[LocalHost.TimesheetsDB]"
                       description="Connection manager used to access lookup data."
                       name="OleDbConnection" />
                   </connections>
@@ -1716,8 +1716,8 @@ where [refTable].[EmployeeID] = ?</property>
                   <connections>
                     <connection
                       refId="Package\Loop Through Excel Files\Leave Days\OLE DB Destination.Connections[OleDbConnection]"
-                      connectionManagerID="Package.ConnectionManagers[LAPTOP-7LSAQSR0.master1]"
-                      connectionManagerRefId="Package.ConnectionManagers[LAPTOP-7LSAQSR0.master1]"
+                      connectionManagerID="Package.ConnectionManagers[LocalHost.TimesheetsDB]"
+                      connectionManagerRefId="Package.ConnectionManagers[LocalHost.TimesheetsDB]"
                       description="The OLE DB runtime connection used to access the database."
                       name="OleDbConnection" />
                   </connections>
@@ -2778,8 +2778,8 @@ where [refTable].[EmployeeID] = ?</property>
                   <connections>
                     <connection
                       refId="Package\Loop Through Excel Files\Load Timesheet\OLE DB Destination.Connections[OleDbConnection]"
-                      connectionManagerID="Package.ConnectionManagers[LAPTOP-7LSAQSR0.master1]"
-                      connectionManagerRefId="Package.ConnectionManagers[LAPTOP-7LSAQSR0.master1]"
+                      connectionManagerID="Package.ConnectionManagers[LocalHost.TimesheetsDB]"
+                      connectionManagerRefId="Package.ConnectionManagers[LocalHost.TimesheetsDB]"
                       description="The OLE DB runtime connection used to access the database."
                       name="OleDbConnection" />
                   </connections>
