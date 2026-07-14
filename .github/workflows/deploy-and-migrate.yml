@@ -378,7 +378,7 @@ jobs:
             -- Environment parameter package fixes tailored to match target package layout (Scope 30)
             EXEC SSISDB.catalog.set_object_parameter_value @object_type = 30, @folder_name = N''$targetFolder'', @project_name = N''$projectName'', @object_name = N''TimesheetMigration.dtsx'', @parameter_name = N''CM.LAPTOP-7LSAQSR0.ServerName'', @parameter_value = N''$partnerServer'';
             EXEC SSISDB.catalog.set_object_parameter_value @object_type = 30, @folder_name = N''$targetFolder'', @project_name = N''$projectName'', @object_name = N''TimesheetMigration.dtsx'', @parameter_name = N''CM.LAPTOP-7LSAQSR0.ServerName'', @parameter_value = N''$partnerServer'';
-            EXEC SSISDB.catalog.set_object_parameter_value @object_type = 30, @folder_name = N''$targetFolder'', @project_name = N''$projectName'', @object_name = N''TimesheetMigration.dtsx'', @parameter_name = N''CM.LocalHost.TimesheetsDB.InitialCatalog'', @parameter_value = N''master'';
+            EXEC SSISDB.catalog.set_object_parameter_value @object_type = 30, @folder_name = N''$targetFolder'', @project_name = N''$projectName'', @object_name = N''TimesheetMigration.dtsx'', @parameter_name = N''CM.LocalHost.TimesheetsDB.InitialCatalog'', @parameter_value = N''TimesheetsDB'';
             EXEC SSISDB.catalog.set_object_parameter_value @object_type = 30, @folder_name = N''$targetFolder'', @project_name = N''$projectName'', @object_name = N''TimesheetMigration.dtsx'', @parameter_name = N''CM.LocalHost.TimesheetsDB.TimesheetsDB.InitialCatalog'', @parameter_value = N''TimesheetsDB'';';
  
             EXEC dbo.sp_add_jobstep @job_name = N'GitHub_SSIS_Deploy_Job', @step_name = N'Run Deploy', @subsystem = N'TSQL', @command = @deploy_script, @retry_attempts = 0;
