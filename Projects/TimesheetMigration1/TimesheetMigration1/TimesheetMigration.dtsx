@@ -11,8 +11,8 @@
   DTS:LocaleID="7177"
   DTS:ObjectName="TimesheetMigration"
   DTS:PackageType="5"
-  DTS:VersionBuild="292"
-  DTS:VersionGUID="{22003D20-B6EC-4AF4-9BF9-81A63227CAD7}">
+  DTS:VersionBuild="293"
+  DTS:VersionGUID="{6047A331-D274-45C7-A8C2-5F90C3E5EEEF}">
   <DTS:Property
     DTS:Name="PackageFormatVersion">8</DTS:Property>
   <DTS:ConnectionManagers>
@@ -3086,6 +3086,7 @@ where [refTable].[EmployeeID] = ?</property>
       DTS:DTSID="{DAC3EDC5-D9A9-412F-9C29-4CE7DC8D8F23}"
       DTS:ExecutableType="Microsoft.ExecuteSQLTask"
       DTS:LocaleID="-1"
+      DTS:MaxErrorCount="5"
       DTS:ObjectName="Move  Staging to Final"
       DTS:TaskContact="Execute SQL Task; Microsoft Corporation; SQL Server 2025; © 2025 Microsoft Corporation; All Rights Reserved;http://www.microsoft.com/sql/support/default.asp;1"
       DTS:ThreadHint="0">
@@ -3284,30 +3285,30 @@ where [refTable].[EmployeeID] = ?</property>
         </EdgeLayout>
         <EdgeLayout
           Id="Package.PrecedenceConstraints[Constraint 2]"
-          TopLeft="416.966650594109,570.333331675994">
+          TopLeft="416.966650594109,570.333331675993">
           <EdgeLayout.Curve>
             <mssgle:Curve
               StartConnector="{assembly:Null}"
-              EndConnector="13.8333308291109,31.333332091835"
+              EndConnector="13.833330829111,31.3333320918354"
               Start="0,0"
-              End="13.8333308291109,23.833332091835">
+              End="13.833330829111,23.8333320918354">
               <mssgle:Curve.Segments>
                 <mssgle:SegmentCollection
                   Capacity="5">
                   <mssgle:LineSegment
-                    End="0,11.6666660459175" />
+                    End="0,11.6666660459177" />
                   <mssgle:CubicBezierSegment
-                    Point1="0,11.6666660459175"
-                    Point2="0,15.6666660459175"
-                    Point3="4,15.6666660459175" />
+                    Point1="0,11.6666660459177"
+                    Point2="0,15.6666660459177"
+                    Point3="4,15.6666660459177" />
                   <mssgle:LineSegment
-                    End="9.83333082911093,15.6666660459175" />
+                    End="9.83333082911099,15.6666660459177" />
                   <mssgle:CubicBezierSegment
-                    Point1="9.83333082911093,15.6666660459175"
-                    Point2="13.8333308291109,15.6666660459175"
-                    Point3="13.8333308291109,19.6666660459175" />
+                    Point1="9.83333082911099,15.6666660459177"
+                    Point2="13.833330829111,15.6666660459177"
+                    Point3="13.833330829111,19.6666660459177" />
                   <mssgle:LineSegment
-                    End="13.8333308291109,23.833332091835" />
+                    End="13.833330829111,23.8333320918354" />
                 </mssgle:SegmentCollection>
               </mssgle:Curve.Segments>
             </mssgle:Curve>
@@ -3322,14 +3323,14 @@ where [refTable].[EmployeeID] = ?</property>
           <EdgeLayout.Curve>
             <mssgle:Curve
               StartConnector="{assembly:Null}"
-              EndConnector="0,36.3333334478405"
+              EndConnector="0,36.33333344784"
               Start="0,0"
-              End="0,28.8333334478405">
+              End="0,28.83333344784">
               <mssgle:Curve.Segments>
                 <mssgle:SegmentCollection
                   Capacity="5">
                   <mssgle:LineSegment
-                    End="0,28.8333334478405" />
+                    End="0,28.83333344784" />
                 </mssgle:SegmentCollection>
               </mssgle:Curve.Segments>
             </mssgle:Curve>
