@@ -1,0 +1,1413 @@
+﻿<?xml version="1.0"?>
+<DTS:Executable xmlns:DTS="www.microsoft.com/SqlServer/Dts"
+  DTS:refId="Package"
+  DTS:CreationDate="8/10/2026 2:22:11 PM"
+  DTS:CreationName="Microsoft.Package"
+  DTS:CreatorComputerName="LAPTOP-7LSAQSR0"
+  DTS:CreatorName="LAPTOP-7LSAQSR0\Jabulane Poulo"
+  DTS:DTSID="{79AAFA3F-C19B-4538-9FBD-55BB4DD44193}"
+  DTS:ExecutableType="Microsoft.Package"
+  DTS:LastModifiedProductVersion="17.0.1016.0"
+  DTS:LocaleID="7177"
+  DTS:ObjectName="Package"
+  DTS:PackageType="5"
+  DTS:VersionBuild="16"
+  DTS:VersionGUID="{5686C378-BA50-4107-9CF6-A04165348C3C}">
+  <DTS:Property
+    DTS:Name="PackageFormatVersion">8</DTS:Property>
+  <DTS:ConnectionManagers>
+    <DTS:ConnectionManager
+      DTS:refId="Package.ConnectionManagers[Excel Connection Manager]"
+      DTS:CreationName="EXCEL"
+      DTS:DTSID="{2CB3FD78-8DAF-40F2-90F2-EF45212E6948}"
+      DTS:ObjectName="Excel Connection Manager">
+      <DTS:ObjectData>
+        <DTS:ConnectionManager
+          DTS:ConnectRetryCount="0"
+          DTS:ConnectRetryInterval="0"
+          DTS:ConnectionString="Provider=Microsoft.ACE.OLEDB.12.0;Data Source=C:\Timesheets\Buhle Mkubha\Buhle_Mukhuba_April_FinalWeek.xlsx;Extended Properties=&quot;Excel 12.0 XML;HDR=YES&quot;;" />
+      </DTS:ObjectData>
+    </DTS:ConnectionManager>
+    <DTS:ConnectionManager
+      DTS:refId="Package.ConnectionManagers[TimesheetJPDB]"
+      DTS:CreationName="OLEDB"
+      DTS:DTSID="{AC2DE1F6-E0DC-4B2F-880F-D90599FCFB4E}"
+      DTS:ObjectName="TimesheetJPDB">
+      <DTS:ObjectData>
+        <DTS:ConnectionManager
+          DTS:ConnectRetryCount="1"
+          DTS:ConnectRetryInterval="5"
+          DTS:ConnectionString="Data Source=.;Initial Catalog=TimesheetJPDB;Provider=SQLOLEDB.1;Integrated Security=SSPI;Application Name=SSIS-Package-{AC2DE1F6-E0DC-4B2F-880F-D90599FCFB4E}TimesheetJBDB;" />
+      </DTS:ObjectData>
+    </DTS:ConnectionManager>
+  </DTS:ConnectionManagers>
+  <DTS:Variables>
+    <DTS:Variable
+      DTS:CreationName=""
+      DTS:DTSID="{3176BDFE-A7F0-4470-8A2B-51381C488F86}"
+      DTS:IncludeInDebugDump="2345"
+      DTS:Namespace="User"
+      DTS:ObjectName="ClientName">
+      <DTS:VariableValue
+        DTS:DataType="8"
+        xml:space="preserve"></DTS:VariableValue>
+    </DTS:Variable>
+    <DTS:Variable
+      DTS:CreationName=""
+      DTS:DTSID="{624C2689-64D0-45B7-AAD9-A4972A436EFF}"
+      DTS:IncludeInDebugDump="2345"
+      DTS:Namespace="User"
+      DTS:ObjectName="ConsultantName">
+      <DTS:VariableValue
+        DTS:DataType="8"
+        xml:space="preserve"></DTS:VariableValue>
+    </DTS:Variable>
+    <DTS:Variable
+      DTS:CreationName=""
+      DTS:DTSID="{D9DE600E-B60C-4AFD-8FF8-B1F15F98927B}"
+      DTS:IncludeInDebugDump="2345"
+      DTS:Namespace="User"
+      DTS:ObjectName="CurrentFilename">
+      <DTS:VariableValue
+        DTS:DataType="8"
+        xml:space="preserve"></DTS:VariableValue>
+    </DTS:Variable>
+    <DTS:Variable
+      DTS:CreationName=""
+      DTS:DTSID="{77D4178F-21AD-4155-AA1B-A2D1D326B941}"
+      DTS:IncludeInDebugDump="2345"
+      DTS:Namespace="User"
+      DTS:ObjectName="CurrentFilepath">
+      <DTS:VariableValue
+        DTS:DataType="8"
+        xml:space="preserve"></DTS:VariableValue>
+    </DTS:Variable>
+    <DTS:Variable
+      DTS:CreationName=""
+      DTS:DTSID="{E69E6110-C520-4E51-93D4-2FEE032AAF0E}"
+      DTS:IncludeInDebugDump="2345"
+      DTS:Namespace="User"
+      DTS:ObjectName="Employee">
+      <DTS:VariableValue
+        DTS:DataType="8"
+        xml:space="preserve"></DTS:VariableValue>
+    </DTS:Variable>
+    <DTS:Variable
+      DTS:CreationName=""
+      DTS:DTSID="{BCA92F91-1633-4F33-90A0-A401EB64821B}"
+      DTS:IncludeInDebugDump="2345"
+      DTS:Namespace="User"
+      DTS:ObjectName="ExtractedEmployeeName">
+      <DTS:VariableValue
+        DTS:DataType="8"
+        xml:space="preserve"></DTS:VariableValue>
+    </DTS:Variable>
+    <DTS:Variable
+      DTS:CreationName=""
+      DTS:DTSID="{D4AA038B-9E9D-4413-82B5-8468438FADF0}"
+      DTS:IncludeInDebugDump="2345"
+      DTS:Namespace="User"
+      DTS:ObjectName="ExtractedFileName">
+      <DTS:VariableValue
+        DTS:DataType="8"
+        xml:space="preserve"></DTS:VariableValue>
+    </DTS:Variable>
+    <DTS:Variable
+      DTS:CreationName=""
+      DTS:DTSID="{30EDAD27-C416-406A-9FB1-B19BF2ED25FC}"
+      DTS:IncludeInDebugDump="2345"
+      DTS:Namespace="User"
+      DTS:ObjectName="FileName">
+      <DTS:VariableValue
+        DTS:DataType="8"
+        xml:space="preserve"></DTS:VariableValue>
+    </DTS:Variable>
+    <DTS:Variable
+      DTS:CreationName=""
+      DTS:DTSID="{4B2232E6-9D7F-4756-A686-B9D46F86B263}"
+      DTS:IncludeInDebugDump="2345"
+      DTS:Namespace="User"
+      DTS:ObjectName="FirstName">
+      <DTS:VariableValue
+        DTS:DataType="8"
+        xml:space="preserve"></DTS:VariableValue>
+    </DTS:Variable>
+    <DTS:Variable
+      DTS:CreationName=""
+      DTS:DTSID="{49917803-92A9-49BB-A2D8-3FA7BF58F828}"
+      DTS:IncludeInDebugDump="2345"
+      DTS:Namespace="User"
+      DTS:ObjectName="LastName">
+      <DTS:VariableValue
+        DTS:DataType="8"
+        xml:space="preserve"></DTS:VariableValue>
+    </DTS:Variable>
+    <DTS:Variable
+      DTS:CreationName=""
+      DTS:DTSID="{BA8CA7DD-345A-47A4-B53F-1A44BAD8EBDD}"
+      DTS:IncludeInDebugDump="2345"
+      DTS:Namespace="User"
+      DTS:ObjectName="MonthName">
+      <DTS:VariableValue
+        DTS:DataType="8"
+        xml:space="preserve"></DTS:VariableValue>
+    </DTS:Variable>
+    <DTS:Variable
+      DTS:CreationName=""
+      DTS:DTSID="{62C317A1-A1A8-4438-A290-FBFE15490F33}"
+      DTS:IncludeInDebugDump="2345"
+      DTS:Namespace="User"
+      DTS:ObjectName="PersonName">
+      <DTS:VariableValue
+        DTS:DataType="8"
+        xml:space="preserve"></DTS:VariableValue>
+    </DTS:Variable>
+    <DTS:Variable
+      DTS:CreationName=""
+      DTS:DTSID="{445FCA8A-5C5C-4384-9E84-0388959D0BDF}"
+      DTS:IncludeInDebugDump="2345"
+      DTS:Namespace="User"
+      DTS:ObjectName="RootFolderPath">
+      <DTS:VariableValue
+        DTS:DataType="8">C:\Timesheets</DTS:VariableValue>
+    </DTS:Variable>
+    <DTS:Variable
+      DTS:CreationName=""
+      DTS:DTSID="{8DA94A31-7B75-4781-A387-7AAC253E61EC}"
+      DTS:IncludeInDebugDump="2345"
+      DTS:Namespace="User"
+      DTS:ObjectName="SheetName">
+      <DTS:VariableValue
+        DTS:DataType="8">SELECT * FROM [Apr$A8:Z]</DTS:VariableValue>
+    </DTS:Variable>
+  </DTS:Variables>
+  <DTS:Executables>
+    <DTS:Executable
+      DTS:refId="Package\Creating Database"
+      DTS:CreationName="Microsoft.ExecuteSQLTask"
+      DTS:Description="Execute SQL Task"
+      DTS:DTSID="{4B996CEE-BE96-491B-92DB-E85F375CD6B4}"
+      DTS:ExecutableType="Microsoft.ExecuteSQLTask"
+      DTS:LocaleID="-1"
+      DTS:ObjectName="Creating Database"
+      DTS:TaskContact="Execute SQL Task; Microsoft Corporation; SQL Server 2025; © 2025 Microsoft Corporation; All Rights Reserved;http://www.microsoft.com/sql/support/default.asp;1"
+      DTS:ThreadHint="0">
+      <DTS:Variables />
+      <DTS:ObjectData>
+        <SQLTask:SqlTaskData
+          SQLTask:Connection="{AC2DE1F6-E0DC-4B2F-880F-D90599FCFB4E}"
+          SQLTask:SqlStatementSource="-- ==========================================&#xA;-- 1. DATABASE SETUP&#xA;-- ==========================================&#xA;IF NOT EXISTS (SELECT * FROM sys.databases WHERE name = 'TimesheetJPDB')&#xA;BEGIN&#xA;    CREATE DATABASE TimesheetJPDB&#xA;END;&#xA;GO&#xA; &#xA;USE TimesheetJPDB;&#xA;GO&#xA;&#xA;-- ==========================================&#xA;-- 2. MASTER &amp; DIMENSION TABLES&#xA;-- ==========================================&#xA;IF OBJECT_ID('dbo.AuditLog', 'U') IS NULL &#xA;BEGIN&#xA;    CREATE TABLE dbo.AuditLog (&#xA;        AuditID INT IDENTITY(1,1) CONSTRAINT PK_AuditLog PRIMARY KEY,&#xA;        PackageName NVARCHAR(100) NOT NULL CONSTRAINT DF_AuditLog_Pkg DEFAULT 'GraduateTimesheet_ETL',&#xA;        TaskName NVARCHAR(100) NOT NULL CONSTRAINT DF_AuditLog_Task DEFAULT 'Clean and Normalize Core Tables',&#xA;        FileName NVARCHAR(260) NULL,&#xA;        RowsStaged INT NOT NULL CONSTRAINT DF_AuditLog_Staged DEFAULT 0,&#xA;        InsertsProcessed INT NOT NULL CONSTRAINT DF_AuditLog_Inserts DEFAULT 0,&#xA;        UpdatesProcessed INT NOT NULL CONSTRAINT DF_AuditLog_Updates DEFAULT 0,&#xA;        DeletesProcessed INT NOT NULL CONSTRAINT DF_AuditLog_Deletes DEFAULT 0,&#xA;        LeaveRowsProcessed INT NOT NULL CONSTRAINT DF_AuditLog_Leave DEFAULT 0,&#xA;        Status NVARCHAR(20) NOT NULL,&#xA;        [Message] NVARCHAR(MAX) NULL,&#xA;        LogTimestamp DATETIME CONSTRAINT DF_AuditLog_Time DEFAULT GETDATE(),&#xA;        ExecutedBy NVARCHAR(100) NOT NULL CONSTRAINT DF_AuditLog_User DEFAULT SYSTEM_USER&#xA;    );&#xA; &#xA;    ALTER TABLE dbo.AuditLog ADD CONSTRAINT CK_AuditLog_Status &#xA;        CHECK (Status IN ('Running', 'Success', 'Failed'));&#xA;END;&#xA;GO&#xA; &#xA;IF OBJECT_ID('dbo.Client', 'U') IS NULL&#xA;BEGIN&#xA;    CREATE TABLE dbo.Client (&#xA;        ClientID INT IDENTITY(1,1) CONSTRAINT PK_Client PRIMARY KEY,&#xA;        ClientName VARCHAR(200) NOT NULL&#xA;    );&#xA;END;&#xA; &#xA;IF OBJECT_ID('dbo.Employee', 'U') IS NULL&#xA;BEGIN&#xA;    CREATE TABLE dbo.Employee (&#xA;        EmployeeID INT IDENTITY(1,1) CONSTRAINT PK_Employee PRIMARY KEY,&#xA;        FirstName NVARCHAR(150) NOT NULL,&#xA;        LastName NVARCHAR(150) NULL&#xA;    );&#xA;END;&#xA; &#xA;-- ==========================================&#xA;-- 3. LEAVE TABLE&#xA;-- ==========================================&#xA;IF OBJECT_ID('dbo.Leave', 'U') IS NULL&#xA;BEGIN&#xA;    CREATE TABLE dbo.Leave (&#xA;        LeaveID INT IDENTITY(1,1) CONSTRAINT PK_Leave PRIMARY KEY,&#xA;        EmployeeID INT NULL CONSTRAINT FK_Leave_Employee FOREIGN KEY REFERENCES dbo.Employee(EmployeeID),&#xA;        LeaveDate DATE NULL,&#xA;        LeaveType NVARCHAR(250) NOT NULL&#xA;    );&#xA;END;&#xA; &#xA;-- ==========================================&#xA;-- 4. STAGING &amp; FACT TIMESHEET TABLES&#xA;-- ==========================================&#xA;IF OBJECT_ID('dbo.StagingTimesheet', 'U') IS NULL&#xA;BEGIN&#xA;    CREATE TABLE dbo.StagingTimesheet (&#xA;        StagingID INT IDENTITY(1,1) CONSTRAINT PK_StagingTimesheet PRIMARY KEY,&#xA;        EmployeeSourceFile NVARCHAR(MAX),&#xA;        RawDate NVARCHAR(50),&#xA;        RawDayOfWeek NVARCHAR(50),&#xA;        RawClient NVARCHAR(150),&#xA;        RawProjectName NVARCHAR(150),&#xA;        RawDescription NVARCHAR(MAX),&#xA;        RawBillableStatus NVARCHAR(50),&#xA;        RawComments NVARCHAR(MAX),&#xA;        RawHoursWorked NVARCHAR(50), &#xA;        RawStartTime NVARCHAR(50),&#xA;        RawEndTime NVARCHAR(50),&#xA;        EmployeeName NVARCHAR(MAX)&#xA;    );&#xA;END;&#xA; &#xA;IF OBJECT_ID('dbo.Timesheet', 'U') IS NULL&#xA;BEGIN&#xA;    CREATE TABLE dbo.Timesheet (&#xA;        TimesheetID INT IDENTITY(1,1) CONSTRAINT PK_Timesheet PRIMARY KEY,&#xA;        EmployeeID INT NULL CONSTRAINT FK_Timesheet_Employee FOREIGN KEY REFERENCES dbo.Employee(EmployeeID),&#xA;        ClientID INT NULL CONSTRAINT FK_Timesheet_Client FOREIGN KEY REFERENCES dbo.Client(ClientID),&#xA;        WorkDate DATE NULL,&#xA;        DayOfWeek NVARCHAR(50) NULL,         &#xA;        BillableStatus NVARCHAR(50) NULL,    &#xA;        StartTime TIME NULL,&#xA;        EndTime TIME NULL,&#xA;        HoursWorked NVARCHAR(50) NULL, &#xA;        TaskDescription NVARCHAR(MAX) NULL,&#xA;        Comments NVARCHAR(MAX) NULL,&#xA;        LastUpdatedDate DATETIME CONSTRAINT DF_Timesheet_LastUpdate DEFAULT GETDATE()&#xA;    );&#xA;END;&#xA; &#xA;IF OBJECT_ID('dbo.StagingTimesheet', 'U') IS NOT NULL&#xA;    TRUNCATE TABLE dbo.StagingTimesheet;&#xA;GO" xmlns:SQLTask="www.microsoft.com/sqlserver/dts/tasks/sqltask" />
+      </DTS:ObjectData>
+    </DTS:Executable>
+    <DTS:Executable
+      DTS:refId="Package\Loops though Files and folders"
+      DTS:CreationName="STOCK:FOREACHLOOP"
+      DTS:Description="Foreach Loop Container"
+      DTS:DTSID="{2CA0753A-2650-47D7-AEBC-FB2EC8C083A7}"
+      DTS:ExecutableType="STOCK:FOREACHLOOP"
+      DTS:LocaleID="-1"
+      DTS:ObjectName="Loops though Files and folders">
+      <DTS:ForEachEnumerator
+        DTS:CreationName="Microsoft.ForEachFileEnumerator"
+        DTS:DTSID="{1FBB1CDB-B308-4D29-8140-6A2EE0DD629D}"
+        DTS:ObjectName="{1FBB1CDB-B308-4D29-8140-6A2EE0DD629D}">
+        <DTS:ObjectData>
+          <ForEachFileEnumeratorProperties>
+            <FEFEProperty
+              Folder="C:\Timesheets" />
+            <FEFEProperty
+              FileSpec="*.xlsx" />
+            <FEFEProperty
+              FileNameRetrievalType="0" />
+            <FEFEProperty
+              Recurse="-1" />
+          </ForEachFileEnumeratorProperties>
+        </DTS:ObjectData>
+      </DTS:ForEachEnumerator>
+      <DTS:Variables />
+      <DTS:Executables>
+        <DTS:Executable
+          DTS:refId="Package\Loops though Files and folders\Data Flow Task"
+          DTS:CreationName="Microsoft.Pipeline"
+          DTS:Description="Data Flow Task"
+          DTS:DTSID="{2693D7C6-C175-4FF1-A405-0F75E57119E2}"
+          DTS:ExecutableType="Microsoft.Pipeline"
+          DTS:LocaleID="-1"
+          DTS:ObjectName="Data Flow Task"
+          DTS:TaskContact="Performs high-performance data extraction, transformation and loading;Microsoft Corporation; Microsoft SQL Server; (C) Microsoft Corporation; All Rights Reserved;http://www.microsoft.com/sql/support/default.asp;1">
+          <DTS:Variables />
+          <DTS:ObjectData>
+            <pipeline
+              version="1">
+              <components>
+                <component
+                  refId="Package\Loops though Files and folders\Data Flow Task\Data Conversion"
+                  componentClassID="Microsoft.DataConvert"
+                  contactInfo="Data Conversion;Microsoft Corporation; Microsoft SQL Server; (C) Microsoft Corporation; All Rights Reserved; http://www.microsoft.com/sql/support;0"
+                  description="Data Conversion"
+                  name="Data Conversion"
+                  usesDispositions="true">
+                  <inputs>
+                    <input
+                      refId="Package\Loops though Files and folders\Data Flow Task\Data Conversion.Inputs[Data Conversion Input]"
+                      name="Data Conversion Input">
+                      <inputColumns>
+                        <inputColumn
+                          refId="Package\Loops though Files and folders\Data Flow Task\Data Conversion.Inputs[Data Conversion Input].Columns[Date]"
+                          cachedDataType="date"
+                          cachedName="Date"
+                          lineageId="Package\Loops though Files and folders\Data Flow Task\Excel Source.Outputs[Excel Source Output].Columns[Date]" />
+                        <inputColumn
+                          refId="Package\Loops though Files and folders\Data Flow Task\Data Conversion.Inputs[Data Conversion Input].Columns[D of Week]"
+                          cachedDataType="wstr"
+                          cachedLength="255"
+                          cachedName="D of Week"
+                          lineageId="Package\Loops though Files and folders\Data Flow Task\Excel Source.Outputs[Excel Source Output].Columns[D of Week]" />
+                        <inputColumn
+                          refId="Package\Loops though Files and folders\Data Flow Task\Data Conversion.Inputs[Data Conversion Input].Columns[Client]"
+                          cachedDataType="wstr"
+                          cachedLength="255"
+                          cachedName="Client"
+                          lineageId="Package\Loops though Files and folders\Data Flow Task\Excel Source.Outputs[Excel Source Output].Columns[Client]" />
+                        <inputColumn
+                          refId="Package\Loops though Files and folders\Data Flow Task\Data Conversion.Inputs[Data Conversion Input].Columns[Client Project Name]"
+                          cachedDataType="wstr"
+                          cachedLength="255"
+                          cachedName="Client Project Name"
+                          lineageId="Package\Loops though Files and folders\Data Flow Task\Excel Source.Outputs[Excel Source Output].Columns[Client Project Name]" />
+                        <inputColumn
+                          refId="Package\Loops though Files and folders\Data Flow Task\Data Conversion.Inputs[Data Conversion Input].Columns[Description]"
+                          cachedDataType="wstr"
+                          cachedLength="255"
+                          cachedName="Description"
+                          lineageId="Package\Loops though Files and folders\Data Flow Task\Excel Source.Outputs[Excel Source Output].Columns[Description]" />
+                        <inputColumn
+                          refId="Package\Loops though Files and folders\Data Flow Task\Data Conversion.Inputs[Data Conversion Input].Columns[Billable or Non Billable]"
+                          cachedDataType="wstr"
+                          cachedLength="255"
+                          cachedName="Billable or Non Billable"
+                          lineageId="Package\Loops though Files and folders\Data Flow Task\Excel Source.Outputs[Excel Source Output].Columns[Billable or Non Billable]" />
+                        <inputColumn
+                          refId="Package\Loops though Files and folders\Data Flow Task\Data Conversion.Inputs[Data Conversion Input].Columns[Comments]"
+                          cachedDataType="wstr"
+                          cachedLength="255"
+                          cachedName="Comments"
+                          lineageId="Package\Loops though Files and folders\Data Flow Task\Excel Source.Outputs[Excel Source Output].Columns[Comments]" />
+                        <inputColumn
+                          refId="Package\Loops though Files and folders\Data Flow Task\Data Conversion.Inputs[Data Conversion Input].Columns[Total Hours]"
+                          cachedDataType="date"
+                          cachedName="Total Hours"
+                          lineageId="Package\Loops though Files and folders\Data Flow Task\Excel Source.Outputs[Excel Source Output].Columns[Total Hours]" />
+                        <inputColumn
+                          refId="Package\Loops though Files and folders\Data Flow Task\Data Conversion.Inputs[Data Conversion Input].Columns[Start Time]"
+                          cachedDataType="date"
+                          cachedName="Start Time"
+                          lineageId="Package\Loops though Files and folders\Data Flow Task\Excel Source.Outputs[Excel Source Output].Columns[Start Time]" />
+                        <inputColumn
+                          refId="Package\Loops though Files and folders\Data Flow Task\Data Conversion.Inputs[Data Conversion Input].Columns[End Time]"
+                          cachedDataType="date"
+                          cachedName="End Time"
+                          lineageId="Package\Loops though Files and folders\Data Flow Task\Excel Source.Outputs[Excel Source Output].Columns[End Time]" />
+                      </inputColumns>
+                      <externalMetadataColumns />
+                    </input>
+                  </inputs>
+                  <outputs>
+                    <output
+                      refId="Package\Loops though Files and folders\Data Flow Task\Data Conversion.Outputs[Data Conversion Output]"
+                      exclusionGroup="1"
+                      name="Data Conversion Output"
+                      synchronousInputId="Package\Loops though Files and folders\Data Flow Task\Data Conversion.Inputs[Data Conversion Input]">
+                      <outputColumns>
+                        <outputColumn
+                          refId="Package\Loops though Files and folders\Data Flow Task\Data Conversion.Outputs[Data Conversion Output].Columns[Copy of Date]"
+                          dataType="date"
+                          errorOrTruncationOperation="Conversion"
+                          errorRowDisposition="FailComponent"
+                          lineageId="Package\Loops though Files and folders\Data Flow Task\Data Conversion.Outputs[Data Conversion Output].Columns[Copy of Date]"
+                          name="Copy of Date"
+                          truncationRowDisposition="FailComponent">
+                          <properties>
+                            <property
+                              containsID="true"
+                              dataType="System.Int32"
+                              description="Specifies the input column used as the source of data for the conversion."
+                              name="SourceInputColumnLineageID">#{Package\Loops though Files and folders\Data Flow Task\Excel Source.Outputs[Excel Source Output].Columns[Date]}</property>
+                            <property
+                              dataType="System.Boolean"
+                              description="Indicates whether the column uses the faster, locale-neutral parsing routines."
+                              name="FastParse">false</property>
+                          </properties>
+                        </outputColumn>
+                        <outputColumn
+                          refId="Package\Loops though Files and folders\Data Flow Task\Data Conversion.Outputs[Data Conversion Output].Columns[Copy of D of Week]"
+                          dataType="wstr"
+                          errorOrTruncationOperation="Conversion"
+                          errorRowDisposition="FailComponent"
+                          length="255"
+                          lineageId="Package\Loops though Files and folders\Data Flow Task\Data Conversion.Outputs[Data Conversion Output].Columns[Copy of D of Week]"
+                          name="Copy of D of Week"
+                          truncationRowDisposition="FailComponent">
+                          <properties>
+                            <property
+                              containsID="true"
+                              dataType="System.Int32"
+                              description="Specifies the input column used as the source of data for the conversion."
+                              name="SourceInputColumnLineageID">#{Package\Loops though Files and folders\Data Flow Task\Excel Source.Outputs[Excel Source Output].Columns[D of Week]}</property>
+                            <property
+                              dataType="System.Boolean"
+                              description="Indicates whether the column uses the faster, locale-neutral parsing routines."
+                              name="FastParse">false</property>
+                          </properties>
+                        </outputColumn>
+                        <outputColumn
+                          refId="Package\Loops though Files and folders\Data Flow Task\Data Conversion.Outputs[Data Conversion Output].Columns[Copy of Client]"
+                          dataType="wstr"
+                          errorOrTruncationOperation="Conversion"
+                          errorRowDisposition="FailComponent"
+                          length="255"
+                          lineageId="Package\Loops though Files and folders\Data Flow Task\Data Conversion.Outputs[Data Conversion Output].Columns[Copy of Client]"
+                          name="Copy of Client"
+                          truncationRowDisposition="FailComponent">
+                          <properties>
+                            <property
+                              containsID="true"
+                              dataType="System.Int32"
+                              description="Specifies the input column used as the source of data for the conversion."
+                              name="SourceInputColumnLineageID">#{Package\Loops though Files and folders\Data Flow Task\Excel Source.Outputs[Excel Source Output].Columns[Client]}</property>
+                            <property
+                              dataType="System.Boolean"
+                              description="Indicates whether the column uses the faster, locale-neutral parsing routines."
+                              name="FastParse">false</property>
+                          </properties>
+                        </outputColumn>
+                        <outputColumn
+                          refId="Package\Loops though Files and folders\Data Flow Task\Data Conversion.Outputs[Data Conversion Output].Columns[Copy of Client Project Name]"
+                          dataType="wstr"
+                          errorOrTruncationOperation="Conversion"
+                          errorRowDisposition="FailComponent"
+                          length="255"
+                          lineageId="Package\Loops though Files and folders\Data Flow Task\Data Conversion.Outputs[Data Conversion Output].Columns[Copy of Client Project Name]"
+                          name="Copy of Client Project Name"
+                          truncationRowDisposition="FailComponent">
+                          <properties>
+                            <property
+                              containsID="true"
+                              dataType="System.Int32"
+                              description="Specifies the input column used as the source of data for the conversion."
+                              name="SourceInputColumnLineageID">#{Package\Loops though Files and folders\Data Flow Task\Excel Source.Outputs[Excel Source Output].Columns[Client Project Name]}</property>
+                            <property
+                              dataType="System.Boolean"
+                              description="Indicates whether the column uses the faster, locale-neutral parsing routines."
+                              name="FastParse">false</property>
+                          </properties>
+                        </outputColumn>
+                        <outputColumn
+                          refId="Package\Loops though Files and folders\Data Flow Task\Data Conversion.Outputs[Data Conversion Output].Columns[Copy of Description]"
+                          dataType="wstr"
+                          errorOrTruncationOperation="Conversion"
+                          errorRowDisposition="FailComponent"
+                          length="255"
+                          lineageId="Package\Loops though Files and folders\Data Flow Task\Data Conversion.Outputs[Data Conversion Output].Columns[Copy of Description]"
+                          name="Copy of Description"
+                          truncationRowDisposition="FailComponent">
+                          <properties>
+                            <property
+                              containsID="true"
+                              dataType="System.Int32"
+                              description="Specifies the input column used as the source of data for the conversion."
+                              name="SourceInputColumnLineageID">#{Package\Loops though Files and folders\Data Flow Task\Excel Source.Outputs[Excel Source Output].Columns[Description]}</property>
+                            <property
+                              dataType="System.Boolean"
+                              description="Indicates whether the column uses the faster, locale-neutral parsing routines."
+                              name="FastParse">false</property>
+                          </properties>
+                        </outputColumn>
+                        <outputColumn
+                          refId="Package\Loops though Files and folders\Data Flow Task\Data Conversion.Outputs[Data Conversion Output].Columns[Copy of Billable or Non Billable]"
+                          dataType="wstr"
+                          errorOrTruncationOperation="Conversion"
+                          errorRowDisposition="FailComponent"
+                          length="255"
+                          lineageId="Package\Loops though Files and folders\Data Flow Task\Data Conversion.Outputs[Data Conversion Output].Columns[Copy of Billable or Non Billable]"
+                          name="Copy of Billable or Non Billable"
+                          truncationRowDisposition="FailComponent">
+                          <properties>
+                            <property
+                              containsID="true"
+                              dataType="System.Int32"
+                              description="Specifies the input column used as the source of data for the conversion."
+                              name="SourceInputColumnLineageID">#{Package\Loops though Files and folders\Data Flow Task\Excel Source.Outputs[Excel Source Output].Columns[Billable or Non Billable]}</property>
+                            <property
+                              dataType="System.Boolean"
+                              description="Indicates whether the column uses the faster, locale-neutral parsing routines."
+                              name="FastParse">false</property>
+                          </properties>
+                        </outputColumn>
+                        <outputColumn
+                          refId="Package\Loops though Files and folders\Data Flow Task\Data Conversion.Outputs[Data Conversion Output].Columns[Copy of Comments]"
+                          dataType="wstr"
+                          errorOrTruncationOperation="Conversion"
+                          errorRowDisposition="FailComponent"
+                          length="255"
+                          lineageId="Package\Loops though Files and folders\Data Flow Task\Data Conversion.Outputs[Data Conversion Output].Columns[Copy of Comments]"
+                          name="Copy of Comments"
+                          truncationRowDisposition="FailComponent">
+                          <properties>
+                            <property
+                              containsID="true"
+                              dataType="System.Int32"
+                              description="Specifies the input column used as the source of data for the conversion."
+                              name="SourceInputColumnLineageID">#{Package\Loops though Files and folders\Data Flow Task\Excel Source.Outputs[Excel Source Output].Columns[Comments]}</property>
+                            <property
+                              dataType="System.Boolean"
+                              description="Indicates whether the column uses the faster, locale-neutral parsing routines."
+                              name="FastParse">false</property>
+                          </properties>
+                        </outputColumn>
+                        <outputColumn
+                          refId="Package\Loops though Files and folders\Data Flow Task\Data Conversion.Outputs[Data Conversion Output].Columns[Copy of Total Hours]"
+                          dataType="date"
+                          errorOrTruncationOperation="Conversion"
+                          errorRowDisposition="FailComponent"
+                          lineageId="Package\Loops though Files and folders\Data Flow Task\Data Conversion.Outputs[Data Conversion Output].Columns[Copy of Total Hours]"
+                          name="Copy of Total Hours"
+                          truncationRowDisposition="FailComponent">
+                          <properties>
+                            <property
+                              containsID="true"
+                              dataType="System.Int32"
+                              description="Specifies the input column used as the source of data for the conversion."
+                              name="SourceInputColumnLineageID">#{Package\Loops though Files and folders\Data Flow Task\Excel Source.Outputs[Excel Source Output].Columns[Total Hours]}</property>
+                            <property
+                              dataType="System.Boolean"
+                              description="Indicates whether the column uses the faster, locale-neutral parsing routines."
+                              name="FastParse">false</property>
+                          </properties>
+                        </outputColumn>
+                        <outputColumn
+                          refId="Package\Loops though Files and folders\Data Flow Task\Data Conversion.Outputs[Data Conversion Output].Columns[Copy of Start Time]"
+                          dataType="date"
+                          errorOrTruncationOperation="Conversion"
+                          errorRowDisposition="FailComponent"
+                          lineageId="Package\Loops though Files and folders\Data Flow Task\Data Conversion.Outputs[Data Conversion Output].Columns[Copy of Start Time]"
+                          name="Copy of Start Time"
+                          truncationRowDisposition="FailComponent">
+                          <properties>
+                            <property
+                              containsID="true"
+                              dataType="System.Int32"
+                              description="Specifies the input column used as the source of data for the conversion."
+                              name="SourceInputColumnLineageID">#{Package\Loops though Files and folders\Data Flow Task\Excel Source.Outputs[Excel Source Output].Columns[Start Time]}</property>
+                            <property
+                              dataType="System.Boolean"
+                              description="Indicates whether the column uses the faster, locale-neutral parsing routines."
+                              name="FastParse">false</property>
+                          </properties>
+                        </outputColumn>
+                        <outputColumn
+                          refId="Package\Loops though Files and folders\Data Flow Task\Data Conversion.Outputs[Data Conversion Output].Columns[Copy of End Time]"
+                          dataType="date"
+                          errorOrTruncationOperation="Conversion"
+                          errorRowDisposition="FailComponent"
+                          lineageId="Package\Loops though Files and folders\Data Flow Task\Data Conversion.Outputs[Data Conversion Output].Columns[Copy of End Time]"
+                          name="Copy of End Time"
+                          truncationRowDisposition="FailComponent">
+                          <properties>
+                            <property
+                              containsID="true"
+                              dataType="System.Int32"
+                              description="Specifies the input column used as the source of data for the conversion."
+                              name="SourceInputColumnLineageID">#{Package\Loops though Files and folders\Data Flow Task\Excel Source.Outputs[Excel Source Output].Columns[End Time]}</property>
+                            <property
+                              dataType="System.Boolean"
+                              description="Indicates whether the column uses the faster, locale-neutral parsing routines."
+                              name="FastParse">false</property>
+                          </properties>
+                        </outputColumn>
+                      </outputColumns>
+                      <externalMetadataColumns />
+                    </output>
+                    <output
+                      refId="Package\Loops though Files and folders\Data Flow Task\Data Conversion.Outputs[Data Conversion Error Output]"
+                      exclusionGroup="1"
+                      isErrorOut="true"
+                      name="Data Conversion Error Output"
+                      synchronousInputId="Package\Loops though Files and folders\Data Flow Task\Data Conversion.Inputs[Data Conversion Input]">
+                      <outputColumns>
+                        <outputColumn
+                          refId="Package\Loops though Files and folders\Data Flow Task\Data Conversion.Outputs[Data Conversion Error Output].Columns[ErrorCode]"
+                          dataType="i4"
+                          lineageId="Package\Loops though Files and folders\Data Flow Task\Data Conversion.Outputs[Data Conversion Error Output].Columns[ErrorCode]"
+                          name="ErrorCode"
+                          specialFlags="1" />
+                        <outputColumn
+                          refId="Package\Loops though Files and folders\Data Flow Task\Data Conversion.Outputs[Data Conversion Error Output].Columns[ErrorColumn]"
+                          dataType="i4"
+                          lineageId="Package\Loops though Files and folders\Data Flow Task\Data Conversion.Outputs[Data Conversion Error Output].Columns[ErrorColumn]"
+                          name="ErrorColumn"
+                          specialFlags="2" />
+                      </outputColumns>
+                      <externalMetadataColumns />
+                    </output>
+                  </outputs>
+                </component>
+                <component
+                  refId="Package\Loops though Files and folders\Data Flow Task\Excel Source"
+                  componentClassID="Microsoft.ExcelSource"
+                  contactInfo="Excel Source;Microsoft Corporation; Microsoft SQL Server; (C) Microsoft Corporation; All Rights Reserved; http://www.microsoft.com/sql/support;1"
+                  description="Excel Source"
+                  name="Excel Source"
+                  usesDispositions="true"
+                  version="1">
+                  <properties>
+                    <property
+                      dataType="System.Int32"
+                      description="The number of seconds before a command times out.  A value of 0 indicates an infinite time-out."
+                      name="CommandTimeout">0</property>
+                    <property
+                      dataType="System.String"
+                      description="Specifies the name of the database object used to open a rowset."
+                      name="OpenRowset"></property>
+                    <property
+                      dataType="System.String"
+                      description="Specifies the variable that contains the name of the database object used to open a rowset."
+                      name="OpenRowsetVariable"></property>
+                    <property
+                      dataType="System.String"
+                      description="The SQL command to be executed."
+                      name="SqlCommand"
+                      UITypeEditor="Microsoft.DataTransformationServices.Controls.ModalMultilineStringEditor">SELECT * FROM [Apr$A8:Z]</property>
+                    <property
+                      dataType="System.String"
+                      description="The variable that contains the SQL command to be executed."
+                      name="SqlCommandVariable"></property>
+                    <property
+                      dataType="System.Int32"
+                      description="Specifies the mode used to access the database."
+                      name="AccessMode"
+                      typeConverter="AccessMode">2</property>
+                    <property
+                      dataType="System.String"
+                      description="The mapping from parameters in the SQL command to variables."
+                      name="ParameterMapping"></property>
+                  </properties>
+                  <connections>
+                    <connection
+                      refId="Package\Loops though Files and folders\Data Flow Task\Excel Source.Connections[OleDbConnection]"
+                      connectionManagerID="Package.ConnectionManagers[Excel Connection Manager]"
+                      connectionManagerRefId="Package.ConnectionManagers[Excel Connection Manager]"
+                      description="The OLE DB runtime connection used to access the database."
+                      name="OleDbConnection" />
+                  </connections>
+                  <outputs>
+                    <output
+                      refId="Package\Loops though Files and folders\Data Flow Task\Excel Source.Outputs[Excel Source Output]"
+                      name="Excel Source Output">
+                      <outputColumns>
+                        <outputColumn
+                          refId="Package\Loops though Files and folders\Data Flow Task\Excel Source.Outputs[Excel Source Output].Columns[Date]"
+                          dataType="date"
+                          errorOrTruncationOperation="Conversion"
+                          errorRowDisposition="FailComponent"
+                          externalMetadataColumnId="Package\Loops though Files and folders\Data Flow Task\Excel Source.Outputs[Excel Source Output].ExternalColumns[Date]"
+                          lineageId="Package\Loops though Files and folders\Data Flow Task\Excel Source.Outputs[Excel Source Output].Columns[Date]"
+                          name="Date"
+                          truncationRowDisposition="FailComponent" />
+                        <outputColumn
+                          refId="Package\Loops though Files and folders\Data Flow Task\Excel Source.Outputs[Excel Source Output].Columns[D of Week]"
+                          dataType="wstr"
+                          errorOrTruncationOperation="Conversion"
+                          errorRowDisposition="FailComponent"
+                          externalMetadataColumnId="Package\Loops though Files and folders\Data Flow Task\Excel Source.Outputs[Excel Source Output].ExternalColumns[D of Week]"
+                          length="255"
+                          lineageId="Package\Loops though Files and folders\Data Flow Task\Excel Source.Outputs[Excel Source Output].Columns[D of Week]"
+                          name="D of Week"
+                          truncationRowDisposition="FailComponent" />
+                        <outputColumn
+                          refId="Package\Loops though Files and folders\Data Flow Task\Excel Source.Outputs[Excel Source Output].Columns[Client]"
+                          dataType="wstr"
+                          errorOrTruncationOperation="Conversion"
+                          errorRowDisposition="FailComponent"
+                          externalMetadataColumnId="Package\Loops though Files and folders\Data Flow Task\Excel Source.Outputs[Excel Source Output].ExternalColumns[Client]"
+                          length="255"
+                          lineageId="Package\Loops though Files and folders\Data Flow Task\Excel Source.Outputs[Excel Source Output].Columns[Client]"
+                          name="Client"
+                          truncationRowDisposition="FailComponent" />
+                        <outputColumn
+                          refId="Package\Loops though Files and folders\Data Flow Task\Excel Source.Outputs[Excel Source Output].Columns[Client Project Name]"
+                          dataType="wstr"
+                          errorOrTruncationOperation="Conversion"
+                          errorRowDisposition="FailComponent"
+                          externalMetadataColumnId="Package\Loops though Files and folders\Data Flow Task\Excel Source.Outputs[Excel Source Output].ExternalColumns[Client Project Name]"
+                          length="255"
+                          lineageId="Package\Loops though Files and folders\Data Flow Task\Excel Source.Outputs[Excel Source Output].Columns[Client Project Name]"
+                          name="Client Project Name"
+                          truncationRowDisposition="FailComponent" />
+                        <outputColumn
+                          refId="Package\Loops though Files and folders\Data Flow Task\Excel Source.Outputs[Excel Source Output].Columns[Description]"
+                          dataType="wstr"
+                          errorOrTruncationOperation="Conversion"
+                          errorRowDisposition="FailComponent"
+                          externalMetadataColumnId="Package\Loops though Files and folders\Data Flow Task\Excel Source.Outputs[Excel Source Output].ExternalColumns[Description]"
+                          length="255"
+                          lineageId="Package\Loops though Files and folders\Data Flow Task\Excel Source.Outputs[Excel Source Output].Columns[Description]"
+                          name="Description"
+                          truncationRowDisposition="FailComponent" />
+                        <outputColumn
+                          refId="Package\Loops though Files and folders\Data Flow Task\Excel Source.Outputs[Excel Source Output].Columns[Billable or Non Billable]"
+                          dataType="wstr"
+                          errorOrTruncationOperation="Conversion"
+                          errorRowDisposition="FailComponent"
+                          externalMetadataColumnId="Package\Loops though Files and folders\Data Flow Task\Excel Source.Outputs[Excel Source Output].ExternalColumns[Billable or Non Billable]"
+                          length="255"
+                          lineageId="Package\Loops though Files and folders\Data Flow Task\Excel Source.Outputs[Excel Source Output].Columns[Billable or Non Billable]"
+                          name="Billable or Non Billable"
+                          truncationRowDisposition="FailComponent" />
+                        <outputColumn
+                          refId="Package\Loops though Files and folders\Data Flow Task\Excel Source.Outputs[Excel Source Output].Columns[Comments]"
+                          dataType="wstr"
+                          errorOrTruncationOperation="Conversion"
+                          errorRowDisposition="FailComponent"
+                          externalMetadataColumnId="Package\Loops though Files and folders\Data Flow Task\Excel Source.Outputs[Excel Source Output].ExternalColumns[Comments]"
+                          length="255"
+                          lineageId="Package\Loops though Files and folders\Data Flow Task\Excel Source.Outputs[Excel Source Output].Columns[Comments]"
+                          name="Comments"
+                          truncationRowDisposition="FailComponent" />
+                        <outputColumn
+                          refId="Package\Loops though Files and folders\Data Flow Task\Excel Source.Outputs[Excel Source Output].Columns[Total Hours]"
+                          dataType="date"
+                          errorOrTruncationOperation="Conversion"
+                          errorRowDisposition="FailComponent"
+                          externalMetadataColumnId="Package\Loops though Files and folders\Data Flow Task\Excel Source.Outputs[Excel Source Output].ExternalColumns[Total Hours]"
+                          lineageId="Package\Loops though Files and folders\Data Flow Task\Excel Source.Outputs[Excel Source Output].Columns[Total Hours]"
+                          name="Total Hours"
+                          truncationRowDisposition="FailComponent" />
+                        <outputColumn
+                          refId="Package\Loops though Files and folders\Data Flow Task\Excel Source.Outputs[Excel Source Output].Columns[Start Time]"
+                          dataType="date"
+                          errorOrTruncationOperation="Conversion"
+                          errorRowDisposition="FailComponent"
+                          externalMetadataColumnId="Package\Loops though Files and folders\Data Flow Task\Excel Source.Outputs[Excel Source Output].ExternalColumns[Start Time]"
+                          lineageId="Package\Loops though Files and folders\Data Flow Task\Excel Source.Outputs[Excel Source Output].Columns[Start Time]"
+                          name="Start Time"
+                          truncationRowDisposition="FailComponent" />
+                        <outputColumn
+                          refId="Package\Loops though Files and folders\Data Flow Task\Excel Source.Outputs[Excel Source Output].Columns[End Time]"
+                          dataType="date"
+                          errorOrTruncationOperation="Conversion"
+                          errorRowDisposition="FailComponent"
+                          externalMetadataColumnId="Package\Loops though Files and folders\Data Flow Task\Excel Source.Outputs[Excel Source Output].ExternalColumns[End Time]"
+                          lineageId="Package\Loops though Files and folders\Data Flow Task\Excel Source.Outputs[Excel Source Output].Columns[End Time]"
+                          name="End Time"
+                          truncationRowDisposition="FailComponent" />
+                      </outputColumns>
+                      <externalMetadataColumns
+                        isUsed="True">
+                        <externalMetadataColumn
+                          refId="Package\Loops though Files and folders\Data Flow Task\Excel Source.Outputs[Excel Source Output].ExternalColumns[Date]"
+                          dataType="date"
+                          name="Date" />
+                        <externalMetadataColumn
+                          refId="Package\Loops though Files and folders\Data Flow Task\Excel Source.Outputs[Excel Source Output].ExternalColumns[D of Week]"
+                          dataType="wstr"
+                          length="255"
+                          name="D of Week" />
+                        <externalMetadataColumn
+                          refId="Package\Loops though Files and folders\Data Flow Task\Excel Source.Outputs[Excel Source Output].ExternalColumns[Client]"
+                          dataType="wstr"
+                          length="255"
+                          name="Client" />
+                        <externalMetadataColumn
+                          refId="Package\Loops though Files and folders\Data Flow Task\Excel Source.Outputs[Excel Source Output].ExternalColumns[Client Project Name]"
+                          dataType="wstr"
+                          length="255"
+                          name="Client Project Name" />
+                        <externalMetadataColumn
+                          refId="Package\Loops though Files and folders\Data Flow Task\Excel Source.Outputs[Excel Source Output].ExternalColumns[Description]"
+                          dataType="wstr"
+                          length="255"
+                          name="Description" />
+                        <externalMetadataColumn
+                          refId="Package\Loops though Files and folders\Data Flow Task\Excel Source.Outputs[Excel Source Output].ExternalColumns[Billable or Non Billable]"
+                          dataType="wstr"
+                          length="255"
+                          name="Billable or Non Billable" />
+                        <externalMetadataColumn
+                          refId="Package\Loops though Files and folders\Data Flow Task\Excel Source.Outputs[Excel Source Output].ExternalColumns[Comments]"
+                          dataType="wstr"
+                          length="255"
+                          name="Comments" />
+                        <externalMetadataColumn
+                          refId="Package\Loops though Files and folders\Data Flow Task\Excel Source.Outputs[Excel Source Output].ExternalColumns[Total Hours]"
+                          dataType="date"
+                          name="Total Hours" />
+                        <externalMetadataColumn
+                          refId="Package\Loops though Files and folders\Data Flow Task\Excel Source.Outputs[Excel Source Output].ExternalColumns[Start Time]"
+                          dataType="date"
+                          name="Start Time" />
+                        <externalMetadataColumn
+                          refId="Package\Loops though Files and folders\Data Flow Task\Excel Source.Outputs[Excel Source Output].ExternalColumns[End Time]"
+                          dataType="date"
+                          name="End Time" />
+                      </externalMetadataColumns>
+                    </output>
+                    <output
+                      refId="Package\Loops though Files and folders\Data Flow Task\Excel Source.Outputs[Excel Source Error Output]"
+                      isErrorOut="true"
+                      name="Excel Source Error Output">
+                      <outputColumns>
+                        <outputColumn
+                          refId="Package\Loops though Files and folders\Data Flow Task\Excel Source.Outputs[Excel Source Error Output].Columns[Date]"
+                          dataType="date"
+                          lineageId="Package\Loops though Files and folders\Data Flow Task\Excel Source.Outputs[Excel Source Error Output].Columns[Date]"
+                          name="Date" />
+                        <outputColumn
+                          refId="Package\Loops though Files and folders\Data Flow Task\Excel Source.Outputs[Excel Source Error Output].Columns[D of Week]"
+                          dataType="wstr"
+                          length="255"
+                          lineageId="Package\Loops though Files and folders\Data Flow Task\Excel Source.Outputs[Excel Source Error Output].Columns[D of Week]"
+                          name="D of Week" />
+                        <outputColumn
+                          refId="Package\Loops though Files and folders\Data Flow Task\Excel Source.Outputs[Excel Source Error Output].Columns[Client]"
+                          dataType="wstr"
+                          length="255"
+                          lineageId="Package\Loops though Files and folders\Data Flow Task\Excel Source.Outputs[Excel Source Error Output].Columns[Client]"
+                          name="Client" />
+                        <outputColumn
+                          refId="Package\Loops though Files and folders\Data Flow Task\Excel Source.Outputs[Excel Source Error Output].Columns[Client Project Name]"
+                          dataType="wstr"
+                          length="255"
+                          lineageId="Package\Loops though Files and folders\Data Flow Task\Excel Source.Outputs[Excel Source Error Output].Columns[Client Project Name]"
+                          name="Client Project Name" />
+                        <outputColumn
+                          refId="Package\Loops though Files and folders\Data Flow Task\Excel Source.Outputs[Excel Source Error Output].Columns[Description]"
+                          dataType="wstr"
+                          length="255"
+                          lineageId="Package\Loops though Files and folders\Data Flow Task\Excel Source.Outputs[Excel Source Error Output].Columns[Description]"
+                          name="Description" />
+                        <outputColumn
+                          refId="Package\Loops though Files and folders\Data Flow Task\Excel Source.Outputs[Excel Source Error Output].Columns[Billable or Non Billable]"
+                          dataType="wstr"
+                          length="255"
+                          lineageId="Package\Loops though Files and folders\Data Flow Task\Excel Source.Outputs[Excel Source Error Output].Columns[Billable or Non Billable]"
+                          name="Billable or Non Billable" />
+                        <outputColumn
+                          refId="Package\Loops though Files and folders\Data Flow Task\Excel Source.Outputs[Excel Source Error Output].Columns[Comments]"
+                          dataType="wstr"
+                          length="255"
+                          lineageId="Package\Loops though Files and folders\Data Flow Task\Excel Source.Outputs[Excel Source Error Output].Columns[Comments]"
+                          name="Comments" />
+                        <outputColumn
+                          refId="Package\Loops though Files and folders\Data Flow Task\Excel Source.Outputs[Excel Source Error Output].Columns[Total Hours]"
+                          dataType="date"
+                          lineageId="Package\Loops though Files and folders\Data Flow Task\Excel Source.Outputs[Excel Source Error Output].Columns[Total Hours]"
+                          name="Total Hours" />
+                        <outputColumn
+                          refId="Package\Loops though Files and folders\Data Flow Task\Excel Source.Outputs[Excel Source Error Output].Columns[Start Time]"
+                          dataType="date"
+                          lineageId="Package\Loops though Files and folders\Data Flow Task\Excel Source.Outputs[Excel Source Error Output].Columns[Start Time]"
+                          name="Start Time" />
+                        <outputColumn
+                          refId="Package\Loops though Files and folders\Data Flow Task\Excel Source.Outputs[Excel Source Error Output].Columns[End Time]"
+                          dataType="date"
+                          lineageId="Package\Loops though Files and folders\Data Flow Task\Excel Source.Outputs[Excel Source Error Output].Columns[End Time]"
+                          name="End Time" />
+                        <outputColumn
+                          refId="Package\Loops though Files and folders\Data Flow Task\Excel Source.Outputs[Excel Source Error Output].Columns[ErrorCode]"
+                          dataType="i4"
+                          lineageId="Package\Loops though Files and folders\Data Flow Task\Excel Source.Outputs[Excel Source Error Output].Columns[ErrorCode]"
+                          name="ErrorCode"
+                          specialFlags="1" />
+                        <outputColumn
+                          refId="Package\Loops though Files and folders\Data Flow Task\Excel Source.Outputs[Excel Source Error Output].Columns[ErrorColumn]"
+                          dataType="i4"
+                          lineageId="Package\Loops though Files and folders\Data Flow Task\Excel Source.Outputs[Excel Source Error Output].Columns[ErrorColumn]"
+                          name="ErrorColumn"
+                          specialFlags="2" />
+                      </outputColumns>
+                      <externalMetadataColumns />
+                    </output>
+                  </outputs>
+                </component>
+                <component
+                  refId="Package\Loops though Files and folders\Data Flow Task\OLE DB Destination"
+                  componentClassID="Microsoft.OLEDBDestination"
+                  contactInfo="OLE DB Destination;Microsoft Corporation; Microsoft SQL Server; (C) Microsoft Corporation; All Rights Reserved; http://www.microsoft.com/sql/support;4"
+                  description="OLE DB Destination"
+                  name="OLE DB Destination"
+                  usesDispositions="true"
+                  version="4">
+                  <properties>
+                    <property
+                      dataType="System.Int32"
+                      description="The number of seconds before a command times out.  A value of 0 indicates an infinite time-out."
+                      name="CommandTimeout">0</property>
+                    <property
+                      dataType="System.String"
+                      description="Specifies the name of the database object used to open a rowset."
+                      name="OpenRowset">[dbo].[StagingTimesheet]</property>
+                    <property
+                      dataType="System.String"
+                      description="Specifies the variable that contains the name of the database object used to open a rowset."
+                      name="OpenRowsetVariable"></property>
+                    <property
+                      dataType="System.String"
+                      description="The SQL command to be executed."
+                      name="SqlCommand"
+                      UITypeEditor="Microsoft.DataTransformationServices.Controls.ModalMultilineStringEditor"></property>
+                    <property
+                      dataType="System.Int32"
+                      description="Specifies the column code page to use when code page information is unavailable from the data source."
+                      name="DefaultCodePage">1252</property>
+                    <property
+                      dataType="System.Boolean"
+                      description="Forces the use of the DefaultCodePage property value when describing character data."
+                      name="AlwaysUseDefaultCodePage">false</property>
+                    <property
+                      dataType="System.Int32"
+                      description="Specifies the mode used to access the database."
+                      name="AccessMode"
+                      typeConverter="AccessMode">3</property>
+                    <property
+                      dataType="System.Boolean"
+                      description="Indicates whether the values supplied for identity columns will be copied to the destination. If false, values for identity columns will be auto-generated at the destination. Applies only if fast load is turned on."
+                      name="FastLoadKeepIdentity">false</property>
+                    <property
+                      dataType="System.Boolean"
+                      description="Indicates whether the columns containing null will have null inserted in the destination. If false, columns containing null will have their default values inserted at the destination. Applies only if fast load is turned on."
+                      name="FastLoadKeepNulls">false</property>
+                    <property
+                      dataType="System.String"
+                      description="Specifies options to be used with fast load.  Applies only if fast load is turned on."
+                      name="FastLoadOptions">TABLOCK,CHECK_CONSTRAINTS</property>
+                    <property
+                      dataType="System.Int32"
+                      description="Specifies when commits are issued during data insertion.  A value of 0 specifies that one commit will be issued at the end of data insertion.  Applies only if fast load is turned on."
+                      name="FastLoadMaxInsertCommitSize">2147483647</property>
+                  </properties>
+                  <connections>
+                    <connection
+                      refId="Package\Loops though Files and folders\Data Flow Task\OLE DB Destination.Connections[OleDbConnection]"
+                      connectionManagerID="Package.ConnectionManagers[TimesheetJPDB]"
+                      connectionManagerRefId="Package.ConnectionManagers[TimesheetJPDB]"
+                      description="The OLE DB runtime connection used to access the database."
+                      name="OleDbConnection" />
+                  </connections>
+                  <inputs>
+                    <input
+                      refId="Package\Loops though Files and folders\Data Flow Task\OLE DB Destination.Inputs[OLE DB Destination Input]"
+                      errorOrTruncationOperation="Insert"
+                      errorRowDisposition="FailComponent"
+                      hasSideEffects="true"
+                      name="OLE DB Destination Input">
+                      <inputColumns>
+                        <inputColumn
+                          refId="Package\Loops though Files and folders\Data Flow Task\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[Copy of Date]"
+                          cachedDataType="date"
+                          cachedName="Copy of Date"
+                          externalMetadataColumnId="Package\Loops though Files and folders\Data Flow Task\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[RawDate]"
+                          lineageId="Package\Loops though Files and folders\Data Flow Task\Data Conversion.Outputs[Data Conversion Output].Columns[Copy of Date]" />
+                        <inputColumn
+                          refId="Package\Loops though Files and folders\Data Flow Task\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[Copy of D of Week]"
+                          cachedDataType="wstr"
+                          cachedLength="255"
+                          cachedName="Copy of D of Week"
+                          externalMetadataColumnId="Package\Loops though Files and folders\Data Flow Task\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[RawDayOfWeek]"
+                          lineageId="Package\Loops though Files and folders\Data Flow Task\Data Conversion.Outputs[Data Conversion Output].Columns[Copy of D of Week]" />
+                        <inputColumn
+                          refId="Package\Loops though Files and folders\Data Flow Task\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[Copy of Client]"
+                          cachedDataType="wstr"
+                          cachedLength="255"
+                          cachedName="Copy of Client"
+                          externalMetadataColumnId="Package\Loops though Files and folders\Data Flow Task\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[RawClient]"
+                          lineageId="Package\Loops though Files and folders\Data Flow Task\Data Conversion.Outputs[Data Conversion Output].Columns[Copy of Client]" />
+                        <inputColumn
+                          refId="Package\Loops though Files and folders\Data Flow Task\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[Copy of Client Project Name]"
+                          cachedDataType="wstr"
+                          cachedLength="255"
+                          cachedName="Copy of Client Project Name"
+                          externalMetadataColumnId="Package\Loops though Files and folders\Data Flow Task\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[RawProjectName]"
+                          lineageId="Package\Loops though Files and folders\Data Flow Task\Data Conversion.Outputs[Data Conversion Output].Columns[Copy of Client Project Name]" />
+                        <inputColumn
+                          refId="Package\Loops though Files and folders\Data Flow Task\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[Copy of Description]"
+                          cachedDataType="wstr"
+                          cachedLength="255"
+                          cachedName="Copy of Description"
+                          externalMetadataColumnId="Package\Loops though Files and folders\Data Flow Task\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[RawDescription]"
+                          lineageId="Package\Loops though Files and folders\Data Flow Task\Data Conversion.Outputs[Data Conversion Output].Columns[Copy of Description]" />
+                        <inputColumn
+                          refId="Package\Loops though Files and folders\Data Flow Task\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[Copy of Billable or Non Billable]"
+                          cachedDataType="wstr"
+                          cachedLength="255"
+                          cachedName="Copy of Billable or Non Billable"
+                          externalMetadataColumnId="Package\Loops though Files and folders\Data Flow Task\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[RawBillableStatus]"
+                          lineageId="Package\Loops though Files and folders\Data Flow Task\Data Conversion.Outputs[Data Conversion Output].Columns[Copy of Billable or Non Billable]" />
+                        <inputColumn
+                          refId="Package\Loops though Files and folders\Data Flow Task\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[Copy of Comments]"
+                          cachedDataType="wstr"
+                          cachedLength="255"
+                          cachedName="Copy of Comments"
+                          externalMetadataColumnId="Package\Loops though Files and folders\Data Flow Task\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[RawComments]"
+                          lineageId="Package\Loops though Files and folders\Data Flow Task\Data Conversion.Outputs[Data Conversion Output].Columns[Copy of Comments]" />
+                        <inputColumn
+                          refId="Package\Loops though Files and folders\Data Flow Task\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[Copy of Total Hours]"
+                          cachedDataType="date"
+                          cachedName="Copy of Total Hours"
+                          externalMetadataColumnId="Package\Loops though Files and folders\Data Flow Task\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[RawHoursWorked]"
+                          lineageId="Package\Loops though Files and folders\Data Flow Task\Data Conversion.Outputs[Data Conversion Output].Columns[Copy of Total Hours]" />
+                        <inputColumn
+                          refId="Package\Loops though Files and folders\Data Flow Task\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[Copy of Start Time]"
+                          cachedDataType="date"
+                          cachedName="Copy of Start Time"
+                          externalMetadataColumnId="Package\Loops though Files and folders\Data Flow Task\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[RawStartTime]"
+                          lineageId="Package\Loops though Files and folders\Data Flow Task\Data Conversion.Outputs[Data Conversion Output].Columns[Copy of Start Time]" />
+                        <inputColumn
+                          refId="Package\Loops though Files and folders\Data Flow Task\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[End Time]"
+                          cachedDataType="date"
+                          cachedName="End Time"
+                          externalMetadataColumnId="Package\Loops though Files and folders\Data Flow Task\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[RawEndTime]"
+                          lineageId="Package\Loops though Files and folders\Data Flow Task\Excel Source.Outputs[Excel Source Output].Columns[End Time]" />
+                      </inputColumns>
+                      <externalMetadataColumns
+                        isUsed="True">
+                        <externalMetadataColumn
+                          refId="Package\Loops though Files and folders\Data Flow Task\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[StagingID]"
+                          dataType="i4"
+                          name="StagingID" />
+                        <externalMetadataColumn
+                          refId="Package\Loops though Files and folders\Data Flow Task\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[EmployeeSourceFile]"
+                          dataType="nText"
+                          name="EmployeeSourceFile" />
+                        <externalMetadataColumn
+                          refId="Package\Loops though Files and folders\Data Flow Task\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[RawDate]"
+                          dataType="wstr"
+                          length="50"
+                          name="RawDate" />
+                        <externalMetadataColumn
+                          refId="Package\Loops though Files and folders\Data Flow Task\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[RawDayOfWeek]"
+                          dataType="wstr"
+                          length="50"
+                          name="RawDayOfWeek" />
+                        <externalMetadataColumn
+                          refId="Package\Loops though Files and folders\Data Flow Task\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[RawClient]"
+                          dataType="wstr"
+                          length="150"
+                          name="RawClient" />
+                        <externalMetadataColumn
+                          refId="Package\Loops though Files and folders\Data Flow Task\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[RawProjectName]"
+                          dataType="wstr"
+                          length="150"
+                          name="RawProjectName" />
+                        <externalMetadataColumn
+                          refId="Package\Loops though Files and folders\Data Flow Task\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[RawDescription]"
+                          dataType="nText"
+                          name="RawDescription" />
+                        <externalMetadataColumn
+                          refId="Package\Loops though Files and folders\Data Flow Task\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[RawBillableStatus]"
+                          dataType="wstr"
+                          length="50"
+                          name="RawBillableStatus" />
+                        <externalMetadataColumn
+                          refId="Package\Loops though Files and folders\Data Flow Task\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[RawComments]"
+                          dataType="nText"
+                          name="RawComments" />
+                        <externalMetadataColumn
+                          refId="Package\Loops though Files and folders\Data Flow Task\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[RawHoursWorked]"
+                          dataType="wstr"
+                          length="50"
+                          name="RawHoursWorked" />
+                        <externalMetadataColumn
+                          refId="Package\Loops though Files and folders\Data Flow Task\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[RawStartTime]"
+                          dataType="wstr"
+                          length="50"
+                          name="RawStartTime" />
+                        <externalMetadataColumn
+                          refId="Package\Loops though Files and folders\Data Flow Task\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[RawEndTime]"
+                          dataType="wstr"
+                          length="50"
+                          name="RawEndTime" />
+                        <externalMetadataColumn
+                          refId="Package\Loops though Files and folders\Data Flow Task\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[EmployeeName]"
+                          dataType="nText"
+                          name="EmployeeName" />
+                      </externalMetadataColumns>
+                    </input>
+                  </inputs>
+                  <outputs>
+                    <output
+                      refId="Package\Loops though Files and folders\Data Flow Task\OLE DB Destination.Outputs[OLE DB Destination Error Output]"
+                      exclusionGroup="1"
+                      isErrorOut="true"
+                      name="OLE DB Destination Error Output"
+                      synchronousInputId="Package\Loops though Files and folders\Data Flow Task\OLE DB Destination.Inputs[OLE DB Destination Input]">
+                      <outputColumns>
+                        <outputColumn
+                          refId="Package\Loops though Files and folders\Data Flow Task\OLE DB Destination.Outputs[OLE DB Destination Error Output].Columns[ErrorCode]"
+                          dataType="i4"
+                          lineageId="Package\Loops though Files and folders\Data Flow Task\OLE DB Destination.Outputs[OLE DB Destination Error Output].Columns[ErrorCode]"
+                          name="ErrorCode"
+                          specialFlags="1" />
+                        <outputColumn
+                          refId="Package\Loops though Files and folders\Data Flow Task\OLE DB Destination.Outputs[OLE DB Destination Error Output].Columns[ErrorColumn]"
+                          dataType="i4"
+                          lineageId="Package\Loops though Files and folders\Data Flow Task\OLE DB Destination.Outputs[OLE DB Destination Error Output].Columns[ErrorColumn]"
+                          name="ErrorColumn"
+                          specialFlags="2" />
+                      </outputColumns>
+                      <externalMetadataColumns />
+                    </output>
+                  </outputs>
+                </component>
+              </components>
+              <paths>
+                <path
+                  refId="Package\Loops though Files and folders\Data Flow Task.Paths[Data Conversion Output]"
+                  endId="Package\Loops though Files and folders\Data Flow Task\OLE DB Destination.Inputs[OLE DB Destination Input]"
+                  name="Data Conversion Output"
+                  startId="Package\Loops though Files and folders\Data Flow Task\Data Conversion.Outputs[Data Conversion Output]" />
+                <path
+                  refId="Package\Loops though Files and folders\Data Flow Task.Paths[Excel Source Output]"
+                  endId="Package\Loops though Files and folders\Data Flow Task\Data Conversion.Inputs[Data Conversion Input]"
+                  name="Excel Source Output"
+                  startId="Package\Loops though Files and folders\Data Flow Task\Excel Source.Outputs[Excel Source Output]" />
+              </paths>
+            </pipeline>
+          </DTS:ObjectData>
+        </DTS:Executable>
+        <DTS:Executable
+          DTS:refId="Package\Loops though Files and folders\Expression Task"
+          DTS:CreationName="Microsoft.ExpressionTask"
+          DTS:Description="Expression Task"
+          DTS:DTSID="{B8C46DE5-DCF9-40BF-8FB6-68411EA115AE}"
+          DTS:ExecutableType="Microsoft.ExpressionTask"
+          DTS:LocaleID="-1"
+          DTS:ObjectName="Expression Task"
+          DTS:TaskContact="Expression Task;Microsoft Corporation; SQL Server 2025; © 2025 Microsoft Corporation; All Rights Reserved;http://www.microsoft.com/sql/support/default.asp;1"
+          DTS:ThreadHint="0">
+          <DTS:Variables />
+          <DTS:ObjectData>
+            <ExpressionTask
+              Expression="@[User::CurrentFilepath]" />
+          </DTS:ObjectData>
+        </DTS:Executable>
+        <DTS:Executable
+          DTS:refId="Package\Loops though Files and folders\Expression Task 1"
+          DTS:CreationName="Microsoft.ExpressionTask"
+          DTS:Description="Expression Task"
+          DTS:DTSID="{7D1E7528-5873-4044-BE17-B52BE026863C}"
+          DTS:ExecutableType="Microsoft.ExpressionTask"
+          DTS:LocaleID="-1"
+          DTS:ObjectName="Expression Task 1"
+          DTS:TaskContact="Expression Task;Microsoft Corporation; SQL Server 2025; © 2025 Microsoft Corporation; All Rights Reserved;http://www.microsoft.com/sql/support/default.asp;1"
+          DTS:ThreadHint="0">
+          <DTS:Variables />
+          <DTS:ObjectData>
+            <ExpressionTask
+              Expression="" />
+          </DTS:ObjectData>
+        </DTS:Executable>
+        <DTS:Executable
+          DTS:refId="Package\Loops though Files and folders\Expression Task 2"
+          DTS:CreationName="Microsoft.ExpressionTask"
+          DTS:Description="Expression Task"
+          DTS:DTSID="{353BA044-5B23-4599-98B4-D05467174D15}"
+          DTS:ExecutableType="Microsoft.ExpressionTask"
+          DTS:LocaleID="-1"
+          DTS:ObjectName="Expression Task 2"
+          DTS:TaskContact="Expression Task;Microsoft Corporation; SQL Server 2025; © 2025 Microsoft Corporation; All Rights Reserved;http://www.microsoft.com/sql/support/default.asp;1"
+          DTS:ThreadHint="0">
+          <DTS:Variables />
+          <DTS:ObjectData>
+            <ExpressionTask
+              Expression="" />
+          </DTS:ObjectData>
+        </DTS:Executable>
+      </DTS:Executables>
+      <DTS:PrecedenceConstraints>
+        <DTS:PrecedenceConstraint
+          DTS:refId="Package\Loops though Files and folders.PrecedenceConstraints[Constraint]"
+          DTS:CreationName=""
+          DTS:DTSID="{31336036-5091-4FCB-AD59-18FEA2B9AE1B}"
+          DTS:From="Package\Loops though Files and folders\Expression Task"
+          DTS:LogicalAnd="True"
+          DTS:ObjectName="Constraint"
+          DTS:To="Package\Loops though Files and folders\Data Flow Task" />
+        <DTS:PrecedenceConstraint
+          DTS:refId="Package\Loops though Files and folders.PrecedenceConstraints[Constraint 1]"
+          DTS:CreationName=""
+          DTS:DTSID="{4C24E7D5-86FA-4993-8C89-463A43CDD89F}"
+          DTS:From="Package\Loops though Files and folders\Expression Task 2"
+          DTS:LogicalAnd="True"
+          DTS:ObjectName="Constraint 1"
+          DTS:To="Package\Loops though Files and folders\Expression Task 1" />
+        <DTS:PrecedenceConstraint
+          DTS:refId="Package\Loops though Files and folders.PrecedenceConstraints[Constraint 2]"
+          DTS:CreationName=""
+          DTS:DTSID="{6A591929-8C1D-4737-B387-DDDC74DE7EC1}"
+          DTS:From="Package\Loops though Files and folders\Expression Task 1"
+          DTS:LogicalAnd="True"
+          DTS:ObjectName="Constraint 2"
+          DTS:To="Package\Loops though Files and folders\Expression Task" />
+      </DTS:PrecedenceConstraints>
+      <DTS:ForEachVariableMappings>
+        <DTS:ForEachVariableMapping
+          DTS:CreationName=""
+          DTS:DTSID="{C53EC393-1D03-4918-A12A-7DC56B3731A9}"
+          DTS:ObjectName="{C53EC393-1D03-4918-A12A-7DC56B3731A9}"
+          DTS:ValueIndex="0"
+          DTS:VariableName="User::CurrentFilepath" />
+      </DTS:ForEachVariableMappings>
+    </DTS:Executable>
+  </DTS:Executables>
+  <DTS:PrecedenceConstraints>
+    <DTS:PrecedenceConstraint
+      DTS:refId="Package.PrecedenceConstraints[Constraint]"
+      DTS:CreationName=""
+      DTS:DTSID="{5BAFEDC6-6493-419B-B6E5-E809A9B9423D}"
+      DTS:From="Package\Creating Database"
+      DTS:LogicalAnd="True"
+      DTS:ObjectName="Constraint"
+      DTS:To="Package\Loops though Files and folders" />
+  </DTS:PrecedenceConstraints>
+  <DTS:DesignTimeProperties><![CDATA[<?xml version="1.0"?>
+<!--This CDATA section contains the layout information of the package. The section includes information such as (x,y) coordinates, width, and height.-->
+<!--If you manually edit this section and make a mistake, you can delete it. -->
+<!--The package will still be able to load normally but the previous layout information will be lost and the designer will automatically re-arrange the elements on the design surface.-->
+<Objects
+  Version="8">
+  <!--Each node below will contain properties that do not affect runtime behavior.-->
+  <Package
+    design-time-name="Package">
+    <LayoutInfo>
+      <GraphLayout
+        Capacity="16" xmlns="clr-namespace:Microsoft.SqlServer.IntegrationServices.Designer.Model.Serialization;assembly=Microsoft.SqlServer.IntegrationServices.Graph" xmlns:mssgle="clr-namespace:Microsoft.SqlServer.Graph.LayoutEngine;assembly=Microsoft.SqlServer.Graph" xmlns:assembly="http://schemas.microsoft.com/winfx/2006/xaml">
+        <NodeLayout
+          Size="164.8,41.6"
+          Id="Package\Creating Database"
+          TopLeft="235.499987433355,15.8999999276797" />
+        <NodeLayout
+          Size="155.2,41.6"
+          Id="Package\Loops though Files and folders\Expression Task"
+          TopLeft="38.9999871601666,160.39999750495" />
+        <NodeLayout
+          Size="150.4,41.6"
+          Id="Package\Loops though Files and folders\Data Flow Task"
+          TopLeft="41.4999870235726,227.999997034868" />
+        <EdgeLayout
+          Id="Package\Loops though Files and folders.PrecedenceConstraints[Constraint]"
+          TopLeft="116.64998709187,201.99999750495">
+          <EdgeLayout.Curve>
+            <mssgle:Curve
+              StartConnector="{assembly:Null}"
+              EndConnector="0,25.999999529918"
+              Start="0,0"
+              End="0,18.499999529918">
+              <mssgle:Curve.Segments>
+                <mssgle:SegmentCollection
+                  Capacity="5">
+                  <mssgle:LineSegment
+                    End="0,18.499999529918" />
+                </mssgle:SegmentCollection>
+              </mssgle:Curve.Segments>
+            </mssgle:Curve>
+          </EdgeLayout.Curve>
+          <EdgeLayout.Labels>
+            <EdgeLabelCollection />
+          </EdgeLayout.Labels>
+        </EdgeLayout>
+        <NodeLayout
+          Size="164,41.6"
+          Id="Package\Loops though Files and folders\Expression Task 1"
+          TopLeft="33.1666541455526,87.8333327607977" />
+        <NodeLayout
+          Size="164,41.6"
+          Id="Package\Loops though Files and folders\Expression Task 2"
+          TopLeft="34.8333207211566,7.5999993852775" />
+        <EdgeLayout
+          Id="Package\Loops though Files and folders.PrecedenceConstraints[Constraint 1]"
+          TopLeft="115.999987433355,49.1999993852775">
+          <EdgeLayout.Curve>
+            <mssgle:Curve
+              StartConnector="{assembly:Null}"
+              EndConnector="0,38.6333333755202"
+              Start="0,0"
+              End="0,31.1333333755202">
+              <mssgle:Curve.Segments>
+                <mssgle:SegmentCollection
+                  Capacity="5">
+                  <mssgle:LineSegment
+                    End="0,31.1333333755202" />
+                </mssgle:SegmentCollection>
+              </mssgle:Curve.Segments>
+            </mssgle:Curve>
+          </EdgeLayout.Curve>
+          <EdgeLayout.Labels>
+            <EdgeLabelCollection />
+          </EdgeLayout.Labels>
+        </EdgeLayout>
+        <EdgeLayout
+          Id="Package\Loops though Files and folders.PrecedenceConstraints[Constraint 2]"
+          TopLeft="115.88332065286,129.433332760798">
+          <EdgeLayout.Curve>
+            <mssgle:Curve
+              StartConnector="{assembly:Null}"
+              EndConnector="0,30.966664744152"
+              Start="0,0"
+              End="0,23.466664744152">
+              <mssgle:Curve.Segments>
+                <mssgle:SegmentCollection
+                  Capacity="5">
+                  <mssgle:LineSegment
+                    End="0,23.466664744152" />
+                </mssgle:SegmentCollection>
+              </mssgle:Curve.Segments>
+            </mssgle:Curve>
+          </EdgeLayout.Curve>
+          <EdgeLayout.Labels>
+            <EdgeLabelCollection />
+          </EdgeLayout.Labels>
+        </EdgeLayout>
+        <ContainerLayout
+          HeaderHeight="43"
+          IsExpanded="True"
+          PanelSize="264.8,324.8"
+          Size="264.8,368"
+          Id="Package\Loops though Files and folders"
+          TopLeft="195.833322633472,155.133332254556" />
+        <EdgeLayout
+          Id="Package.PrecedenceConstraints[Constraint]"
+          TopLeft="317.899987433355,57.4999999276797">
+          <EdgeLayout.Curve>
+            <mssgle:Curve
+              StartConnector="{assembly:Null}"
+              EndConnector="10.3333352001176,97.633332326876"
+              Start="0,0"
+              End="10.3333352001176,90.133332326876">
+              <mssgle:Curve.Segments>
+                <mssgle:SegmentCollection
+                  Capacity="5">
+                  <mssgle:LineSegment
+                    End="0,44.816666163438" />
+                  <mssgle:CubicBezierSegment
+                    Point1="0,44.816666163438"
+                    Point2="0,48.816666163438"
+                    Point3="4,48.816666163438" />
+                  <mssgle:LineSegment
+                    End="6.33333520011757,48.816666163438" />
+                  <mssgle:CubicBezierSegment
+                    Point1="6.33333520011757,48.816666163438"
+                    Point2="10.3333352001176,48.816666163438"
+                    Point3="10.3333352001176,52.816666163438" />
+                  <mssgle:LineSegment
+                    End="10.3333352001176,90.133332326876" />
+                </mssgle:SegmentCollection>
+              </mssgle:Curve.Segments>
+            </mssgle:Curve>
+          </EdgeLayout.Curve>
+          <EdgeLayout.Labels>
+            <EdgeLabelCollection />
+          </EdgeLayout.Labels>
+        </EdgeLayout>
+      </GraphLayout>
+    </LayoutInfo>
+  </Package>
+  <TaskHost
+    design-time-name="Package\Loops though Files and folders\Data Flow Task">
+    <LayoutInfo>
+      <GraphLayout
+        Capacity="8" xmlns="clr-namespace:Microsoft.SqlServer.IntegrationServices.Designer.Model.Serialization;assembly=Microsoft.SqlServer.IntegrationServices.Graph" xmlns:mssgle="clr-namespace:Microsoft.SqlServer.Graph.LayoutEngine;assembly=Microsoft.SqlServer.Graph" xmlns:assembly="http://schemas.microsoft.com/winfx/2006/xaml">
+        <NodeLayout
+          Size="140,41.6"
+          Id="Package\Loops though Files and folders\Data Flow Task\Excel Source"
+          TopLeft="279.999984701475,83.1999994214376" />
+        <NodeLayout
+          Size="156,41.6"
+          Id="Package\Loops though Files and folders\Data Flow Task\Data Conversion"
+          TopLeft="270.833318535653,192.399998662074" />
+        <EdgeLayout
+          Id="Package\Loops though Files and folders\Data Flow Task.Paths[Excel Source Output]"
+          TopLeft="349.416651618564,124.799999421438">
+          <EdgeLayout.Curve>
+            <mssgle:Curve
+              StartConnector="{assembly:Null}"
+              EndConnector="0,67.5999992406369"
+              Start="0,0"
+              End="0,60.0999992406369">
+              <mssgle:Curve.Segments>
+                <mssgle:SegmentCollection
+                  Capacity="5">
+                  <mssgle:LineSegment
+                    End="0,60.0999992406369" />
+                </mssgle:SegmentCollection>
+              </mssgle:Curve.Segments>
+            </mssgle:Curve>
+          </EdgeLayout.Curve>
+          <EdgeLayout.Labels>
+            <EdgeLabelCollection />
+          </EdgeLayout.Labels>
+        </EdgeLayout>
+        <NodeLayout
+          Size="171.2,41.6"
+          Id="Package\Loops though Files and folders\Data Flow Task\OLE DB Destination"
+          TopLeft="279.999984701475,293.799997956951" />
+        <EdgeLayout
+          Id="Package\Loops though Files and folders\Data Flow Task.Paths[Data Conversion Output]"
+          TopLeft="348.833318535653,233.999998662074">
+          <EdgeLayout.Curve>
+            <mssgle:Curve
+              StartConnector="{assembly:Null}"
+              EndConnector="16.766666165822,59.799999294877"
+              Start="0,0"
+              End="16.766666165822,52.299999294877">
+              <mssgle:Curve.Segments>
+                <mssgle:SegmentCollection
+                  Capacity="5">
+                  <mssgle:LineSegment
+                    End="0,25.8999996474385" />
+                  <mssgle:CubicBezierSegment
+                    Point1="0,25.8999996474385"
+                    Point2="0,29.8999996474385"
+                    Point3="4,29.8999996474385" />
+                  <mssgle:LineSegment
+                    End="12.766666165822,29.8999996474385" />
+                  <mssgle:CubicBezierSegment
+                    Point1="12.766666165822,29.8999996474385"
+                    Point2="16.766666165822,29.8999996474385"
+                    Point3="16.766666165822,33.8999996474385" />
+                  <mssgle:LineSegment
+                    End="16.766666165822,52.299999294877" />
+                </mssgle:SegmentCollection>
+              </mssgle:Curve.Segments>
+            </mssgle:Curve>
+          </EdgeLayout.Curve>
+          <EdgeLayout.Labels>
+            <EdgeLabelCollection />
+          </EdgeLayout.Labels>
+        </EdgeLayout>
+      </GraphLayout>
+    </LayoutInfo>
+  </TaskHost>
+  <PipelineComponentMetadata
+    design-time-name="Package\Loops though Files and folders\Data Flow Task\Excel Source">
+    <Properties>
+      <Property>
+        <Name>DataSourceViewID</Name>
+      </Property>
+    </Properties>
+  </PipelineComponentMetadata>
+  <PipelineComponentMetadata
+    design-time-name="Package\Loops though Files and folders\Data Flow Task\OLE DB Destination">
+    <Properties>
+      <Property>
+        <Name>DataSourceViewID</Name>
+      </Property>
+      <Property>
+        <Name>TableInfoObjectType</Name>
+        <Value
+          type="q2:string">Table</Value>
+      </Property>
+    </Properties>
+  </PipelineComponentMetadata>
+</Objects>]]></DTS:DesignTimeProperties>
+</DTS:Executable>
