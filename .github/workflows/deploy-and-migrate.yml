@@ -16,7 +16,7 @@ jobs:
     steps:
     - name: Checkout Repository Code
       uses: actions/checkout@v4
-      
+ 
     - name: Deploy SSIS and Create Execution Job
       shell: powershell
       run: |
@@ -26,7 +26,7 @@ jobs:
  
         if (-not (Test-Path -Path $ispacPath)) {
             Write-Host "Primary path not found. Testing alternate path..."
-             $ispacPath = "${{ github.workspace }}\..\Projects\TimesheetMigration1\TimesheetMigration1\bin\Development\TimesheetMigration1.ispac" 
+            $ispacPath = "${{ github.workspace }}\..\Projects\TimesheetMigration1\TimesheetMigration1\bin\Development\TimesheetMigration1.ispac"
             $ispacPath = [System.IO.Path]::GetFullPath($ispacPath)
         }
  
@@ -35,9 +35,9 @@ jobs:
             exit 1
         }
         # STEP 2: DEFINE TARGET CONFIGURATIONS FROM YOUR ENVIRONMENT
-         $tunnelAddress = "${{ secrets.SQL_SERVER }},${{ secrets.SQL_PORT }}"
-          $dbUser        = "${{ secrets.SQL_USERNAME }}"
-          $dbPassword    = "${{ secrets.SQL_PASSWORD }}"
+        $tunnelAddress = "${{ secrets.SQL_SERVER }},${{ secrets.SQL_PORT }}"
+        $dbUser        = "${{ secrets.SQL_USERNAME }}"
+        $dbPassword    = "${{ secrets.SQL_PASSWORD }}"
         $initialDb     = "master"
         $targetFolder     = "TimesheetDevTestMigration"
         $projectName      = "TimesheetMigration1"
@@ -146,7 +146,7 @@ jobs:
  
         if (-not (Test-Path -Path $ispacPath)) {
             Write-Host "Primary path not found. Testing alternate path..."
-             $ispacPath = "${{ github.workspace }}\..\Projects\TimesheetMigration1\TimesheetMigration1\bin\Development\TimesheetMigration1.ispac" 
+            $ispacPath = "${{ github.workspace }}\..\Projects\TimesheetMigration1\TimesheetMigration1\bin\Development\TimesheetMigration1.ispac"
             $ispacPath = [System.IO.Path]::GetFullPath($ispacPath)
         }
  
@@ -157,8 +157,8 @@ jobs:
  
         # STEP 2: DEFINE TARGET CONFIGURATIONS FROM YOUR ENVIRONMENT
         $tunnelAddress = "${{ secrets.SQL_SERVER }},${{ secrets.SQL_PORT }}"
-          $dbUser        = "${{ secrets.SQL_USERNAME }}"
-          $dbPassword    = "${{ secrets.SQL_PASSWORD }}"
+        $dbUser        = "${{ secrets.SQL_USERNAME }}"
+        $dbPassword    = "${{ secrets.SQL_PASSWORD }}"
         $initialDb     = "master"
  
         $targetFolder     = "TimesheetProductionMigration"
@@ -202,10 +202,10 @@ jobs:
             EXEC [catalog].[deploy_project] @folder_name = N''$targetFolder'', @project_name = N''$projectName'', @project_stream = @project_stream;
  
             -- Environment parameter package fixes tailored to match target package layout (Scope 20)
-            EXEC SSISDB.catalog.set_object_parameter_value @object_type = 20, @folder_name = N''$targetFolder'', @project_name = N''$projectName'', @object_name = N''TimesheetMigration.dtsx'', @parameter_name = N''CM.TimesheetJPDB.ServerName'', @parameter_value = N''$partnerServer'';
-            EXEC SSISDB.catalog.set_object_parameter_value @object_type = 20, @folder_name = N''$targetFolder'', @project_name = N''$projectName'', @object_name = N''TimesheetMigration.dtsx'', @parameter_name = N''CM.TimesheetJPDB.ServerName'', @parameter_value = N''$partnerServer'';
-            EXEC SSISDB.catalog.set_object_parameter_value @object_type = 20, @folder_name = N''$targetFolder'', @project_name = N''$projectName'', @object_name = N''TimesheetMigration.dtsx'', @parameter_name = N''CM.LocalHost.TimesheetJPDB.InitialCatalog'', @parameter_value = N''TimesheetJPDB'';
-            EXEC SSISDB.catalog.set_object_parameter_value @object_type = 20, @folder_name = N''$targetFolder'', @project_name = N''$projectName'', @object_name = N''TimesheetMigration.dtsx'', @parameter_name = N''CM.LocalHost.TimesheetJPDB.TimesheetJPDB.InitialCatalog'', @parameter_value = N''TimesheetJPDB'';';
+            EXEC SSISDB.catalog.set_object_parameter_value @object_type = 20, @folder_name = N''$targetFolder'', @project_name = N''$projectName'', @parameter_name = N''CM.TimesheetJPDB.ServerName'', @parameter_value = N''$partnerServer'';
+            EXEC SSISDB.catalog.set_object_parameter_value @object_type = 20, @folder_name = N''$targetFolder'', @project_name = N''$projectName'', @parameter_name = N''CM.TimesheetJPDB.ServerName'', @parameter_value = N''$partnerServer'';
+            EXEC SSISDB.catalog.set_object_parameter_value @object_type = 20, @folder_name = N''$targetFolder'', @project_name = N''$projectName'', @parameter_name = N''CM.LocalHost.TimesheetJPDB.InitialCatalog'', @parameter_value = N''TimesheetJPDB'';
+            EXEC SSISDB.catalog.set_object_parameter_value @object_type = 20, @folder_name = N''$targetFolder'', @project_name = N''$projectName'', @parameter_name = N''CM.LocalHost.TimesheetJPDB.TimesheetJPDB.InitialCatalog'', @parameter_value = N''TimesheetJPDB'';';
  
             EXEC dbo.sp_add_jobstep @job_name = N'GitHub_SSIS_Deploy_Job1', @step_name = N'Run Deploy', @subsystem = N'TSQL', @command = @deploy_script, @retry_attempts = 0;
             EXEC dbo.sp_add_jobserver @job_name = N'GitHub_SSIS_Deploy_Job1', @server_name = N'(local)';
