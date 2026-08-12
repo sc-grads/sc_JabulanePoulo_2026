@@ -1,26 +1,23 @@
 -- =============================================
--- Database: TimesheetsDB
+-- Database: TimesheetJPDB
 -- Description: Complete database creation script with job execution
 -- =============================================
 
 -- Check if database exists and drop it
-IF EXISTS (SELECT name FROM sys.databases WHERE name = N'TimesheetsDB')
+IF EXISTS (SELECT name FROM sys.databases WHERE name = N'TimesheetJPDB')
 BEGIN
-    ALTER DATABASE TimesheetsDB SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
-    DROP DATABASE TimesheetsDB;
+   ALTER DATABASE TimesheetJPDB SET MULTI_USER    WITH ROLLBACK IMMEDIATE;
+    DROP DATABASE TimesheetJPDB;
 END
 GO
 
-
 -- Create the database
-CREATE DATABASE TimesheetsDB;
+CREATE DATABASE TimesheetJPDB;
 GO
 
 -- Use the database
-USE TimesheetsDB;
+USE TimesheetJPDB;
 GO
-
-
 
 -- =============================================
 -- Create Schemas
@@ -56,37 +53,43 @@ SET QUOTED_IDENTIFIER ON
 GO
 
 CREATE TABLE [audit].[AuditLog](
-	[LogID] [bigint] IDENTITY(1,1) NOT NULL,
-	[LogDateTime] [datetime] NULL,
-	[RunNumber] [int] NULL,
-	[LogSource] [nvarchar](500) NULL,
-	[TaskName] [nvarchar](200) NULL,
-	[LogStatus] [varchar](50) NULL,
-	[RowsInserted] [int] NULL,
-	[RowsUpdated] [int] NULL,
-	[RowsDeleted] [int] NULL,
-	[ExecutedBy] [nvarchar](100) NULL,
-	[TargetTable] [nvarchar](100) NULL,
-	[ExecutionDurationMs] [int] NULL,
-	[Message] [nvarchar](max) NULL,
-PRIMARY KEY CLUSTERED 
-(
-	[LogID] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+    [LogID]               [bigint]          IDENTITY(1,1) NOT NULL,
+    [LogDateTime]         [datetime]        NULL,
+    [RunNumber]           [int]             NULL,
+    [LogSource]           [nvarchar](500)   NULL,
+    [TaskName]            [nvarchar](200)   NULL,
+    [LogStatus]           [varchar](50)     NULL,
+    [RowsInserted]        [int]             NULL,
+    [RowsUpdated]         [int]             NULL,
+    [RowsDeleted]         [int]             NULL,
+    [ExecutedBy]          [nvarchar](100)   NULL,
+    [TargetTable]         [nvarchar](100)   NULL,
+    [ExecutionDurationMs] [int]             NULL,
+    [Message]             [nvarchar](max)   NULL,
+    CONSTRAINT [PK_AuditLog] PRIMARY KEY CLUSTERED (
+        [LogID] ASC
+    ) WITH (
+        PAD_INDEX = OFF, 
+        STATISTICS_NORECOMPUTE = OFF, 
+        IGNORE_DUP_KEY = OFF, 
+        ALLOW_ROW_LOCKS = ON, 
+        ALLOW_PAGE_LOCKS = ON, 
+        OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF
+    ) ON [PRIMARY]
 ) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
 GO
 
-ALTER TABLE [audit].[AuditLog] ADD  DEFAULT (getdate()) FOR [LogDateTime]
+ALTER TABLE [audit].[AuditLog] ADD  DEFAULT (GETDATE()) FOR [LogDateTime]
 GO
+
 ALTER TABLE [audit].[AuditLog] ADD  DEFAULT ((0)) FOR [RowsInserted]
 GO
+
 ALTER TABLE [audit].[AuditLog] ADD  DEFAULT ((0)) FOR [RowsUpdated]
 GO
+
 ALTER TABLE [audit].[AuditLog] ADD  DEFAULT ((0)) FOR [RowsDeleted]
 GO
-
-
-
 
 -- =============================================
 -- Table: staging.Timesheet
@@ -97,27 +100,34 @@ SET QUOTED_IDENTIFIER ON
 GO
 
 CREATE TABLE [staging].[Timesheet](
-	[StagingID] [int] IDENTITY(1,1) NOT NULL,
-	[EmployeeID] [int] NULL,
-	[WorkDate] [date] NULL,
-	[ClientName] [varchar](255) NULL,
-	[ProjectName] [varchar](255) NULL,
-	[WorkDescription] [varchar](500) NULL,
-	[BillableStatus] [varchar](50) NULL,
-	[Comments] [varchar](max) NULL,
-	[HoursWorked] [decimal](5, 2) NULL,
-	[StartTime] [time](7) NULL,
-	[EndTime] [time](7) NULL,
-	[SourceFile] [varchar](255) NULL,
-	[Processed] [bit] NULL,
-	[ProcessedAt] [datetime2](7) NULL,
-	[DayOfWeek] [varchar](20) NULL,
-PRIMARY KEY CLUSTERED 
-(
-	[StagingID] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+    [StagingID]       [int]             IDENTITY(1,1) NOT NULL,
+    [EmployeeID]      [int]             NULL,
+    [WorkDate]        [date]            NULL,
+    [ClientName]      [varchar](255)    NULL,
+    [ProjectName]     [varchar](255)    NULL,
+    [WorkDescription] [varchar](500)    NULL,
+    [BillableStatus]  [varchar](50)     NULL,
+    [Comments]        [varchar](max)    NULL,
+    [HoursWorked]     [decimal](5, 2)   NULL,
+    [StartTime]       [time](7)         NULL,
+    [EndTime]         [time](7)         NULL,
+    [SourceFile]      [varchar](255)    NULL,
+    [Processed]       [bit]             NULL,
+    [ProcessedAt]     [datetime2](7)    NULL,
+    [DayOfWeek]       [varchar](20)     NULL,
+    CONSTRAINT [PK_StagingTimesheet] PRIMARY KEY CLUSTERED (
+        [StagingID] ASC
+    ) WITH (
+        PAD_INDEX = OFF, 
+        STATISTICS_NORECOMPUTE = OFF, 
+        IGNORE_DUP_KEY = OFF, 
+        ALLOW_ROW_LOCKS = ON, 
+        ALLOW_PAGE_LOCKS = ON, 
+        OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF
+    ) ON [PRIMARY]
 ) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
 GO
+
 
 ALTER TABLE [staging].[Timesheet] ADD  DEFAULT ((0)) FOR [Processed]
 GO
@@ -131,16 +141,28 @@ SET QUOTED_IDENTIFIER ON
 GO
 
 CREATE TABLE [timesheet].[Client](
-	[ClientID] [int] IDENTITY(1,1) NOT NULL,
-	[ClientName] [nvarchar](200) NOT NULL,
-PRIMARY KEY CLUSTERED 
-(
-	[ClientID] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY],
-UNIQUE NONCLUSTERED 
-(
-	[ClientName] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+    [ClientID]   [int]           IDENTITY(1,1) NOT NULL,
+    [ClientName] [nvarchar](200) NOT NULL,
+    CONSTRAINT [PK_Client] PRIMARY KEY CLUSTERED (
+        [ClientID] ASC
+    ) WITH (
+        PAD_INDEX = OFF, 
+        STATISTICS_NORECOMPUTE = OFF, 
+        IGNORE_DUP_KEY = OFF, 
+        ALLOW_ROW_LOCKS = ON, 
+        ALLOW_PAGE_LOCKS = ON, 
+        OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF
+    ) ON [PRIMARY],
+    CONSTRAINT [UQ_Client_ClientName] UNIQUE NONCLUSTERED (
+        [ClientName] ASC
+    ) WITH (
+        PAD_INDEX = OFF, 
+        STATISTICS_NORECOMPUTE = OFF, 
+        IGNORE_DUP_KEY = OFF, 
+        ALLOW_ROW_LOCKS = ON, 
+        ALLOW_PAGE_LOCKS = ON, 
+        OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF
+    ) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
 
@@ -153,38 +175,57 @@ SET QUOTED_IDENTIFIER ON
 GO
 
 CREATE TABLE [timesheet].[Employee](
-	[EmployeeID] [int] IDENTITY(1,1) NOT NULL,
-	[FirstName] [nvarchar](100) NULL,
-	[LastName] [nvarchar](100) NULL,
-PRIMARY KEY CLUSTERED 
-(
-	[EmployeeID] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+    [EmployeeID] [int]           IDENTITY(1,1) NOT NULL,
+    [FirstName]  [nvarchar](100) NULL,
+    [LastName]   [nvarchar](100) NULL,
+    CONSTRAINT [PK_Employee] PRIMARY KEY CLUSTERED (
+        [EmployeeID] ASC
+    ) WITH (
+        PAD_INDEX = OFF, 
+        STATISTICS_NORECOMPUTE = OFF, 
+        IGNORE_DUP_KEY = OFF, 
+        ALLOW_ROW_LOCKS = ON, 
+        ALLOW_PAGE_LOCKS = ON, 
+        OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF
+    ) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
+
 -- =============================================
--- Table: timesheet.EMployeeLeave
+-- Table: timesheet.EmployeeLeave
 -- =============================================
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
 CREATE TABLE [timesheet].[EmployeeLeave](
-	[LeaveID] [int] IDENTITY(1,1) NOT NULL,
-	[EmployeeID] [int] NOT NULL,
-	[LeaveType] [varchar](100) NULL,
-	[StartDate] [date] NULL,
-	[EndDate] [date] NULL,
-	[NumberOfDays] [decimal](5, 2) NULL,
-PRIMARY KEY CLUSTERED 
-(
-	[LeaveID] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+    [LeaveID]      [int]             IDENTITY(1,1) NOT NULL,
+    [EmployeeID]   [int]             NOT NULL,
+    [LeaveType]    [varchar](100)    NULL,
+    [StartDate]    [date]            NULL,
+    [EndDate]      [date]            NULL,
+    [NumberOfDays] [decimal](5, 2)   NULL,
+    CONSTRAINT [PK_EmployeeLeave] PRIMARY KEY CLUSTERED (
+        [LeaveID] ASC
+    ) WITH (
+        PAD_INDEX = OFF, 
+        STATISTICS_NORECOMPUTE = OFF, 
+        IGNORE_DUP_KEY = OFF, 
+        ALLOW_ROW_LOCKS = ON, 
+        ALLOW_PAGE_LOCKS = ON, 
+        OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF
+    ) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
 
-
-
-ALTER TABLE [timesheet].[EmployeeLeave]  WITH CHECK ADD FOREIGN KEY([EmployeeID])
-REFERENCES [timesheet].[Employee] ([EmployeeID])
+ALTER TABLE [timesheet].[EmployeeLeave] WITH CHECK 
+    ADD CONSTRAINT [FK_EmployeeLeave_Employee] 
+    FOREIGN KEY ([EmployeeID]) REFERENCES [timesheet].[Employee] ([EmployeeID])
 GO
 
+ALTER TABLE [timesheet].[EmployeeLeave] CHECK CONSTRAINT [FK_EmployeeLeave_Employee]
+GO
 
 -- =============================================
 -- Table: timesheet.Timesheet
@@ -195,49 +236,54 @@ SET QUOTED_IDENTIFIER ON
 GO
 
 CREATE TABLE [timesheet].[Timesheet](
-	[TimesheetID] [bigint] IDENTITY(1,1) NOT NULL,
-	[EmployeeID] [int] NOT NULL,
-	[WorkDate] [date] NOT NULL,
-	[DayOfWeek] [varchar](20) NULL,
-	[WorkDescription] [varchar](500) NULL,
-	[Comments] [varchar](max) NULL,
-	[HoursWorked] [decimal](5, 2) NOT NULL,
-	[StartTime] [time](7) NULL,
-	[EndTime] [time](7) NULL,
-	[ClientID] [int] NULL,
-	[BillableStatus] [varchar](50) NULL,
-PRIMARY KEY CLUSTERED 
-(
-	[TimesheetID] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+    [TimesheetID]     [bigint]          IDENTITY(1,1) NOT NULL,
+    [EmployeeID]      [int]             NOT NULL,
+    [WorkDate]        [date]            NOT NULL,
+    [DayOfWeek]       [varchar](20)     NULL,
+    [WorkDescription] [varchar](500)    NULL,
+    [Comments]        [varchar](max)    NULL,
+    [HoursWorked]     [varchar](5)      NOT NULL,
+    [StartTime]       [time](0)         NULL,
+    [EndTime]         [time](0)         NULL,
+    [ClientID]        [int]             NULL,
+    [BillableStatus]  [varchar](50)     NULL,
+    CONSTRAINT [PK_Timesheet] PRIMARY KEY CLUSTERED (
+        [TimesheetID] ASC
+    ) WITH (
+        PAD_INDEX = OFF, 
+        STATISTICS_NORECOMPUTE = OFF, 
+        IGNORE_DUP_KEY = OFF, 
+        ALLOW_ROW_LOCKS = ON, 
+        ALLOW_PAGE_LOCKS = ON, 
+        OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF
+    ) ON [PRIMARY]
 ) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
 GO
 
-
-ALTER TABLE [timesheet].[Timesheet] WITH CHECK ADD CONSTRAINT [FK_Timesheet_Client] FOREIGN KEY([ClientID])
-REFERENCES [timesheet].[Client] ([ClientID])
+ALTER TABLE [timesheet].[Timesheet] WITH CHECK 
+    ADD CONSTRAINT [FK_Timesheet_Client] 
+    FOREIGN KEY ([ClientID]) REFERENCES [timesheet].[Client] ([ClientID])
 GO
-
 
 ALTER TABLE [timesheet].[Timesheet] CHECK CONSTRAINT [FK_Timesheet_Client]
 GO
 
-ALTER TABLE [timesheet].[Timesheet] WITH CHECK ADD CONSTRAINT [FK_Timesheet_Employee] FOREIGN KEY([EmployeeID])
-REFERENCES [timesheet].[Employee] ([EmployeeID])
+ALTER TABLE [timesheet].[Timesheet] WITH CHECK 
+    ADD CONSTRAINT [FK_Timesheet_Employee] 
+    FOREIGN KEY ([EmployeeID]) REFERENCES [timesheet].[Employee] ([EmployeeID])
 GO
-
 
 ALTER TABLE [timesheet].[Timesheet] CHECK CONSTRAINT [FK_Timesheet_Employee]
 GO
 
-
 -- =============================================
 -- Populate Data
 -- =============================================
+
 -- Insert Employee data
 INSERT INTO [timesheet].[Employee] (FirstName, LastName) 
 VALUES 
-    ('Buhle', 'Mkubha'),
+    ('Buhle', 'Mukhuba'),
     ('Charmane', 'Mchunu'),
     ('Jabulane', 'Poulo'),
     ('Kayden', 'Padayachee'),
@@ -250,20 +296,36 @@ VALUES
 INSERT INTO [timesheet].[Client] (ClientName) 
 VALUES 
     ('Internal Sambe'),
-    ('Discovery');
-
+    ('Discovery'),
+    ('Sanlam');
 
 -- =============================================
 -- Verification Queries
 -- =============================================
 
 -- Verify the data was inserted
-SELECT 'Employee Count' as [Check], COUNT(*) as [Count] FROM [timesheet].[Employee]
+SELECT 
+    'Employee Count' AS [Check], 
+    COUNT(*) AS [Count] 
+FROM [timesheet].[Employee]
 UNION ALL
-SELECT 'Client Count', COUNT(*) FROM [timesheet].[Client];
+SELECT 
+    'Client Count', 
+    COUNT(*) 
+FROM [timesheet].[Client];
 
 -- Show the inserted data
-SELECT 'Employees' as [Table], EmployeeID, FirstName, LastName FROM [timesheet].[Employee]
+SELECT 
+    'Employees' AS [Table], 
+    EmployeeID, 
+    FirstName, 
+    LastName 
+FROM [timesheet].[Employee]
 UNION ALL
-SELECT 'Clients', ClientID, ClientName, '' FROM [timesheet].[Client];
+SELECT 
+    'Clients', 
+    ClientID, 
+    ClientName, 
+    '' 
+FROM [timesheet].[Client];
 GO

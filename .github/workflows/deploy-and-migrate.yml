@@ -137,6 +137,62 @@ jobs:
     - name: Checkout Repository Code
       uses: actions/checkout@v4
  
+    - name: Run Create Database Script (Partner)
+      shell: powershell
+      run: |
+        # Locate the create database SQL script
+        $sqlScriptPath = "${{ github.workspace }}\create_database.sql"
+        
+        # Check if the file exists in the root, try alternative locations if not
+        if (-not (Test-Path -Path $sqlScriptPath)) {
+            Write-Host "Primary path not found. Testing alternate locations..."
+            $sqlScriptPath = "${{ github.workspace }}\database\create_database.sql"
+        }
+        
+        if (-not (Test-Path -Path $sqlScriptPath)) {
+            Write-Host "Warning: create_database.sql not found. Skipping database creation."
+            exit 0
+        }
+        
+        # Read the SQL script content
+        $sqlScript = Get-Content -Path $sqlScriptPath -Raw
+        
+        # Define connection parameters
+        $tunnelAddress = "${{ secrets.SQL_SERVER }},${{ secrets.SQL_PORT }}"
+        $dbUser = "${{ secrets.SQL_USERNAME }}"
+        $dbPassword = "${{ secrets.SQL_PASSWORD }}"
+        $initialDb = "master"
+        
+        # Create connection string
+        $connStr = "Data Source=$tunnelAddress;Initial Catalog=$initialDb;User ID=$dbUser;Password=$dbPassword;TrustServerCertificate=True;Encrypt=False;"
+        $connection = New-Object System.Data.SqlClient.SqlConnection($connStr)
+        
+        try {
+            $connection.Open()
+            Write-Host "Connected to partner database server. Executing database creation script..."
+            
+            # Split the script by GO statements (SQL Server batch separator)
+            $batches = $sqlScript -split "(?m)^\s*GO\s*$"
+            
+            foreach ($batch in $batches) {
+                if ($batch.Trim()) {
+                    $command = $connection.CreateCommand()
+                    $command.CommandText = $batch
+                    $command.CommandTimeout = 300
+                    $command.ExecuteNonQuery() | Out-Null
+                    Write-Host "Executed batch successfully."
+                }
+            }
+            
+            Write-Host "SUCCESS: Database creation script executed on partner server!"
+            
+        } catch {
+            Write-Error "Database creation failed on partner server: $_"
+            exit 1
+        } finally {
+            $connection.Close()
+        }
+ 
     - name: Deploy SSIS and Create Execution Job (Partner)
       shell: powershell
       run: |
