@@ -16,23 +16,6 @@ jobs:
     steps:
     - name: Checkout Repository Code
       uses: actions/checkout@v4
-    - name: Run Database Creation Script (Partner)
-      shell: powershell
-      run: |
-        # STEP 1: LOCATE THE DATABASE CREATION SCRIPT
-        $sqlScriptPath = "${{ github.workspace }}\scripts\create_database.sql"
-        
-        if (-not (Test-Path -Path $sqlScriptPath)) {
-            Write-Host "Primary path not found. Testing alternate path..."
-            $sqlScriptPath = "${{ github.workspace }}\create_database.sql"
-        }
-        
-        if (-not (Test-Path -Path $sqlScriptPath)) {
-            Write-Host "Warning: create_database.sql not found. Skipping database creation."
-            exit 0
-        }
-        
-        Write-Host "Found database creation script at: $sqlScriptPath"
  
     - name: Deploy SSIS and Create Execution Job
       shell: powershell
