@@ -43,17 +43,42 @@ jobs:
         
         Write-Host "Found create_database.sql at: $createDbScript"
         
-        # STEP 3: READ THE SQL SCRIPT AND REMOVE GO STATEMENTS
+        # STEP 3: READ THE SQL SCRIPT
         $sqlScript = Get-Content -Path $createDbScript -Raw
-        # Remove CREATE DATABASE statement if it exists (we'll create it separately)
-        $sqlScript = $sqlScript -replace '(?i)CREATE\s+DATABASE\s+\[.*?\]\s*;', ''
-        # Remove USE DATABASE statement if it exists (we'll set it in connection string)
-        $sqlScript = $sqlScript -replace '(?i)USE\s+\[.*?\]\s*;', ''
-        # Remove GO statements
-        $sqlScript = $sqlScript -replace '(?i)^\s*GO\s*$', ''
-        $sqlScript = $sqlScript -replace '(?i)\r?\n\s*GO\s*\r?\n', "`r`n"
+        Write-Host "Original SQL Script Length: $($sqlScript.Length)"
         
-        # STEP 4: FIRST CREATE THE DATABASE
+        # STEP 4: REMOVE GO STATEMENTS AND CREATE DATABASE/USE STATEMENTS
+        # Split by GO statements and process each part
+        $scriptParts = $sqlScript -split "(?i)^\s*GO\s*$" -match "\S"
+        
+        # Filter out CREATE DATABASE and USE statements
+        $filteredParts = @()
+        foreach ($part in $scriptParts) {
+            # Skip parts that only contain CREATE DATABASE or USE statements
+            $trimmed = $part.Trim()
+            if ($trimmed -match "(?i)^CREATE\s+DATABASE\s+\[.*?\]\s*;?$") {
+                Write-Host "Skipping CREATE DATABASE statement"
+                continue
+            }
+            if ($trimmed -match "(?i)^USE\s+\[.*?\]\s*;?$") {
+                Write-Host "Skipping USE statement"
+                continue
+            }
+            if ($trimmed -ne "") {
+                $filteredParts += $part
+            }
+        }
+        
+        # Join the filtered parts back together
+        $cleanScript = ($filteredParts -join "`r`n`r`n").Trim()
+        Write-Host "Cleaned SQL Script Length: $($cleanScript.Length)"
+        
+        if ($cleanScript.Length -eq 0) {
+            Write-Host "WARNING: No SQL commands found after filtering. Skipping schema creation."
+            exit 0
+        }
+        
+        # STEP 5: FIRST CREATE THE DATABASE
         Write-Host "Creating database $targetDb on Local Server..."
         
         $connStr = "Data Source=$tunnelAddress;Initial Catalog=$initialDb;User ID=$dbUser;Password=$dbPassword;TrustServerCertificate=True;Encrypt=False;"
@@ -64,25 +89,20 @@ jobs:
             
             # Create the database
             $createDbCmd = $connection.CreateCommand()
-            $createDbCmd.CommandText = "CREATE DATABASE [$targetDb];"
+            $createDbCmd.CommandText = "IF NOT EXISTS (SELECT name FROM sys.databases WHERE name = N'$targetDb') CREATE DATABASE [$targetDb];"
             $createDbCmd.CommandTimeout = 60
             $createDbCmd.ExecuteNonQuery() | Out-Null
             
-            Write-Host "Database $targetDb created successfully!"
+            Write-Host "Database $targetDb is ready!"
             
         } catch {
-            # Check if database already exists
-            if ($_.Exception.Message -match "already exists") {
-                Write-Host "Database $targetDb already exists. Continuing..."
-            } else {
-                Write-Error "Failed to create database: $_"
-                exit 1
-            }
+            Write-Error "Failed to create/verify database: $_"
+            exit 1
         } finally {
             $connection.Close()
         }
         
-        # STEP 5: EXECUTE THE SCRIPT IN THE TARGET DATABASE
+        # STEP 6: EXECUTE THE SCRIPT IN THE TARGET DATABASE
         Write-Host "Creating tables and schema in $targetDb on Local Server..."
         
         $connStr = "Data Source=$tunnelAddress;Initial Catalog=$targetDb;User ID=$dbUser;Password=$dbPassword;TrustServerCertificate=True;Encrypt=False;"
@@ -91,18 +111,25 @@ jobs:
         try {
             $connection.Open()
             
-            # Execute the entire script as one batch
-            $command = $connection.CreateCommand()
-            $command.CommandText = $sqlScript
-            $command.CommandTimeout = 120
-            $command.ExecuteNonQuery() | Out-Null
+            # Execute each batch separately
+            $batches = $cleanScript -split "(?i)\s*GO\s*" | Where-Object { $_.Trim() -ne "" }
+            
+            foreach ($batch in $batches) {
+                if ($batch.Trim() -ne "") {
+                    $command = $connection.CreateCommand()
+                    $command.CommandText = $batch.Trim()
+                    $command.CommandTimeout = 120
+                    $command.ExecuteNonQuery() | Out-Null
+                    Write-Host "Executed batch successfully."
+                }
+            }
             
             Write-Host "SUCCESS: Database schema and tables created successfully on Local Server!"
             
         } catch {
             Write-Error "Local Database Schema Creation Failed: $_"
             Write-Host "SQL Script that was attempted:"
-            Write-Host $sqlScript
+            Write-Host $cleanScript.Substring(0, [Math]::Min(1000, $cleanScript.Length))
             exit 1
         } finally {
             $connection.Close()
@@ -256,17 +283,42 @@ jobs:
         
         Write-Host "Found create_database.sql at: $createDbScript"
         
-        # STEP 3: READ THE SQL SCRIPT AND REMOVE GO STATEMENTS
+        # STEP 3: READ THE SQL SCRIPT
         $sqlScript = Get-Content -Path $createDbScript -Raw
-        # Remove CREATE DATABASE statement if it exists (we'll create it separately)
-        $sqlScript = $sqlScript -replace '(?i)CREATE\s+DATABASE\s+\[.*?\]\s*;', ''
-        # Remove USE DATABASE statement if it exists (we'll set it in connection string)
-        $sqlScript = $sqlScript -replace '(?i)USE\s+\[.*?\]\s*;', ''
-        # Remove GO statements
-        $sqlScript = $sqlScript -replace '(?i)^\s*GO\s*$', ''
-        $sqlScript = $sqlScript -replace '(?i)\r?\n\s*GO\s*\r?\n', "`r`n"
+        Write-Host "Original SQL Script Length: $($sqlScript.Length)"
         
-        # STEP 4: FIRST CREATE THE DATABASE
+        # STEP 4: REMOVE GO STATEMENTS AND CREATE DATABASE/USE STATEMENTS
+        # Split by GO statements and process each part
+        $scriptParts = $sqlScript -split "(?i)^\s*GO\s*$" -match "\S"
+        
+        # Filter out CREATE DATABASE and USE statements
+        $filteredParts = @()
+        foreach ($part in $scriptParts) {
+            # Skip parts that only contain CREATE DATABASE or USE statements
+            $trimmed = $part.Trim()
+            if ($trimmed -match "(?i)^CREATE\s+DATABASE\s+\[.*?\]\s*;?$") {
+                Write-Host "Skipping CREATE DATABASE statement"
+                continue
+            }
+            if ($trimmed -match "(?i)^USE\s+\[.*?\]\s*;?$") {
+                Write-Host "Skipping USE statement"
+                continue
+            }
+            if ($trimmed -ne "") {
+                $filteredParts += $part
+            }
+        }
+        
+        # Join the filtered parts back together
+        $cleanScript = ($filteredParts -join "`r`n`r`n").Trim()
+        Write-Host "Cleaned SQL Script Length: $($cleanScript.Length)"
+        
+        if ($cleanScript.Length -eq 0) {
+            Write-Host "WARNING: No SQL commands found after filtering. Skipping schema creation."
+            exit 0
+        }
+        
+        # STEP 5: FIRST CREATE THE DATABASE
         Write-Host "Creating database $targetDb on Partner Server..."
         
         $connStr = "Data Source=$tunnelAddress;Initial Catalog=$initialDb;User ID=$dbUser;Password=$dbPassword;TrustServerCertificate=True;Encrypt=False;"
@@ -277,25 +329,20 @@ jobs:
             
             # Create the database
             $createDbCmd = $connection.CreateCommand()
-            $createDbCmd.CommandText = "CREATE DATABASE [$targetDb];"
+            $createDbCmd.CommandText = "IF NOT EXISTS (SELECT name FROM sys.databases WHERE name = N'$targetDb') CREATE DATABASE [$targetDb];"
             $createDbCmd.CommandTimeout = 60
             $createDbCmd.ExecuteNonQuery() | Out-Null
             
-            Write-Host "Database $targetDb created successfully!"
+            Write-Host "Database $targetDb is ready!"
             
         } catch {
-            # Check if database already exists
-            if ($_.Exception.Message -match "already exists") {
-                Write-Host "Database $targetDb already exists. Continuing..."
-            } else {
-                Write-Error "Failed to create database: $_"
-                exit 1
-            }
+            Write-Error "Failed to create/verify database: $_"
+            exit 1
         } finally {
             $connection.Close()
         }
         
-        # STEP 5: EXECUTE THE SCRIPT IN THE TARGET DATABASE
+        # STEP 6: EXECUTE THE SCRIPT IN THE TARGET DATABASE
         Write-Host "Creating tables and schema in $targetDb on Partner Server..."
         
         $connStr = "Data Source=$tunnelAddress;Initial Catalog=$targetDb;User ID=$dbUser;Password=$dbPassword;TrustServerCertificate=True;Encrypt=False;"
@@ -304,18 +351,25 @@ jobs:
         try {
             $connection.Open()
             
-            # Execute the entire script as one batch
-            $command = $connection.CreateCommand()
-            $command.CommandText = $sqlScript
-            $command.CommandTimeout = 120
-            $command.ExecuteNonQuery() | Out-Null
+            # Execute each batch separately
+            $batches = $cleanScript -split "(?i)\s*GO\s*" | Where-Object { $_.Trim() -ne "" }
+            
+            foreach ($batch in $batches) {
+                if ($batch.Trim() -ne "") {
+                    $command = $connection.CreateCommand()
+                    $command.CommandText = $batch.Trim()
+                    $command.CommandTimeout = 120
+                    $command.ExecuteNonQuery() | Out-Null
+                    Write-Host "Executed batch successfully."
+                }
+            }
             
             Write-Host "SUCCESS: Database schema and tables created successfully on Partner Server!"
             
         } catch {
             Write-Error "Partner Database Schema Creation Failed: $_"
             Write-Host "SQL Script that was attempted:"
-            Write-Host $sqlScript
+            Write-Host $cleanScript.Substring(0, [Math]::Min(1000, $cleanScript.Length))
             exit 1
         } finally {
             $connection.Close()
