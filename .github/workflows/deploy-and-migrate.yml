@@ -370,7 +370,7 @@ jobs:
  
             EXEC dbo.sp_start_job @job_name = N'$executionJobName';
             WAITFOR DELAY '00:00:05';
-'@
+        '@
  
             # Safe string replacements handled strictly at execution runtime
             $sqlQuery = $sqlQuery.Replace('$targetFolder', $targetFolder)
