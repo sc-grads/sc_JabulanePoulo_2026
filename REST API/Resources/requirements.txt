@@ -2,4 +2,4 @@ flask
 flask-smorest
 python-dotenv
 sqlalchemy
-fask-sqlalchemy
+flask-sqlalchemy

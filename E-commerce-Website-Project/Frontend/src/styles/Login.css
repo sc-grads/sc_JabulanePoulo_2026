@@ -1,0 +1,22 @@
+.form-row-between {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.25rem;
+}
+
+.forgot-link {
+  font-size: 0.8125rem;
+  color: #2E5D3A;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.forgot-link:hover {
+  color: #244A2E;
+}
+.google-login-wrapper {
+  display: flex;
+  justify-content: center;
+  margin: 0.6rem 0;
+}

@@ -1,0 +1,135 @@
+.confirm2-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 15, 26, 0.55);
+  backdrop-filter: blur(2px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2400;
+  padding: 1rem;
+}
+
+.confirm2-modal {
+  position: relative;
+  background: #fff;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 420px;
+  padding: 2rem 1.8rem 1.6rem;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: confirmIn 0.2s ease;
+}
+
+@keyframes confirmIn {
+  from { opacity: 0; transform: translateY(12px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.confirm2-close {
+  position: absolute;
+  top: 0.9rem;
+  right: 0.9rem;
+  background: transparent;
+  border: none;
+  color: #888;
+  cursor: pointer;
+  padding: 0.3rem;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+}
+
+.confirm2-close:hover {
+  background: #f4f2ff;
+  color: #5b4bdb;
+}
+
+.confirm2-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0 auto 1rem;
+}
+
+.confirm2-icon.danger {
+  background: #ffe9ec;
+  color: #c20017;
+}
+
+.confirm2-icon.warning {
+  background: #fff4d9;
+  color: #a06a00;
+}
+
+.confirm2-icon.info {
+  background: #e6e0ff;
+  color: #4a3bc0;
+}
+
+.confirm2-title {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #1a1a2e;
+  margin: 0 0 0.5rem;
+}
+
+.confirm2-message {
+  color: #666;
+  font-size: 0.92rem;
+  line-height: 1.55;
+  margin: 0 0 1.5rem;
+}
+
+.confirm2-actions {
+  display: flex;
+  gap: 0.7rem;
+}
+
+.confirm2-actions button {
+  flex: 1;
+  padding: 0.8rem;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 0.92rem;
+  cursor: pointer;
+  border: none;
+  font-family: inherit;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.confirm2-actions button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.confirm2-cancel {
+  background: #eee;
+  color: #333;
+}
+
+.confirm2-cancel:hover:not(:disabled) {
+  background: #ddd;
+}
+
+.confirm2-confirm.danger {
+  background: #eb001b;
+  color: #fff;
+}
+
+.confirm2-confirm.danger:hover:not(:disabled) {
+  background: #c20017;
+}
+
+.confirm2-confirm.info {
+  background: #5b4bdb;
+  color: #fff;
+}
+
+.confirm2-confirm.info:hover:not(:disabled) {
+  background: #4a3bc0;
+}

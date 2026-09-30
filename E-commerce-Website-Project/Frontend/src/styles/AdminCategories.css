@@ -1,0 +1,199 @@
+.admin-page {
+  min-height: 100vh;
+  background: #f7f7fb;
+  font-family: 'Poppins', sans-serif;
+}
+
+.admin-content {
+  max-width: 900px;
+  margin: 2rem auto;
+  padding: 0 1.5rem;
+}
+
+.admin-content h1 { font-size: 2rem; margin-bottom: 0.3rem; }
+.welcome { color: #666; margin-bottom: 2rem; }
+
+.admin-section {
+  background: #fff;
+  padding: 1.5rem;
+  border-radius: 12px;
+  margin-bottom: 2rem;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.admin-section h2 {
+  font-size: 1.2rem;
+  margin-bottom: 1rem;
+}
+
+.category-form {
+  display: flex;
+  gap: 0.8rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.category-form input {
+  flex: 1;
+  min-width: 240px;
+  padding: 0.75rem 1rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 0.95rem;
+}
+
+.category-form input:focus {
+  outline: none;
+  border-color: #5b4bdb;
+  box-shadow: 0 0 0 3px rgba(91, 75, 219, 0.12);
+}
+
+.category-form button[type="submit"] {
+  background: #5b4bdb;
+  color: #fff;
+  border: none;
+  padding: 0.75rem 1.6rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.category-form button[type="submit"]:hover {
+  background: #4a3bc0;
+}
+
+.category-form button[type="submit"]:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.category-form .cancel-btn {
+  background: #eee;
+  color: #333;
+  border: none;
+  padding: 0.75rem 1.4rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+.admin-table th,
+.admin-table td {
+  padding: 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid #eee;
+}
+.admin-table th {
+  background: #f4f2ff;
+  font-weight: 700;
+}
+.admin-table .editing-row {
+  background: #fff8e1;
+}
+
+.actions-cell {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.admin-table .edit {
+  background: #e6e0ff;
+  color: #4a3bc0;
+  border: none;
+  padding: 0.4rem 0.9rem;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+.admin-table .edit:hover {
+  background: #5b4bdb;
+  color: #fff;
+}
+
+.admin-table .danger {
+  background: #ffe9ec;
+  color: #c20017;
+  border: none;
+  padding: 0.4rem 0.9rem;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.admin-table .danger:hover {
+  background: #eb001b;
+  color: #fff;
+}
+/* =================================
+   PAGINATION
+================================= */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.page-dots {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.page-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: none;
+  background: #d6d3f0;
+  cursor: pointer;
+  padding: 0;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.page-dot:hover {
+  background: #a59cdd;
+  transform: scale(1.15);
+}
+
+.page-dot.active {
+  background: #5b4bdb;
+  transform: scale(1.35);
+  box-shadow: 0 0 0 4px rgba(91, 75, 219, 0.15);
+}
+
+.page-arrow {
+  background: #fff;
+  border: 1px solid #e0e0ec;
+  color: #5b4bdb;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.page-arrow:hover:not(:disabled) {
+  background: #5b4bdb;
+  color: #fff;
+  border-color: #5b4bdb;
+}
+
+.page-arrow:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}

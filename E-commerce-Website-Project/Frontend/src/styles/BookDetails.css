@@ -1,0 +1,236 @@
+.book-details-page {
+  min-height: 100vh;
+  background: #f7f7fb;
+  font-family: 'Poppins', sans-serif;
+}
+
+.book-details-content {
+  max-width: 1000px;
+  margin: 2rem auto;
+  padding: 0 1.5rem;
+}
+
+/* TOP: image + info */
+.book-details-top {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 2.5rem;
+  background: #fff;
+  padding: 2rem;
+  border-radius: 16px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.05);
+  margin-bottom: 2rem;
+}
+
+.book-details-image {
+  position: relative;   /* needed for the wishlist heart */
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #eef0ff;
+}
+
+.book-details-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.book-details-info h1 {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: #1a1a2e;
+  margin: 0 0 0.4rem;
+  line-height: 1.2;
+}
+
+.book-details-author {
+  color: #777;
+  font-size: 1rem;
+  margin-bottom: 1rem;
+}
+
+.book-details-rating {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 1rem;
+  font-size: 0.95rem;
+}
+
+.book-details-rating strong {
+  color: #1a1a2e;
+}
+
+.book-details-rating .rating-count {
+  color: #888;
+  font-weight: 500;
+}
+
+.book-details-rating .no-rating {
+  color: #b0b0b8;
+  font-style: italic;
+  font-size: 0.9rem;
+}
+
+.book-details-price {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: #5b4bdb;
+  margin: 0.5rem 0;
+}
+
+.book-details-stock {
+  color: #666;
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+}
+
+.book-details-description {
+  color: #555;
+  line-height: 1.65;
+  margin-bottom: 1.5rem;
+}
+
+.add-to-cart-btn {
+  background: #5b4bdb;
+  color: #fff;
+  border: none;
+  padding: 0.9rem 2rem;
+  border-radius: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  font-size: 1rem;
+  font-family: inherit;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.add-to-cart-btn:hover:not(:disabled) {
+  background: #4a3bc0;
+  transform: translateY(-1px);
+}
+
+.add-to-cart-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+.cart-toast {
+  margin-top: 0.6rem;
+  font-size: 0.85rem;
+  color: #5b4bdb;
+  font-weight: 600;
+}
+
+/* BOTTOM: reviews */
+.book-details-reviews {
+  background: #fff;
+  padding: 2rem;
+  border-radius: 16px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.05);
+}
+
+.book-details-reviews h2 {
+  font-size: 1.3rem;
+  margin: 0 0 1.5rem;
+  color: #1a1a2e;
+}
+
+.book-details-reviews h2 span {
+  color: #888;
+  font-weight: 500;
+  font-size: 1rem;
+}
+
+.no-reviews-msg {
+  color: #888;
+  font-style: italic;
+  padding: 1rem 0;
+  text-align: center;
+}
+
+.reviews-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.review-card {
+  border: 1px solid #f0f0f5;
+  border-radius: 12px;
+  padding: 1.2rem;
+  transition: border-color 0.2s ease;
+}
+
+.review-card:hover {
+  border-color: #e6e0ff;
+}
+
+.review-card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  margin-bottom: 0.8rem;
+  flex-wrap: wrap;
+}
+
+.review-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #5b4bdb 0%, #8a7cf5 100%);
+  color: #fff;
+  font-weight: 800;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.review-meta {
+  flex: 1;
+  min-width: 120px;
+}
+
+.review-name {
+  font-weight: 700;
+  color: #1a1a2e;
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+.review-date {
+  font-size: 0.78rem;
+  color: #999;
+  margin: 0.15rem 0 0;
+}
+
+.review-stars {
+  display: flex;
+  gap: 0.1rem;
+}
+
+.review-comment {
+  color: #444;
+  line-height: 1.6;
+  font-size: 0.92rem;
+  margin: 0;
+}
+
+.review-comment.empty {
+  color: #aaa;
+  font-style: italic;
+}
+
+@media (max-width: 700px) {
+  .book-details-top {
+    grid-template-columns: 1fr;
+  }
+
+  .book-details-image {
+    max-width: 220px;
+    margin: 0 auto;
+  }
+}

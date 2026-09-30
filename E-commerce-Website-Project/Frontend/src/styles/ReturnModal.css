@@ -1,0 +1,155 @@
+.return-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 15, 26, 0.55);
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  padding: 1rem;
+}
+
+.return-modal {
+  background: #fff;
+  border-radius: 16px;
+  padding: 1.8rem;
+  width: 100%;
+  max-width: 460px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: returnIn 0.2s ease;
+}
+
+@keyframes returnIn {
+  from { opacity: 0; transform: translateY(12px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.return-header {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.5rem;
+}
+
+.return-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: #e6e0ff;
+  color: #4a3bc0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.return-header h2 {
+  flex: 1;
+  font-size: 1.15rem;
+  margin: 0;
+  color: #1a1a2e;
+}
+
+.return-close {
+  background: transparent;
+  border: none;
+  color: #666;
+  cursor: pointer;
+  padding: 0.3rem;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+}
+
+.return-close:hover {
+  background: #f4f2ff;
+  color: #5b4bdb;
+}
+
+.return-subtitle {
+  color: #888;
+  font-size: 0.85rem;
+  margin: 0 0 1.2rem;
+}
+
+.return-subtitle strong {
+  color: #1a1a2e;
+}
+
+.return-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.return-form label {
+  font-size: 0.85rem;
+  color: #555;
+  font-weight: 600;
+}
+
+.return-form textarea {
+  width: 100%;
+  padding: 0.85rem;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 0.9rem;
+  resize: vertical;
+  min-height: 90px;
+}
+
+.return-form textarea:focus {
+  outline: none;
+  border-color: #5b4bdb;
+  box-shadow: 0 0 0 3px rgba(91, 75, 219, 0.12);
+}
+
+.return-actions {
+  display: flex;
+  gap: 0.7rem;
+  margin-top: 0.6rem;
+}
+
+.return-actions button {
+  flex: 1;
+  padding: 0.8rem;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 0.92rem;
+  cursor: pointer;
+  border: none;
+  font-family: inherit;
+  transition: background 0.2s ease;
+}
+
+.return-actions .cancel-btn {
+  background: #eee;
+  color: #333;
+}
+
+.return-actions .cancel-btn:hover:not(:disabled) {
+  background: #ddd;
+}
+
+.return-actions .submit-btn {
+  background: #5b4bdb;
+  color: #fff;
+}
+
+.return-actions .submit-btn:hover:not(:disabled) {
+  background: #4a3bc0;
+}
+
+.return-actions button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.form-error {
+  color: #eb001b;
+  font-size: 0.85rem;
+  font-weight: 500;
+  margin: 0;
+}

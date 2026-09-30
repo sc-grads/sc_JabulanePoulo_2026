@@ -1,0 +1,177 @@
+.books-page {
+  min-height: 100vh;
+  background: #f7f7fb;
+  font-family: 'Poppins', sans-serif;
+}
+
+.books-page-content {
+  max-width: 1200px;
+  margin: 2rem auto;
+  padding: 0 1.5rem;
+}
+
+.books-page-content h1 {
+  font-size: 2rem;
+  color: #1a1a2e;
+  margin-bottom: 0.3rem;
+}
+
+.books-page-content .subtitle {
+  color: #666;
+  margin-bottom: 1.5rem;
+}
+
+.back-btn {
+  background: transparent;
+  border: 2px solid #5b4bdb;
+  color: #5b4bdb;
+  padding: 0.5rem 1.2rem;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+.back-btn:hover {
+  background: #5b4bdb;
+  color: #fff;
+}
+
+/* FILTER BAR */
+.filter-bar {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 0.8fr 0.8fr auto auto;
+  gap: 0.6rem;
+  background: #fff;
+  padding: 1rem;
+  border-radius: 12px;
+  margin-bottom: 2rem;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.filter-bar input,
+.filter-bar select {
+  padding: 0.6rem 0.8rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 0.88rem;
+  background: #fff;
+}
+
+.filter-bar button {
+  background: #5b4bdb;
+  color: #fff;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 0.88rem;
+}
+
+.filter-bar .reset {
+  background: #eee;
+  color: #333;
+}
+
+.books-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1.8rem;
+}
+
+/* Reuse the book-card styles you already have in Home.css.
+   If they don't apply, add them here too — but Home.css should
+   be loaded because Home.jsx imports it. If not, copy the
+   .book-card rules from Home.css into Books.css. */
+
+.no-results,
+.loading-text {
+  text-align: center;
+  color: #888;
+  padding: 3rem 0;
+  font-size: 1rem;
+}
+
+.cart-toast {
+  margin-top: 0.5rem;
+  font-size: 0.8rem;
+  color: #5b4bdb;
+  font-weight: 600;
+}
+
+@media (max-width: 900px) {
+  .filter-bar {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+@media (max-width: 500px) {
+  .filter-bar {
+    grid-template-columns: 1fr;
+  }
+}
+/* =================================
+   PAGINATION
+================================= */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  margin: 3rem 0 1rem;
+}
+
+.page-dots {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.page-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: none;
+  background: #d6d3f0;
+  cursor: pointer;
+  padding: 0;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.page-dot:hover {
+  background: #a59cdd;
+  transform: scale(1.15);
+}
+
+.page-dot.active {
+  background: #5b4bdb;
+  transform: scale(1.35);
+  box-shadow: 0 0 0 4px rgba(91, 75, 219, 0.15);
+}
+
+.page-arrow {
+  background: #fff;
+  border: 1px solid #e0e0ec;
+  color: #5b4bdb;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.page-arrow:hover:not(:disabled) {
+  background: #5b4bdb;
+  color: #fff;
+  border-color: #5b4bdb;
+}
+
+.page-arrow:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}

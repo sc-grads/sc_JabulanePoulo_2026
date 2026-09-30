@@ -1,0 +1,76 @@
+.success-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 15, 26, 0.55);
+  backdrop-filter: blur(2px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2200;
+  padding: 1rem;
+}
+
+.success-modal {
+  background: #fff;
+  border-radius: 20px;
+  width: 100%;
+  max-width: 400px;
+  padding: 2.5rem 2rem;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: modalIn 0.25s ease;
+}
+
+@keyframes modalIn {
+  from { opacity: 0; transform: translateY(12px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.success-icon {
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  background: #d4edda;
+  color: #155724;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0 auto 1.2rem;
+}
+
+.success-modal h2 {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: #1a1a2e;
+  margin: 0 0 0.6rem;
+}
+
+.success-msg {
+  color: #666;
+  font-size: 0.92rem;
+  line-height: 1.55;
+  margin-bottom: 1.6rem;
+}
+
+.success-msg strong {
+  color: #5b4bdb;
+}
+
+.success-btn {
+  background: #5b4bdb;
+  color: #fff;
+  border: none;
+  padding: 0.9rem 2rem;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.2s ease, transform 0.15s ease;
+  width: 100%;
+}
+
+.success-btn:hover {
+  background: #4a3bc0;
+  transform: translateY(-1px);
+}
