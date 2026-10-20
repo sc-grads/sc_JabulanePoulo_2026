@@ -17,6 +17,12 @@ import ResetPassword from './pages/ResetPassword'
 import AdminReviews from './pages/AdminReviews'
 import Wishlist from './pages/Wishlist'
 import AdminReturns from './pages/AdminReturns'
+import About from './pages/About'
+import Feedback from './pages/Feedback'
+import RequestBook from './pages/RequestBook'
+import AdminBookRequests from './pages/AdminBookRequests'
+import AdminFeedback from './pages/AdminFeedback'
+import AdminAnalytics from './pages/AdminAnalytics'
 
 function App() {
   return (
@@ -41,6 +47,12 @@ function App() {
         <Route path="/admin/reviews" element={<AdminReviews />} />
         <Route path="/wishlist" element={<Wishlist />} />
         <Route path="/admin/returns" element={<AdminReturns />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/feedback" element={<Feedback />} />
+        <Route path="/request-book" element={<RequestBook />} />
+        <Route path="/admin/book-requests" element={<AdminBookRequests />} />
+        <Route path="/admin/feedback" element={<AdminFeedback />} />
+        <Route path="/admin/analytics" element={<AdminAnalytics />} />
       </Routes>
     </BrowserRouter>
   )

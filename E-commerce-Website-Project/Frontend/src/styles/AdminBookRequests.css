@@ -1,0 +1,208 @@
+.admin-page {
+  min-height: 100vh;
+  background: #f7f7fb;
+  font-family: 'Poppins', sans-serif;
+}
+
+.admin-content {
+  max-width: 1000px;
+  margin: 2rem auto;
+  padding: 0 1.5rem;
+}
+
+.admin-page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 2rem;
+}
+
+.admin-page-header h1 {
+  font-size: 1.8rem;
+  margin: 0 0 0.2rem;
+  font-weight: 800;
+}
+
+.welcome { color: #666; font-size: 0.9rem; margin: 0; }
+
+.admin-stat-card {
+  background: linear-gradient(135deg, #5b4bdb 0%, #8a7cf5 100%);
+  color: #fff;
+  padding: 0.9rem 1.4rem;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 130px;
+  box-shadow: 0 8px 24px rgba(91, 75, 219, 0.25);
+}
+
+.stat-value { font-size: 1.6rem; font-weight: 800; line-height: 1; }
+.stat-label {
+  font-size: 0.72rem;
+  opacity: 0.9;
+  margin-top: 0.2rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.reviews-tabs {
+  display: flex;
+  gap: 0.4rem;
+  margin-bottom: 1.5rem;
+  background: #fff;
+  padding: 0.4rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+  flex-wrap: wrap;
+}
+
+.reviews-tab {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+  background: transparent;
+  border: none;
+  padding: 0.7rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #666;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.reviews-tab:hover { background: #f4f2ff; }
+.reviews-tab.active { background: #5b4bdb; color: #fff; }
+
+.tab-count {
+  background: rgba(0, 0, 0, 0.08);
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.reviews-tab.active .tab-count {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.req-admin-card {
+  background: #fff;
+  padding: 1.4rem;
+  border-radius: 12px;
+  margin-bottom: 1rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  border-left: 4px solid #5b4bdb;
+}
+
+.req-admin-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 0.4rem;
+}
+
+.req-admin-head h3 {
+  font-size: 1.1rem;
+  margin: 0;
+  color: #1a1a2e;
+}
+
+.req-admin-author { color: #888; font-size: 0.85rem; margin: 0.15rem 0; }
+.req-admin-isbn { color: #999; font-size: 0.78rem; margin: 0.15rem 0; }
+.req-admin-customer {
+  color: #4a3bc0;
+  font-size: 0.88rem;
+  font-weight: 600;
+  margin: 0.4rem 0;
+}
+.req-admin-notes, .req-admin-note {
+  background: #faf9ff;
+  padding: 0.7rem 0.9rem;
+  border-radius: 8px;
+  margin: 0.5rem 0;
+  font-size: 0.85rem;
+}
+.req-admin-notes strong, .req-admin-note strong {
+  color: #888;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: block;
+  margin-bottom: 0.2rem;
+}
+.req-admin-notes p, .req-admin-note p { margin: 0; color: #444; }
+.req-admin-date { font-size: 0.78rem; color: #999; margin: 0.4rem 0 0.8rem; }
+
+.req-admin-actions {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.req-admin-actions button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.55rem 1.1rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.82rem;
+  cursor: pointer;
+  border: none;
+  font-family: inherit;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.approve-btn { background: #e6f0ff; color: #004085; }
+.approve-btn:hover { background: #004085; color: #fff; }
+.add-btn { background: #d4edda; color: #155724; }
+.add-btn:hover { background: #2fa55a; color: #fff; }
+.reject-btn { background: #ffe9ec; color: #c20017; }
+.reject-btn:hover { background: #eb001b; color: #fff; }
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+.page-dots { display: flex; align-items: center; gap: 0.5rem; }
+.page-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: none;
+  background: #d6d3f0;
+  cursor: pointer;
+  padding: 0;
+}
+.page-dot:hover { background: #a59cdd; }
+.page-dot.active { background: #5b4bdb; transform: scale(1.35); }
+.page-arrow {
+  background: #fff;
+  border: 1px solid #e0e0ec;
+  color: #5b4bdb;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+}
+.page-arrow:hover:not(:disabled) { background: #5b4bdb; color: #fff; }
+.page-arrow:disabled { opacity: 0.35; cursor: not-allowed; }
+
+.loading-text, .no-results {
+  text-align: center;
+  color: #888;
+  padding: 2rem 0;
+}

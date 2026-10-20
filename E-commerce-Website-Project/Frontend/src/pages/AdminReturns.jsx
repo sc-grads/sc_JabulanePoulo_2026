@@ -63,7 +63,7 @@ function AdminReturns() {
     setResolving(true);
     try {
       await returnService.resolveReturn(resolveTarget.return_id, resolveTarget.action, "");
-      showToast(resolveTarget.action === "approve" ? "Return approved ✓" : "Return rejected");
+      showToast(resolveTarget.action === "approve" ? "Return approved " : "Return rejected");
       setResolveTarget(null);
       loadReturns(tab, page);
     } catch (err) { showToast(err.message, "error"); }

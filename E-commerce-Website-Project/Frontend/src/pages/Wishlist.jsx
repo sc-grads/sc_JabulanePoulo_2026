@@ -61,7 +61,7 @@ function Wishlist() {
   const handleAddToCart = async (book) => {
     try {
       await cartService.addItem(book.book_id, 1);
-      showToast(`"${book.title}" added to cart ✓`);
+      showToast(`"${book.title}" added to cart `);
       window.dispatchEvent(new Event("cart-updated"));
     } catch (err) { showToast(err.message, "error"); }
   };

@@ -1,3 +1,6 @@
+/* =================================
+   BOOKS PAGE
+================================= */
 .books-page {
   min-height: 100vh;
   background: #f7f7fb;
@@ -21,69 +24,173 @@
   margin-bottom: 1.5rem;
 }
 
-.back-btn {
-  background: transparent;
-  border: 2px solid #5b4bdb;
-  color: #5b4bdb;
-  padding: 0.5rem 1.2rem;
-  border-radius: 10px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.25s ease;
-}
-.back-btn:hover {
-  background: #5b4bdb;
-  color: #fff;
-}
-
-/* FILTER BAR */
+/* ==========================================
+   FILTER BAR
+========================================== */
 .filter-bar {
-  display: grid;
-  grid-template-columns: 2fr 1fr 1fr 0.8fr 0.8fr auto auto;
-  gap: 0.6rem;
   background: #fff;
-  padding: 1rem;
-  border-radius: 12px;
+  border-radius: 16px;
+  padding: 1.2rem;
   margin-bottom: 2rem;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+/* Search row — full width */
+.filter-search-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: #ffffff;
+  border: 2px solid #5b4bdb;              /* bold purple border */
+  border-radius: 12px;
+  padding: 0.3rem 0.8rem 0.3rem 1.1rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+  box-shadow: 0 2px 8px rgba(91, 75, 219, 0.1);
 }
 
-.filter-bar input,
-.filter-bar select {
-  padding: 0.6rem 0.8rem;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  font-family: inherit;
-  font-size: 0.88rem;
+.filter-search-row:hover {
+  border-color: #4a3bc0;
+  box-shadow: 0 4px 14px rgba(91, 75, 219, 0.18);
+}
+
+.filter-search-row:focus-within {
+  border-color: #4a3bc0;
   background: #fff;
+  box-shadow: 0 0 0 4px rgba(91, 75, 219, 0.2);
 }
 
-.filter-bar button {
+.filter-search-row .search-icon {
+  color: #5b4bdb;                          /* purple icon to match border */
+  flex-shrink: 0;
+  margin-right: 0.6rem;
+}
+
+.filter-search-row input {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  padding: 0.85rem 0;
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #1a1a2e;
+}
+
+.filter-search-row input::placeholder {
+  color: #8a8a9e;
+  font-weight: 500;
+}
+
+/* Second row — dropdowns + price + buttons */
+.filter-controls-row {
+  display: grid;
+  grid-template-columns: 1.3fr 1.3fr 1fr 1fr auto auto;
+  gap: 0.6rem;
+  align-items: center;
+}
+
+.filter-controls-row select,
+.filter-controls-row input[type="number"] {
+  width: 100%;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid #e0e0ec;
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 0.9rem;
+  color: #1a1a2e;
+  background: #fff;
+  cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 0.9rem center;
+  background-size: 12px;
+  padding-right: 2.2rem;
+}
+
+.filter-controls-row input[type="number"] {
+  background-image: none;
+  padding-right: 0.9rem;
+  cursor: text;
+}
+
+.filter-controls-row input[type="number"]::-webkit-outer-spin-button,
+.filter-controls-row input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.filter-controls-row input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+.filter-controls-row select:focus,
+.filter-controls-row input[type="number"]:focus {
+  outline: none;
+  border-color: #5b4bdb;
+  box-shadow: 0 0 0 3px rgba(91, 75, 219, 0.12);
+}
+
+/* Make Min/Max placeholders look like normal text */
+.filter-controls-row input[type="number"]::placeholder {
+  color: #1a1a2e;      /* same as the dropdowns */
+  opacity: 1;          /* Firefox dims placeholders by default */
+}
+
+.filter-controls-row input[type="number"]::-webkit-input-placeholder {
+  color: #1a1a2e;
+  opacity: 1;
+}
+
+.filter-controls-row input[type="number"]::-moz-placeholder {
+  color: #1a1a2e;
+  opacity: 1;
+}
+
+.filter-controls-row button {
+  padding: 0.75rem 1.4rem;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+  font-family: inherit;
+  border: none;
+  transition: background 0.2s ease, transform 0.15s ease;
+  white-space: nowrap;
+}
+
+.filter-controls-row .apply-btn {
   background: #5b4bdb;
   color: #fff;
-  border: none;
-  padding: 0.6rem 1.2rem;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
-  font-size: 0.88rem;
 }
 
-.filter-bar .reset {
-  background: #eee;
-  color: #333;
+.filter-controls-row .apply-btn:hover {
+  background: #4a3bc0;
+  transform: translateY(-1px);
 }
 
+.filter-controls-row .reset-btn {
+  background: #f0f0f5;
+  color: #555;
+}
+
+.filter-controls-row .reset-btn:hover {
+  background: #e5e5ee;
+  color: #1a1a2e;
+}
+
+/* ==========================================
+   BOOKS GRID
+========================================== */
 .books-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 1.8rem;
 }
-
-/* Reuse the book-card styles you already have in Home.css.
-   If they don't apply, add them here too — but Home.css should
-   be loaded because Home.jsx imports it. If not, copy the
-   .book-card rules from Home.css into Books.css. */
 
 .no-results,
 .loading-text {
@@ -93,26 +200,16 @@
   font-size: 1rem;
 }
 
-.cart-toast {
-  margin-top: 0.5rem;
-  font-size: 0.8rem;
-  color: #5b4bdb;
-  font-weight: 600;
+.form-error {
+  text-align: center;
+  color: #eb001b;
+  padding: 1.5rem 0;
+  font-weight: 500;
 }
 
-@media (max-width: 900px) {
-  .filter-bar {
-    grid-template-columns: 1fr 1fr;
-  }
-}
-@media (max-width: 500px) {
-  .filter-bar {
-    grid-template-columns: 1fr;
-  }
-}
-/* =================================
+/* ==========================================
    PAGINATION
-================================= */
+========================================== */
 .pagination {
   display: flex;
   justify-content: center;
@@ -174,4 +271,30 @@
 .page-arrow:disabled {
   opacity: 0.35;
   cursor: not-allowed;
+}
+
+/* ==========================================
+   RESPONSIVE
+========================================== */
+@media (max-width: 1000px) {
+  .filter-controls-row {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+}
+
+@media (max-width: 700px) {
+  .filter-controls-row {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .filter-controls-row button {
+    padding: 0.75rem 0.9rem;
+    font-size: 0.85rem;
+  }
+}
+
+@media (max-width: 500px) {
+  .filter-controls-row {
+    grid-template-columns: 1fr;
+  }
 }

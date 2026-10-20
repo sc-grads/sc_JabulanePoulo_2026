@@ -137,3 +137,127 @@
   color: #888;
   padding: 2rem 0;
 }
+/* =================================
+   ORDERS TOOLBAR (search + filter)
+================================= */
+.orders-toolbar {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+}
+
+/* Search bar */
+.orders-search {
+  flex: 1;
+  min-width: 260px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #fff;
+  border: 2px solid #e0e0ec;
+  border-radius: 12px;
+  padding: 0.3rem 0.8rem 0.3rem 1rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.orders-search:hover {
+  border-color: #c9c9dd;
+}
+
+.orders-search:focus-within {
+  border-color: #5b4bdb;
+  box-shadow: 0 0 0 3px rgba(91, 75, 219, 0.12);
+}
+
+.orders-search .search-icon {
+  color: #7b7b8f;
+  flex-shrink: 0;
+}
+
+.orders-search input {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  padding: 0.75rem 0;
+  font-family: inherit;
+  font-size: 0.95rem;
+  color: #1a1a2e;
+}
+
+.orders-search input::placeholder {
+  color: #9b9bb0;
+}
+
+.orders-search .clear-search {
+  background: #f0f0f5;
+  color: #666;
+  border: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.orders-search .clear-search:hover {
+  background: #e0e0ea;
+  color: #1a1a2e;
+}
+
+/* Filter dropdown — keep existing look */
+.orders-filter {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  background: #fff;
+  padding: 0.5rem 1rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.orders-filter label {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #555;
+  white-space: nowrap;
+}
+
+.orders-filter select {
+  padding: 0.5rem 0.9rem;
+  border: 1px solid #e0e0ec;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 0.88rem;
+  cursor: pointer;
+  color: #1a1a2e;
+  background: #fff;
+  transition: border-color 0.2s ease;
+}
+
+.orders-filter select:focus {
+  outline: none;
+  border-color: #5b4bdb;
+  box-shadow: 0 0 0 3px rgba(91, 75, 219, 0.12);
+}
+
+/* Responsive */
+@media (max-width: 700px) {
+  .orders-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .orders-filter {
+    justify-content: space-between;
+  }
+}

@@ -1,0 +1,199 @@
+.request-page {
+  min-height: 100vh;
+  background: #f7f7fb;
+  font-family: 'Poppins', sans-serif;
+}
+
+.request-content {
+  max-width: 1000px;
+  margin: 3rem auto;
+  padding: 0 1.5rem;
+}
+
+.request-header {
+  text-align: center;
+  margin-bottom: 2.5rem;
+}
+
+.request-icon {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: #f4f2ff;
+  color: #5b4bdb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1rem;
+}
+
+.request-header h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #1a1a2e;
+  margin: 0 0 0.5rem;
+}
+
+.request-header p {
+  color: #666;
+  max-width: 520px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+.request-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+@media (max-width: 800px) {
+  .request-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.request-card {
+  background: #fff;
+  padding: 1.8rem;
+  border-radius: 14px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+}
+
+.request-card h2 {
+  font-size: 1.2rem;
+  font-weight: 800;
+  margin: 0 0 1rem;
+  color: #1a1a2e;
+}
+
+.form-row-2col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 1rem;
+}
+
+.form-group label {
+  font-size: 0.85rem;
+  color: #555;
+  font-weight: 600;
+  margin-bottom: 0.35rem;
+}
+
+.form-group input,
+.form-group textarea {
+  padding: 0.75rem 0.9rem;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 0.9rem;
+  resize: vertical;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: #5b4bdb;
+  box-shadow: 0 0 0 3px rgba(91, 75, 219, 0.12);
+}
+
+.request-submit {
+  background: #5b4bdb;
+  color: #fff;
+  border: none;
+  padding: 0.9rem;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  font-family: inherit;
+  width: 100%;
+  transition: background 0.2s ease;
+}
+
+.request-submit:hover:not(:disabled) {
+  background: #4a3bc0;
+}
+
+.request-submit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.no-requests {
+  color: #888;
+  font-style: italic;
+  text-align: center;
+  padding: 2rem 0;
+}
+
+.request-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+.request-item {
+  background: #faf9ff;
+  padding: 1rem;
+  border-radius: 10px;
+}
+
+.request-item-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.request-item h3 {
+  font-size: 0.95rem;
+  margin: 0;
+  color: #1a1a2e;
+}
+
+.req-author {
+  margin: 0.2rem 0 0;
+  font-size: 0.8rem;
+  color: #888;
+}
+
+.req-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.req-status-pending { background: #fff4d9; color: #a06a00; }
+.req-status-progress { background: #e6f0ff; color: #004085; }
+.req-status-added { background: #d4edda; color: #155724; }
+.req-status-rejected { background: #f8d7da; color: #721c24; }
+
+.req-note {
+  font-size: 0.82rem;
+  color: #555;
+  background: #fff;
+  padding: 0.5rem 0.7rem;
+  border-radius: 6px;
+  margin: 0.4rem 0;
+}
+
+.req-date {
+  font-size: 0.75rem;
+  color: #999;
+  margin: 0.3rem 0 0;
+}

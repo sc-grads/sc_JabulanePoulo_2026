@@ -62,7 +62,10 @@ function NavDrawer({ open, onClose }) {
               <p onClick={() => handleNavigate("/profile")}>My Profile</p>
               <p onClick={() => handleNavigate("/cart")}>My Cart</p>
               <p onClick={() => handleNavigate("/orders")}>My Orders</p>
-              <p onClick={() => handleNavigate("/wishlist")}>My Wishlist</p>  
+              <p onClick={() => handleNavigate("/wishlist")}>My Wishlist</p>
+              <p onClick={() => handleNavigate("/about")}>About Us</p>
+              <p onClick={() => handleNavigate("/feedback")}>Feedback</p>
+              <p onClick={() => handleNavigate("/request-book")}>Request a Book</p>  
               
             </>
           )}
@@ -76,6 +79,9 @@ function NavDrawer({ open, onClose }) {
               <p onClick={() => handleNavigate("/admin/reviews")}>Reviews</p>
               <p onClick={() => handleNavigate("/admin/returns")}>Returns</p>
               <p onClick={() => handleNavigate("/admin/customers")}>Customers</p>
+              <p onClick={() => handleNavigate("/admin/book-requests")}>Book Requests</p>
+              <p onClick={() => handleNavigate("/admin/feedback")}>Feedback</p>
+              <p onClick={() => handleNavigate("/admin/analytics")}>Analytics</p>
             </>
           )}
 

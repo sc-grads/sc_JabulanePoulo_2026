@@ -1,6 +1,11 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Star, ChevronLeft, ChevronRight, RotateCcw } from "lucide-react";
+import {
+  Star,
+  ChevronLeft,
+  ChevronRight,
+  RotateCcw,
+} from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { orderService } from "../services/orderService";
 import { returnService } from "../services/returnService";
@@ -31,6 +36,7 @@ function Orders() {
 
   const [cancelling, setCancelling] = useState(false);
   const [myReturns, setMyReturns] = useState([]);
+  const [choosingResolution, setChoosingResolution] = useState(null);
 
   // Pagination
   const [page, setPage] = useState(1);
@@ -114,6 +120,27 @@ function Orders() {
   };
 
   // ============================================================
+  // CHOOSE REFUND OR REPLACEMENT
+  // ============================================================
+  const handleChooseResolution = async (returnId, resolution) => {
+    setChoosingResolution(returnId);
+
+    try {
+      await returnService.chooseResolution(returnId, resolution);
+      showToast(
+        resolution === "refund"
+          ? "Refund requested "
+          : "Replacement requested "
+      );
+      await loadMyReturns();
+    } catch (err) {
+      showToast(err.message, "error");
+    } finally {
+      setChoosingResolution(null);
+    }
+  };
+
+  // ============================================================
   // HELPERS
   // ============================================================
   const markReviewed = (bookId) => {
@@ -131,7 +158,9 @@ function Orders() {
     myReturns.find(
       (r) =>
         r.order_id === orderId &&
-        (r.status === "pending" || r.status === "approved")
+        (r.status === "pending" ||
+          r.status === "approved" ||
+          r.status === "rejected")
     );
 
   const canCancel = (status) =>
@@ -205,11 +234,21 @@ function Orders() {
                       </button>
                     )}
 
-                    {orderReturn && (
-                      <span
-                        className={`return-badge return-${orderReturn.status}`}
-                      >
-                        Return {orderReturn.status}
+                    {orderReturn && orderReturn.status === "pending" && (
+                      <span className="return-badge return-pending">
+                        Return pending
+                      </span>
+                    )}
+
+                    {orderReturn && orderReturn.status === "approved" && (
+                      <span className="return-badge return-approved">
+                        Return approved
+                      </span>
+                    )}
+
+                    {orderReturn && orderReturn.status === "rejected" && (
+                      <span className="return-badge return-rejected">
+                        Return rejected
                       </span>
                     )}
 
@@ -258,22 +297,71 @@ function Orders() {
                         )}
 
                         {order.status === "delivered" && item.reviewed && (
-                          <span className="reviewed-tag">✓ Reviewed</span>
+                          <span className="reviewed-tag"> Reviewed</span>
                         )}
                       </div>
                     );
                   })}
                 </div>
 
+                {/* RETURN STATUS BANNERS */}
                 {orderReturn?.status === "pending" && (
                   <div className="return-info-banner">
                     Your return request is pending admin review.
                   </div>
                 )}
 
-                {orderReturn?.status === "approved" && (
-                  <div className="return-info-banner return-approved">
-                    Your return has been approved.
+                {orderReturn?.status === "approved" &&
+                  !orderReturn.resolution && (
+                    <div className="return-resolution-picker">
+                      <p className="resolution-title">
+                        Your return was approved. What would you like?
+                      </p>
+                      <div className="resolution-buttons">
+                        <button
+                          className="resolution-btn refund"
+                          onClick={() =>
+                            handleChooseResolution(
+                              orderReturn.return_id,
+                              "refund"
+                            )
+                          }
+                          disabled={
+                            choosingResolution === orderReturn.return_id
+                          }
+                        >
+                           Refund
+                        </button>
+                        <button
+                          className="resolution-btn replacement"
+                          onClick={() =>
+                            handleChooseResolution(
+                              orderReturn.return_id,
+                              "replacement"
+                            )
+                          }
+                          disabled={
+                            choosingResolution === orderReturn.return_id
+                          }
+                        >
+                           Replacement
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                {orderReturn?.status === "approved" &&
+                  orderReturn.resolution && (
+                    <div className="return-info-banner return-approved">
+                      You chose:{" "}
+                      <strong>{orderReturn.resolution}</strong>. We'll handle
+                      it shortly.
+                    </div>
+                  )}
+
+                {orderReturn?.status === "rejected" && (
+                  <div className="return-info-banner return-rejected">
+                    Your return request was not approved.
                   </div>
                 )}
 
@@ -284,7 +372,8 @@ function Orders() {
                     Number(order.delivery_fee) > 0 && (
                       <span className="delivery-note">
                         {" "}
-                        (incl. R{Number(order.delivery_fee).toFixed(2)} delivery)
+                        (incl. R{Number(order.delivery_fee).toFixed(2)}{" "}
+                        delivery)
                       </span>
                     )}
                 </div>
@@ -309,7 +398,7 @@ function Orders() {
           onClose={() => setReviewModal(null)}
           onSubmitted={() => {
             markReviewed(reviewModal.book.book_id);
-            showToast("Review submitted! Thank you 🎉");
+            showToast("Review submitted! Thank you ");
           }}
         />
       )}

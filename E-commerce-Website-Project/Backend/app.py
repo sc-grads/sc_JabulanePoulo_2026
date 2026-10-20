@@ -111,41 +111,192 @@ def send_email(to_email, subject, body_text, body_html=None):
         return False
 
 
-def build_email_html(title, intro, rows, cta_text=None, cta_url=None):
+def build_email_html(
+    title,
+    intro,
+    rows,
+    cta_text=None,
+    cta_url=None,
+    subtitle=None,
+    highlight=None,
+):
     """
-    Build a simple branded HTML email.
-    rows is a list of tuples: [(label, value), ...]
+    Build a proper branded HTML email.
+    rows       - list of (label, value) tuples
+    highlight  - optional (label, value) shown in a colored banner
+    subtitle   - optional subtitle under the title
     """
+    subtitle_html = (
+        f"<p style='margin:4px 0 0;color:#e0dcff;font-size:14px;'>{subtitle}</p>"
+        if subtitle else ""
+    )
+
     rows_html = "".join([
-        f"<tr><td style='padding:6px 0;color:#888;font-size:13px;'>{label}</td>"
-        f"<td style='padding:6px 0;text-align:right;color:#1a1a2e;font-weight:600;'>{value}</td></tr>"
+        f"""
+        <tr>
+          <td style="padding:10px 0;color:#6c6c80;font-size:13px;
+                     border-bottom:1px solid #f0f0f5;">{label}</td>
+          <td style="padding:10px 0;text-align:right;color:#1a1a2e;
+                     font-weight:600;font-size:14px;
+                     border-bottom:1px solid #f0f0f5;">{value}</td>
+        </tr>
+        """
         for label, value in rows
     ])
 
+    highlight_html = ""
+    if highlight:
+        h_label, h_value = highlight
+        highlight_html = f"""
+        <div style="background:#f4f2ff;border-left:4px solid #5b4bdb;
+                    padding:14px 18px;border-radius:8px;margin:20px 0;">
+          <p style="margin:0;font-size:12px;color:#5b4bdb;
+                    text-transform:uppercase;letter-spacing:1px;font-weight:700;">
+            {h_label}
+          </p>
+          <p style="margin:6px 0 0;font-size:16px;color:#1a1a2e;font-weight:700;">
+            {h_value}
+          </p>
+        </div>
+        """
+
     cta_html = ""
     if cta_text and cta_url:
-        cta_html = (
-            f"<p style='text-align:center;margin:24px 0;'>"
-            f"<a href='{cta_url}' style='display:inline-block;padding:12px 24px;"
-            f"background:#5b4bdb;color:#fff;text-decoration:none;"
-            f"border-radius:8px;font-weight:600;'>{cta_text}</a></p>"
-        )
+        cta_html = f"""
+        <p style="text-align:center;margin:28px 0 8px;">
+          <a href="{cta_url}"
+             style="display:inline-block;padding:14px 32px;
+                    background:#5b4bdb;color:#ffffff;text-decoration:none;
+                    border-radius:10px;font-weight:700;font-size:14px;
+                    letter-spacing:0.3px;">
+            {cta_text}
+          </a>
+        </p>
+        """
 
     return f"""
-    <div style="font-family:Arial,Helvetica,sans-serif;max-width:520px;margin:0 auto;
-                padding:24px;background:#f7f7fb;border-radius:12px;color:#1a1a2e;">
-      <h1 style="font-size:22px;margin:0 0 8px;color:#5b4bdb;">{title}</h1>
-      <p style="color:#444;line-height:1.6;margin:0 0 20px;">{intro}</p>
-      <table style="width:100%;border-collapse:collapse;background:#fff;
-                    padding:16px;border-radius:10px;">
-        <tbody>{rows_html}</tbody>
+    <!DOCTYPE html>
+    <html>
+    <body style="margin:0;padding:0;background:#eef0f7;
+                 font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
+             style="background:#eef0f7;padding:32px 16px;">
+        <tr>
+          <td align="center">
+            <table role="presentation" width="560" cellpadding="0" cellspacing="0"
+                   style="max-width:560px;background:#ffffff;border-radius:16px;
+                          overflow:hidden;
+                          box-shadow:0 8px 32px rgba(15,15,26,0.08);">
+
+              <!-- HEADER -->
+              <tr>
+                <td style="background:linear-gradient(135deg,#5b4bdb 0%,#8a7cf5 100%);
+                           padding:28px 32px;">
+                  <p style="margin:0;color:#ffffff;font-size:20px;
+                            font-weight:800;letter-spacing:-0.3px;">
+                    Book Worm
+                  </p>
+                  <h1 style="margin:14px 0 0;color:#ffffff;font-size:24px;
+                             font-weight:800;letter-spacing:-0.5px;">
+                    {title}
+                  </h1>
+                  {subtitle_html}
+                </td>
+              </tr>
+
+              <!-- BODY -->
+              <tr>
+                <td style="padding:32px;">
+                  <p style="margin:0 0 20px;color:#1a1a2e;font-size:15px;
+                            line-height:1.6;">
+                    {intro}
+                  </p>
+
+                  {highlight_html}
+
+                  <table role="presentation" width="100%" cellpadding="0"
+                         cellspacing="0" style="margin-top:8px;">
+                    {rows_html}
+                  </table>
+
+                  {cta_html}
+                </td>
+              </tr>
+
+              <!-- FOOTER -->
+              <tr>
+                <td style="background:#faf9ff;padding:22px 32px;
+                           text-align:center;border-top:1px solid #f0f0f5;">
+                  <p style="margin:0;color:#9b9bb0;font-size:12px;
+                            line-height:1.6;">
+                    Thank you for shopping with Book Worm 💜<br>
+                    © 2026 Book Worm. All rights reserved.
+                  </p>
+                </td>
+              </tr>
+
+            </table>
+          </td>
+        </tr>
       </table>
-      {cta_html}
-      <p style="color:#888;font-size:12px;text-align:center;margin-top:24px;">
-        © 2026 Book Worm
-      </p>
-    </div>
+    </body>
+    </html>
     """
+def send_book_request_status_email(req, new_status, admin_note):
+    user = db.session.get(User, req.user_id)
+    if not user or not user.email:
+        return
+
+    titles = {
+        "pending": "Book Request Received",
+        "in_progress": "We're Looking for Your Book",
+        "added": "Your Requested Book Is Now Available",
+        "rejected": "Book Request Update"
+    }
+    intros = {
+        "pending": "We've received your request and will look into it shortly.",
+        "in_progress": "Good news — we're working on sourcing your requested book.",
+        "added": "Great news! The book you requested is now in our catalog.",
+        "rejected": "Unfortunately we couldn't source this title at the moment."
+    }
+
+    rows = [
+        ("Book Title", req.title),
+    ]
+    if req.author:
+        rows.append(("Author", req.author))
+    rows.append(("Status", new_status.replace("_", " ").capitalize()))
+    if admin_note:
+        rows.append(("Note from our team", admin_note))
+
+    cta_text = "Browse Books" if new_status == "added" else "View my requests"
+    cta_url = (
+        f"{os.getenv('FRONTEND_URL', 'http://localhost:5173')}/books"
+        if new_status == "added"
+        else f"{os.getenv('FRONTEND_URL', 'http://localhost:5173')}/request-book"
+    )
+
+    send_email(
+        to_email=user.email,
+        subject=f"{titles.get(new_status, 'Book Request Update')} — Book Worm",
+        body_text=(
+            f"Hi {user.name},\n\n"
+            f"{intros.get(new_status, '')}\n\n"
+            f"Book: {req.title}\n"
+            f"Status: {new_status.replace('_', ' ').capitalize()}\n"
+            + (f"Note: {admin_note}\n" if admin_note else "")
+            + "\n— Book Worm"
+        ),
+        body_html=build_email_html(
+            title=titles.get(new_status, "Book Request Update"),
+            subtitle="",
+            intro=f"Hi <strong>{user.name}</strong>, {intros.get(new_status, '')}",
+            rows=rows,
+            cta_text=cta_text,
+            cta_url=cta_url,
+        )
+    )
+
 # ============================================================
 # MODELS
 # ============================================================
@@ -280,6 +431,12 @@ class Order(db.Model):
         default=0
     )
 
+    confirmation_email_sent = db.Column(
+        db.Boolean,
+        nullable=False,
+        default=False
+    )
+
 class OrderItem(db.Model):
     __tablename__ = "order_items"
     order_item_id = db.Column(db.Integer, primary_key=True)
@@ -396,6 +553,12 @@ class Return(db.Model):
 
     admin_note = db.Column(db.Text, nullable=True)
 
+    resolution = db.Column(
+        db.Enum("refund", "replacement"),
+        nullable=True
+    )
+    resolution_chosen_at = db.Column(db.DateTime, nullable=True)
+
     created_at = db.Column(
         db.DateTime,
         server_default=db.func.current_timestamp()
@@ -403,6 +566,71 @@ class Return(db.Model):
 
     resolved_at = db.Column(db.DateTime, nullable=True)
 
+
+# ============================================================
+# APP FEEDBACK MODEL
+# ============================================================
+
+class AppFeedback(db.Model):
+    __tablename__ = "app_feedback"
+
+    feedback_id = db.Column(db.Integer, primary_key=True)
+
+    user_id = db.Column(
+        db.Integer,
+        db.ForeignKey("users.user_id"),
+        nullable=True          # allow anonymous feedback
+    )
+
+    name = db.Column(db.String(100), nullable=True)
+    email = db.Column(db.String(150), nullable=True)
+
+    rating = db.Column(db.Integer, nullable=False)   # 1..5
+    comment = db.Column(db.Text, nullable=True)
+
+    is_visible = db.Column(db.Boolean, nullable=False, default=True)
+
+    created_at = db.Column(
+        db.DateTime,
+        server_default=db.func.current_timestamp()
+    )
+
+
+# ============================================================
+# BOOK REQUEST MODEL
+# ============================================================
+
+class BookRequest(db.Model):
+    __tablename__ = "book_requests"
+
+    request_id = db.Column(db.Integer, primary_key=True)
+
+    user_id = db.Column(
+        db.Integer,
+        db.ForeignKey("users.user_id"),
+        nullable=False
+    )
+
+    title = db.Column(db.String(255), nullable=False)
+    author = db.Column(db.String(150), nullable=True)
+    isbn = db.Column(db.String(20), nullable=True)
+
+    notes = db.Column(db.Text, nullable=True)
+
+    status = db.Column(
+        db.Enum("pending", "in_progress", "added", "rejected"),
+        nullable=False,
+        default="pending"
+    )
+
+    admin_note = db.Column(db.Text, nullable=True)
+
+    created_at = db.Column(
+        db.DateTime,
+        server_default=db.func.current_timestamp()
+    )
+
+    resolved_at = db.Column(db.DateTime, nullable=True)
 # ============================================================
 # PASSWORD RESET MODEL
 # ============================================================
@@ -1603,6 +1831,11 @@ def get_my_returns():
             "reason": r.reason,
             "status": r.status,
             "admin_note": r.admin_note,
+            "resolution": r.resolution,                                 # NEW
+            "resolution_chosen_at": (                                   # NEW
+                r.resolution_chosen_at.isoformat()
+                if r.resolution_chosen_at else None
+            ),
             "created_at": r.created_at.isoformat() if r.created_at else None,
             "resolved_at": r.resolved_at.isoformat() if r.resolved_at else None
         })
@@ -1841,13 +2074,11 @@ def cancel_order(order_id):
     if not order:
         return jsonify({"message": "Order not found"}), 404
 
-    # Only these statuses can be cancelled
     if order.status not in ("pending", "paid"):
         return jsonify({
             "message": f"You cannot cancel an order that is {order.status}"
         }), 403
 
-    # Block cancel if a return request is already open
     open_return = Return.query.filter_by(
         order_id=order_id,
         user_id=int(user_id)
@@ -1859,7 +2090,6 @@ def cancel_order(order_id):
         }), 409
 
     try:
-        # Restore stock
         for item in OrderItem.query.filter_by(order_id=order_id).all():
             book = db.session.get(Book, item.book_id)
             if book:
@@ -1867,6 +2097,9 @@ def cancel_order(order_id):
 
         order.status = "cancelled"
         db.session.commit()
+
+        # Send cancellation email
+        send_order_cancellation_email(order, cancelled_by="customer")
 
         return jsonify({
             "message": "Order cancelled",
@@ -1921,24 +2154,42 @@ def create_payment_intent(order_id):
 
 
 # ============================================================
-# EMAIL HELPERS FOR ORDERS
-# (Plain functions — NO @app.route decorators)
+# EMAIL HELPERS FOR ORDERS  (no decorators — plain functions)
 # ============================================================
 
+def _format_delivery_estimate(order):
+    """Returns a friendly delivery estimate string."""
+    from datetime import datetime, timedelta
+
+    created = order.order_date or datetime.utcnow()
+
+    if order.delivery_method == "pickup":
+        eta_days = 1
+        method = "Pickup"
+    else:
+        eta_days = 5
+        method = "Delivery"
+
+    eta = created + timedelta(days=eta_days)
+    eta_str = eta.strftime("%A, %d %B %Y")
+
+    return method, eta_str
+
+
 def send_order_confirmation_email(order):
-    """Sends the order-confirmation email for the given order."""
+    """Order confirmation email sent right after payment."""
     user = db.session.get(User, order.user_id)
     if not user or not user.email:
         return
 
+    method, eta = _format_delivery_estimate(order)
+
     items = OrderItem.query.filter_by(order_id=order.order_id).all()
     rows = [
-        ("Order #", order.order_id),
-        ("Status", "Paid"),
-        (
-            "Method",
-            "Delivery" if order.delivery_method == "delivery" else "Pickup"
-        ),
+        ("Order Number", f"#{order.order_id}"),
+        ("Status", "Paid "),
+        ("Method", method),
+        ("Estimated " + method, eta),
     ]
     for it in items:
         book = db.session.get(Book, it.book_id)
@@ -1947,25 +2198,27 @@ def send_order_confirmation_email(order):
                 f"{book.title} × {it.quantity}",
                 f"R{float(it.price_at_purchase) * it.quantity:.2f}"
             ))
-    rows.append(("Total", f"R{float(order.total_amount):.2f}"))
+    rows.append(("Total Paid", f"R{float(order.total_amount):.2f}"))
 
     send_email(
         to_email=user.email,
-        subject=f"Order #{order.order_id} confirmed",
+        subject=f" Order #{order.order_id} confirmed — Book Worm",
         body_text=(
             f"Hi {user.name},\n\n"
-            f"Thanks for your order #{order.order_id}! "
-            f"Your payment of R{float(order.total_amount):.2f} "
-            f"has been received.\n\n"
-            f"— Book Worm"
+            f"Your order #{order.order_id} has been confirmed and paid.\n\n"
+            f"{method}: {eta}\n"
+            f"Total: R{float(order.total_amount):.2f}\n\n"
+            f"Thanks for shopping with Book Worm!\n"
         ),
         body_html=build_email_html(
-            title="Order Confirmed ",
+            title="Order Confirmed",
+            subtitle="Thank you for your purchase!",
             intro=(
-                f"Hi {user.name}, thanks for your order! "
-                f"We've received your payment and will process your books shortly."
+                f"Hi <strong>{user.name}</strong>, we've received your "
+                f"payment and your order is now being prepared."
             ),
             rows=rows,
+            highlight=("Estimated " + method, eta),
             cta_text="View my orders",
             cta_url=f"{os.getenv('FRONTEND_URL', 'http://localhost:5173')}/orders",
         )
@@ -1981,22 +2234,38 @@ def send_order_status_email(order, new_status):
     if not user or not user.email:
         return
 
+    method, eta = _format_delivery_estimate(order)
+
     if new_status == "shipped":
-        title = "Your order has shipped "
+        title = "Your Order Has Shipped"
+        subtitle = "Your books are on the way "
+        subject = f" Order #{order.order_id} shipped — Book Worm"
         intro = (
-            f"Hi {user.name}, great news — order #{order.order_id} is on its way!"
+            f"Hi <strong>{user.name}</strong>, great news — "
+            f"order #{order.order_id} has been shipped."
         )
-        subject = f"Order #{order.order_id} shipped"
+        highlight = (
+            ("Estimated " + method, eta)
+            if method == "Delivery"
+            else ("Ready for " + method, eta)
+        )
     else:
-        title = "Your order was delivered "
+        title = "Your Order Was Delivered"
+        subtitle = "Enjoy your books! "
+        subject = f" Order #{order.order_id} delivered — Book Worm"
         intro = (
-            f"Hi {user.name}, order #{order.order_id} has been delivered. "
-            f"We hope you enjoy your books!"
+            f"Hi <strong>{user.name}</strong>, order #{order.order_id} "
+            f"has been delivered. We hope you enjoy your books!"
         )
-        subject = f"Order #{order.order_id} delivered"
+        highlight = ("Delivered", order.order_date.strftime("%A, %d %B %Y")
+                     if order.order_date else "Just now")
 
     items = OrderItem.query.filter_by(order_id=order.order_id).all()
-    rows = [("Order #", order.order_id), ("Status", new_status.capitalize())]
+    rows = [
+        ("Order Number", f"#{order.order_id}"),
+        ("Status", new_status.capitalize()),
+        ("Method", method),
+    ]
     for it in items:
         book = db.session.get(Book, it.book_id)
         if book:
@@ -2007,23 +2276,223 @@ def send_order_status_email(order, new_status):
         to_email=user.email,
         subject=subject,
         body_text=(
-            f"Hi {user.name},\n\n{intro}\n\nOrder total: "
-            f"R{float(order.total_amount):.2f}\n\n— Book Worm"
+            f"Hi {user.name},\n\n"
+            f"Order #{order.order_id} — {new_status.capitalize()}\n\n"
+            f"Thanks for shopping with Book Worm!\n"
         ),
         body_html=build_email_html(
             title=title,
+            subtitle=subtitle,
             intro=intro,
             rows=rows,
+            highlight=highlight,
             cta_text="View my orders",
             cta_url=f"{os.getenv('FRONTEND_URL', 'http://localhost:5173')}/orders",
         )
     )
 
 
+def send_order_cancellation_email(order, cancelled_by="customer"):
+    """Sends a cancellation email. cancelled_by: 'customer' or 'admin'."""
+    user = db.session.get(User, order.user_id)
+    if not user or not user.email:
+        return
+
+    method, _ = _format_delivery_estimate(order)
+
+    if cancelled_by == "admin":
+        reason = (
+            "Your order was cancelled by our team. "
+            "If you were charged, a refund will be issued within 5–7 business days."
+        )
+    else:
+        reason = (
+            "Your order has been cancelled as requested. "
+            "If you were charged, a refund will be issued within 5–7 business days."
+        )
+
+    items = OrderItem.query.filter_by(order_id=order.order_id).all()
+    rows = [
+        ("Order Number", f"#{order.order_id}"),
+        ("Status", "Cancelled"),
+        ("Method", method),
+    ]
+    for it in items:
+        book = db.session.get(Book, it.book_id)
+        if book:
+            rows.append((f"{book.title} × {it.quantity}", ""))
+    rows.append(("Refund Amount", f"R{float(order.total_amount):.2f}"))
+
+    send_email(
+        to_email=user.email,
+        subject=f"Order #{order.order_id} cancelled — Book Worm",
+        body_text=(
+            f"Hi {user.name},\n\n"
+            f"Your order #{order.order_id} has been cancelled.\n"
+            f"{reason}\n\n"
+            f"— Book Worm"
+        ),
+        body_html=build_email_html(
+            title="Order Cancelled",
+            subtitle="We're sorry to see this order go",
+            intro=f"Hi <strong>{user.name}</strong>, {reason}",
+            rows=rows,
+            highlight=("Refund Amount", f"R{float(order.total_amount):.2f}"),
+            cta_text="Browse books",
+            cta_url=f"{os.getenv('FRONTEND_URL', 'http://localhost:5173')}/books",
+        )
+    )
 # ============================================================
-# MARK ORDER AS PAID (ROUTE)
+# RETURN EMAILS
 # ============================================================
 
+def send_return_approved_email(ret, order, pickup_date):
+    """Sent when the admin approves a return."""
+    user = db.session.get(User, order.user_id)
+    if not user or not user.email:
+        return
+
+    pickup_str = pickup_date.strftime("%A, %d %B %Y")
+    pickup_time = "between 09:00 and 17:00"
+
+    items = OrderItem.query.filter_by(order_id=order.order_id).all()
+    rows = [
+        ("Order Number", f"#{order.order_id}"),
+        ("Return Status", "Approved "),
+    ]
+    for it in items:
+        book = db.session.get(Book, it.book_id)
+        if book:
+            rows.append((f"{book.title} × {it.quantity}", ""))
+
+    send_email(
+        to_email=user.email,
+        subject=f"Return approved — Order #{order.order_id}",
+        body_text=(
+            f"Hi {user.name},\n\n"
+            f"Your return request for order #{order.order_id} has been approved.\n\n"
+            f"We will collect the book on: {pickup_str} {pickup_time}\n\n"
+            f"Please choose your resolution on our website:\n"
+            f"{os.getenv('FRONTEND_URL', 'http://localhost:5173')}/orders\n\n"
+            f"— Book Worm"
+        ),
+        body_html=build_email_html(
+            title="Return Approved",
+            subtitle="We'll pick up your book soon ",
+            intro=(
+                f"Hi <strong>{user.name}</strong>, your return request for "
+                f"order #{order.order_id} has been approved. Our courier "
+                f"will collect the book from your delivery address."
+            ),
+            rows=rows,
+            highlight=(
+                "Pickup scheduled for",
+                f"{pickup_str}, {pickup_time}"
+            ),
+            cta_text="Choose refund or replacement",
+            cta_url=f"{os.getenv('FRONTEND_URL', 'http://localhost:5173')}/orders",
+        )
+    )
+
+
+def send_return_rejected_email(ret, order, note):
+    """Sent when the admin rejects a return."""
+    user = db.session.get(User, order.user_id)
+    if not user or not user.email:
+        return
+
+    rows = [
+        ("Order Number", f"#{order.order_id}"),
+        ("Return Status", "Rejected"),
+    ]
+    if note:
+        rows.append(("Admin note", note))
+
+    send_email(
+        to_email=user.email,
+        subject=f"Return update — Order #{order.order_id}",
+        body_text=(
+            f"Hi {user.name},\n\n"
+            f"Unfortunately your return request for order #{order.order_id} "
+            f"was not approved.\n"
+            f"{'Reason: ' + note if note else ''}\n\n"
+            f"If you have questions, please reply to this email.\n\n"
+            f"— Book Worm"
+        ),
+        body_html=build_email_html(
+            title="Return Not Approved",
+            subtitle="",
+            intro=(
+                f"Hi <strong>{user.name}</strong>, we've reviewed your "
+                f"return request for order #{order.order_id}. Unfortunately "
+                f"we're unable to process this return."
+            ),
+            rows=rows,
+            cta_text="Contact support",
+            cta_url=f"{os.getenv('FRONTEND_URL', 'http://localhost:5173')}/profile",
+        )
+    )
+
+
+def send_return_resolution_email(ret, order):
+    """Sent when the customer picks refund or replacement."""
+    user = db.session.get(User, order.user_id)
+    if not user or not user.email:
+        return
+
+    if ret.resolution == "refund":
+        title = "Refund Confirmed"
+        subtitle = "Your refund is on its way "
+        intro = (
+            f"Hi <strong>{user.name}</strong>, we've received your choice. "
+            f"A refund of <strong>R{float(order.total_amount):.2f}</strong> "
+            f"will be issued within 5–7 business days."
+        )
+        highlight = ("Refund Amount", f"R{float(order.total_amount):.2f}")
+        subject = f"Refund confirmed — Order #{order.order_id}"
+    else:
+        title = "Replacement Confirmed"
+        subtitle = "We'll send a new copy "
+        intro = (
+            f"Hi <strong>{user.name}</strong>, we've received your choice. "
+            f"A replacement copy of your book will be shipped shortly."
+        )
+        highlight = ("Replacement for", f"Order #{order.order_id}")
+        subject = f"Replacement confirmed — Order #{order.order_id}"
+
+    items = OrderItem.query.filter_by(order_id=order.order_id).all()
+    rows = [
+        ("Order Number", f"#{order.order_id}"),
+        ("Resolution", ret.resolution.capitalize()),
+    ]
+    for it in items:
+        book = db.session.get(Book, it.book_id)
+        if book:
+            rows.append((f"{book.title} × {it.quantity}", ""))
+
+    send_email(
+        to_email=user.email,
+        subject=subject,
+        body_text=(
+            f"Hi {user.name},\n\n"
+            f"Order #{order.order_id}\n"
+            f"Resolution: {ret.resolution.capitalize()}\n\n"
+            f"— Book Worm"
+        ),
+        body_html=build_email_html(
+            title=title,
+            subtitle=subtitle,
+            intro=intro,
+            rows=rows,
+            highlight=highlight,
+            cta_text="View my orders",
+            cta_url=f"{os.getenv('FRONTEND_URL', 'http://localhost:5173')}/orders",
+        )
+    )
+
+# ============================================================
+# MARK ORDER AS PAID  (ROUTE)
+# ============================================================
 @app.route("/api/orders/<int:order_id>/mark-paid", methods=["POST"])
 @role_required("customer")
 def mark_order_paid(order_id):
@@ -2038,17 +2507,23 @@ def mark_order_paid(order_id):
     if not order:
         return jsonify({"message": "Order not found"}), 404
 
-    was_pending = order.status == "pending"
-
-    if was_pending:
+    # Flip to paid if still pending
+    if order.status == "pending":
         order.status = "paid"
+
+    # Send the email only once per order
+    if not order.confirmation_email_sent:
+        order.confirmation_email_sent = True
         db.session.commit()
         send_order_confirmation_email(order)
+    else:
+        db.session.commit()
 
     return jsonify({
         "message": "Order marked as paid",
         "status": order.status
     }), 200
+
 # ============================================================
 # STRIPE WEBHOOK
 # Called by Stripe when payment succeeds.
@@ -2077,11 +2552,20 @@ def stripe_webhook():
 
         if order_id:
             order = db.session.get(Order, int(order_id))
-            if order and order.status == "pending":
-                order.status = "paid"
-                db.session.commit()
-                print(f"[STRIPE] Order #{order_id} marked as PAID")
-                send_order_confirmation_email(order)
+
+            if order:
+                # Flip to paid if still pending
+                if order.status == "pending":
+                    order.status = "paid"
+
+                # Send the email only once per order
+                if not order.confirmation_email_sent:
+                    order.confirmation_email_sent = True
+                    db.session.commit()
+                    print(f"[STRIPE] Order #{order_id} marked as PAID")
+                    send_order_confirmation_email(order)
+                else:
+                    db.session.commit()
 
     elif event["type"] == "payment_intent.payment_failed":
         intent = event["data"]["object"]
@@ -2157,6 +2641,241 @@ def get_all_orders():
             "has_next": pagination.has_next,
             "has_previous": pagination.has_prev
         }
+    }), 200
+
+# ============================================================
+# ADMIN ANALYTICS / SALES DASHBOARD
+# Query params:
+#   days=30  (7, 30, 90, 365)
+# ============================================================
+
+@app.route("/api/admin/analytics", methods=["GET"])
+@role_required("admin")
+def get_analytics():
+
+    from datetime import datetime, timedelta
+    from sqlalchemy import func
+
+    days = request.args.get("days", 30, type=int)
+    if days not in (7, 30, 90, 365):
+        days = 30
+
+    now = datetime.utcnow()
+    since = now - timedelta(days=days)
+
+    # ---- 1. REVENUE + ORDER STATS ----
+    # Count only paid orders (exclude pending, cancelled, returned)
+    paid_statuses = ("paid", "processing", "shipped", "delivered")
+
+    orders_in_range = (
+        Order.query
+        .filter(
+            Order.order_date >= since,
+            Order.status.in_(paid_statuses)
+        )
+        .all()
+    )
+
+    total_revenue = sum(float(o.total_amount) for o in orders_in_range)
+    total_orders = len(orders_in_range)
+    total_units = (
+        db.session.query(func.sum(OrderItem.quantity))
+        .join(Order, Order.order_id == OrderItem.order_id)
+        .filter(
+            Order.order_date >= since,
+            Order.status.in_(paid_statuses)
+        )
+        .scalar()
+    ) or 0
+
+    avg_order_value = (
+        round(total_revenue / total_orders, 2)
+        if total_orders else 0
+    )
+
+    # ---- 2. REVENUE OVER TIME (daily buckets) ----
+    revenue_by_day = {}
+    for o in orders_in_range:
+        day = o.order_date.strftime("%Y-%m-%d")
+        revenue_by_day[day] = revenue_by_day.get(day, 0) + float(o.total_amount)
+
+    # Fill in missing days with 0 so the chart is continuous
+    daily_series = []
+    cursor = since
+    end = now + timedelta(days=1)
+    while cursor <= end:
+        key = cursor.strftime("%Y-%m-%d")
+        daily_series.append({
+            "date": key,
+            "revenue": round(revenue_by_day.get(key, 0), 2)
+        })
+        cursor += timedelta(days=1)
+
+    # ---- 3. ORDERS BY STATUS ----
+    status_counts = {}
+    for s in ("pending", "paid", "processing",
+              "shipped", "delivered", "cancelled", "returned"):
+        status_counts[s] = (
+            Order.query
+            .filter(
+                Order.order_date >= since,
+                Order.status == s
+            )
+            .count()
+        )
+
+    # ---- 4. TOP 5 SELLING BOOKS ----
+    top_books_raw = (
+        db.session.query(
+            Book.book_id,
+            Book.title,
+            Book.author,
+            Book.image_url,
+            func.sum(OrderItem.quantity).label("units_sold"),
+            func.sum(OrderItem.quantity * OrderItem.price_at_purchase)
+                .label("revenue")
+        )
+        .join(OrderItem, OrderItem.book_id == Book.book_id)
+        .join(Order, Order.order_id == OrderItem.order_id)
+        .filter(
+            Order.order_date >= since,
+            Order.status.in_(paid_statuses)
+        )
+        .group_by(Book.book_id)
+        .order_by(func.sum(OrderItem.quantity).desc())
+        .limit(5)
+        .all()
+    )
+
+    top_books = []
+    for b in top_books_raw:
+        top_books.append({
+            "book_id": b.book_id,
+            "title": b.title,
+            "author": b.author,
+            "image_url": b.image_url,
+            "units_sold": int(b.units_sold or 0),
+            "revenue": round(float(b.revenue or 0), 2)
+        })
+
+    # ---- 5. REVENUE BY CATEGORY ----
+    cat_rows = (
+        db.session.query(
+            Category.name,
+            func.sum(OrderItem.quantity * OrderItem.price_at_purchase)
+                .label("revenue"),
+            func.sum(OrderItem.quantity).label("units")
+        )
+        .select_from(OrderItem)
+        .join(Order, Order.order_id == OrderItem.order_id)
+        .join(Book, Book.book_id == OrderItem.book_id)
+        .join(Category, Category.category_id == Book.category_id)
+        .filter(
+            Order.order_date >= since,
+            Order.status.in_(paid_statuses)
+        )
+        .group_by(Category.category_id)
+        .order_by(func.sum(OrderItem.quantity * OrderItem.price_at_purchase).desc())
+        .all()
+    )
+
+    categories = [
+        {
+            "name": r.name,
+            "revenue": round(float(r.revenue or 0), 2),
+            "units": int(r.units or 0)
+        }
+        for r in cat_rows
+    ]
+
+    # ---- 6. TOP 5 CUSTOMERS ----
+    top_customers_raw = (
+        db.session.query(
+            User.user_id,
+            User.name,
+            User.surname,
+            User.email,
+            func.count(Order.order_id).label("orders_count"),
+            func.sum(Order.total_amount).label("total_spent")
+        )
+        .join(Order, Order.user_id == User.user_id)
+        .filter(
+            Order.order_date >= since,
+            Order.status.in_(paid_statuses)
+        )
+        .group_by(User.user_id)
+        .order_by(func.sum(Order.total_amount).desc())
+        .limit(5)
+        .all()
+    )
+
+    top_customers = [
+        {
+            "user_id": c.user_id,
+            "name": f"{c.name} {c.surname}",
+            "email": c.email,
+            "orders_count": int(c.orders_count or 0),
+            "total_spent": round(float(c.total_spent or 0), 2)
+        }
+        for c in top_customers_raw
+    ]
+
+    # ---- 7. DELIVERY METHOD BREAKDOWN ----
+    delivery_count = (
+        Order.query
+        .filter(
+            Order.order_date >= since,
+            Order.status.in_(paid_statuses),
+            Order.delivery_method == "delivery"
+        )
+        .count()
+    )
+    pickup_count = (
+        Order.query
+        .filter(
+            Order.order_date >= since,
+            Order.status.in_(paid_statuses),
+            Order.delivery_method == "pickup"
+        )
+        .count()
+    )
+
+    # ---- 8. LOW STOCK WARNINGS ----
+    low_stock = (
+        Book.query
+        .filter(Book.stock_quantity <= 3)
+        .order_by(Book.stock_quantity.asc())
+        .limit(10)
+        .all()
+    )
+
+    low_stock_list = [
+        {
+            "book_id": b.book_id,
+            "title": b.title,
+            "stock_quantity": b.stock_quantity
+        }
+        for b in low_stock
+    ]
+
+    return jsonify({
+        "range_days": days,
+        "summary": {
+            "total_revenue": round(total_revenue, 2),
+            "total_orders": total_orders,
+            "total_units": int(total_units),
+            "avg_order_value": avg_order_value
+        },
+        "daily_revenue": daily_series,
+        "orders_by_status": status_counts,
+        "top_books": top_books,
+        "categories": categories,
+        "top_customers": top_customers,
+        "delivery_breakdown": {
+            "delivery": delivery_count,
+            "pickup": pickup_count
+        },
+        "low_stock": low_stock_list
     }), 200
 
 # ============================================================
@@ -2389,9 +3108,11 @@ def update_order_status(order_id):
     order.status = new_status
     db.session.commit()
 
-    # Send email only on transitions into shipped or delivered
-    if new_status != old_status and new_status in ("shipped", "delivered"):
-        send_order_status_email(order, new_status)
+    if new_status != old_status:
+        if new_status in ("shipped", "delivered"):
+            send_order_status_email(order, new_status)
+        elif new_status == "cancelled":
+            send_order_cancellation_email(order, cancelled_by="admin")
 
     return jsonify({
         "message": "Order status updated",
@@ -2400,7 +3121,6 @@ def update_order_status(order_id):
             "status": order.status
         }
     }), 200
-
 # ============================================================
 # GET ALL REVIEWS (ADMIN)
 # ?status=pending | approved | rejected | all  (default: pending)
@@ -2555,6 +3275,384 @@ def delete_review_admin(review_id):
     db.session.commit()
 
     return jsonify({"message": "Review deleted"}), 200
+
+# ============================================================
+# SUBMIT APP FEEDBACK (PUBLIC — logged-in or not)
+# ============================================================
+
+@app.route("/api/feedback", methods=["POST"])
+def submit_feedback():
+
+    data = request.get_json() or {}
+
+    rating = data.get("rating")
+    comment = (data.get("comment") or "").strip()
+    name = (data.get("name") or "").strip()
+    email = (data.get("email") or "").strip().lower()
+
+    if rating is None or not isinstance(rating, int) or rating < 1 or rating > 5:
+        return jsonify({"message": "Rating must be an integer 1..5"}), 400
+
+    # Optionally associate with the logged-in user
+    user_id = None
+    try:
+        from flask_jwt_extended import verify_jwt_in_request
+        verify_jwt_in_request(optional=True)
+        identity = get_jwt_identity()
+        if identity:
+            user_id = int(identity)
+    except Exception:
+        pass  # anonymous feedback is fine
+
+    fb = AppFeedback(
+        user_id=user_id,
+        name=name or None,
+        email=email or None,
+        rating=rating,
+        comment=comment or None,
+        is_visible=True
+    )
+    db.session.add(fb)
+    db.session.commit()
+
+    return jsonify({
+        "message": "Thank you for your feedback!",
+        "feedback_id": fb.feedback_id
+    }), 201
+
+
+# ============================================================
+# GET PUBLIC FEEDBACK STATS (no comments — only aggregate)
+# ============================================================
+
+@app.route("/api/feedback", methods=["GET"])
+def get_feedback():
+
+    rows = AppFeedback.query.filter_by(is_visible=True).all()
+    total = len(rows)
+    avg = sum(r.rating for r in rows) / total if total else 0
+
+    # Count per star rating
+    counts = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0}
+    for r in rows:
+        counts[r.rating] = counts.get(r.rating, 0) + 1
+
+    return jsonify({
+        "total": total,
+        "average_rating": round(avg, 2),
+        "counts": counts
+    }), 200
+
+
+# ============================================================
+# GET ALL FEEDBACK (ADMIN)
+# ============================================================
+
+@app.route("/api/admin/feedback", methods=["GET"])
+@role_required("admin")
+def get_all_feedback():
+
+    page = request.args.get("page", 1, type=int)
+    per_page = request.args.get("per_page", 10, type=int)
+    rating_filter = request.args.get("rating", type=int)
+
+    if page < 1:
+        return jsonify({"message": "Page must be 1 or greater"}), 400
+    if per_page < 1 or per_page > 100:
+        return jsonify({
+            "message": "per_page must be between 1 and 100"
+        }), 400
+
+    query = AppFeedback.query
+
+    if rating_filter and rating_filter in (1, 2, 3, 4, 5):
+        query = query.filter(AppFeedback.rating == rating_filter)
+
+    pagination = (
+        query
+        .order_by(AppFeedback.created_at.desc())
+        .paginate(page=page, per_page=per_page, error_out=False)
+    )
+
+    feedback_list = []
+    for f in pagination.items:
+        # If registered user, use their name; else use the submitted name
+        user = db.session.get(User, f.user_id) if f.user_id else None
+
+        feedback_list.append({
+            "feedback_id": f.feedback_id,
+            "rating": f.rating,
+            "comment": f.comment,
+            "name": f.name or (f"{user.name} {user.surname}" if user else "Anonymous"),
+            "email": f.email or (user.email if user else ""),
+            "user_id": f.user_id,
+            "is_visible": f.is_visible,
+            "created_at": f.created_at.isoformat() if f.created_at else None
+        })
+
+    # Overall stats
+    all_rows = AppFeedback.query.all()
+    total = len(all_rows)
+    avg = sum(r.rating for r in all_rows) / total if total else 0
+
+    counts = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0}
+    for r in all_rows:
+        counts[r.rating] = counts.get(r.rating, 0) + 1
+
+    return jsonify({
+        "feedback": feedback_list,
+        "pagination": {
+            "page": pagination.page,
+            "per_page": pagination.per_page,
+            "total_feedback": pagination.total,
+            "total_pages": pagination.pages,
+            "has_next": pagination.has_next,
+            "has_previous": pagination.has_prev
+        },
+        "stats": {
+            "total": total,
+            "average_rating": round(avg, 2),
+            "counts": counts
+        }
+    }), 200
+
+
+# ============================================================
+# DELETE FEEDBACK (ADMIN)
+# ============================================================
+
+@app.route("/api/admin/feedback/<int:feedback_id>", methods=["DELETE"])
+@role_required("admin")
+def delete_feedback(feedback_id):
+
+    fb = db.session.get(AppFeedback, feedback_id)
+    if not fb:
+        return jsonify({"message": "Feedback not found"}), 404
+
+    db.session.delete(fb)
+    db.session.commit()
+    return jsonify({"message": "Feedback deleted"}), 200
+
+
+# ============================================================
+# TOGGLE FEEDBACK VISIBILITY (ADMIN)
+# ============================================================
+
+@app.route("/api/admin/feedback/<int:feedback_id>/visibility", methods=["PUT"])
+@role_required("admin")
+def toggle_feedback_visibility(feedback_id):
+
+    fb = db.session.get(AppFeedback, feedback_id)
+    if not fb:
+        return jsonify({"message": "Feedback not found"}), 404
+
+    fb.is_visible = not fb.is_visible
+    db.session.commit()
+
+    return jsonify({
+        "message": f"Feedback {'visible' if fb.is_visible else 'hidden'}",
+        "is_visible": fb.is_visible
+    }), 200
+
+# ============================================================
+# REQUEST A BOOK NOT IN CATALOG (CUSTOMER)
+# ============================================================
+
+@app.route("/api/book-requests", methods=["POST"])
+@role_required("customer")
+def create_book_request():
+
+    user_id = get_jwt_identity()
+    data = request.get_json() or {}
+
+    title = (data.get("title") or "").strip()
+    author = (data.get("author") or "").strip()
+    isbn = (data.get("isbn") or "").strip()
+    notes = (data.get("notes") or "").strip()
+
+    if not title:
+        return jsonify({"message": "Book title is required"}), 400
+
+    # Prevent duplicate open requests from the same user
+    existing = BookRequest.query.filter_by(
+        user_id=int(user_id),
+        title=title
+    ).filter(
+        BookRequest.status.in_(["pending", "in_progress"])
+    ).first()
+
+    if existing:
+        return jsonify({
+            "message": "You already requested this book"
+        }), 409
+
+    req = BookRequest(
+        user_id=int(user_id),
+        title=title,
+        author=author or None,
+        isbn=isbn or None,
+        notes=notes or None,
+        status="pending"
+    )
+    db.session.add(req)
+    db.session.commit()
+
+    return jsonify({
+        "message": "Book request submitted. We'll let you know!",
+        "request": {
+            "request_id": req.request_id,
+            "title": req.title,
+            "status": req.status
+        }
+    }), 201
+
+
+# ============================================================
+# GET MY BOOK REQUESTS (CUSTOMER)
+# ============================================================
+
+@app.route("/api/book-requests", methods=["GET"])
+@role_required("customer")
+def get_my_book_requests():
+
+    user_id = get_jwt_identity()
+
+    rows = (
+        BookRequest.query
+        .filter_by(user_id=int(user_id))
+        .order_by(BookRequest.created_at.desc())
+        .all()
+    )
+
+    out = [{
+        "request_id": r.request_id,
+        "title": r.title,
+        "author": r.author,
+        "status": r.status,
+        "admin_note": r.admin_note,
+        "created_at": r.created_at.isoformat() if r.created_at else None,
+        "resolved_at": r.resolved_at.isoformat() if r.resolved_at else None
+    } for r in rows]
+
+    return jsonify({"requests": out}), 200
+
+
+# ============================================================
+# GET ALL BOOK REQUESTS (ADMIN)
+# ============================================================
+
+@app.route("/api/admin/book-requests", methods=["GET"])
+@role_required("admin")
+def get_all_book_requests():
+
+    status = request.args.get("status", "pending")
+    page = request.args.get("page", 1, type=int)
+    per_page = request.args.get("per_page", 10, type=int)
+
+    if page < 1:
+        return jsonify({"message": "Page must be 1 or greater"}), 400
+    if per_page < 1 or per_page > 100:
+        return jsonify({
+            "message": "per_page must be between 1 and 100"
+        }), 400
+
+    query = BookRequest.query
+    if status in ("pending", "in_progress", "added", "rejected"):
+        query = query.filter(BookRequest.status == status)
+
+    pagination = (
+        query
+        .order_by(BookRequest.created_at.desc())
+        .paginate(page=page, per_page=per_page, error_out=False)
+    )
+
+    requests_out = []
+    for r in pagination.items:
+        customer = db.session.get(User, r.user_id)
+        requests_out.append({
+            "request_id": r.request_id,
+            "title": r.title,
+            "author": r.author,
+            "isbn": r.isbn,
+            "notes": r.notes,
+            "status": r.status,
+            "admin_note": r.admin_note,
+            "created_at": r.created_at.isoformat() if r.created_at else None,
+            "resolved_at": r.resolved_at.isoformat() if r.resolved_at else None,
+            "customer_name": (
+                f"{customer.name} {customer.surname}"
+                if customer else "Unknown"
+            ),
+            "customer_email": customer.email if customer else ""
+        })
+
+    counts = {
+        "pending": BookRequest.query.filter_by(status="pending").count(),
+        "in_progress": BookRequest.query.filter_by(status="in_progress").count(),
+        "added": BookRequest.query.filter_by(status="added").count(),
+        "rejected": BookRequest.query.filter_by(status="rejected").count(),
+        "all": BookRequest.query.count()
+    }
+
+    return jsonify({
+        "requests": requests_out,
+        "pagination": {
+            "page": pagination.page,
+            "per_page": pagination.per_page,
+            "total_requests": pagination.total,
+            "total_pages": pagination.pages,
+            "has_next": pagination.has_next,
+            "has_previous": pagination.has_prev
+        },
+        "counts": counts
+    }), 200
+
+
+# ============================================================
+# UPDATE BOOK REQUEST STATUS (ADMIN)
+# ============================================================
+
+@app.route("/api/admin/book-requests/<int:request_id>", methods=["PUT"])
+@role_required("admin")
+def update_book_request(request_id):
+
+    from datetime import datetime
+
+    req = db.session.get(BookRequest, request_id)
+    if not req:
+        return jsonify({"message": "Request not found"}), 404
+
+    data = request.get_json() or {}
+    new_status = data.get("status")
+    admin_note = (data.get("admin_note") or "").strip()
+
+    allowed = ["pending", "in_progress", "added", "rejected"]
+    if new_status not in allowed:
+        return jsonify({
+            "message": f"Status must be one of: {', '.join(allowed)}"
+        }), 400
+
+    req.status = new_status
+    req.admin_note = admin_note or None
+
+    if new_status in ("added", "rejected"):
+        req.resolved_at = datetime.utcnow()
+
+    db.session.commit()
+
+    # Send email to the customer
+    try:
+        send_book_request_status_email(req, new_status, admin_note)
+    except Exception as e:
+        print(f"[MAIL ERROR] Book request email failed: {e}")
+
+    return jsonify({
+        "message": "Request updated",
+        "request": {
+            "request_id": req.request_id,
+            "status": req.status
+        }
+    }), 200
 
 # ============================================================
 # PROFILE INFORMATION
@@ -2841,6 +3939,7 @@ def google_login():
         }
     }), 200
 
+
 # ============================================================
 # GET ALL RETURNS (ADMIN)
 # ?status=pending | approved | rejected | all
@@ -2885,6 +3984,11 @@ def get_all_returns():
             "reason": r.reason,
             "status": r.status,
             "admin_note": r.admin_note,
+            "resolution": r.resolution,                                 # NEW
+            "resolution_chosen_at": (                                   # NEW
+                 r.resolution_chosen_at.isoformat()
+                 if r.resolution_chosen_at else None
+            ),
             "created_at": r.created_at.isoformat() if r.created_at else None,
             "resolved_at": r.resolved_at.isoformat() if r.resolved_at else None,
             "customer_name": (
@@ -2918,12 +4022,11 @@ def get_all_returns():
 # ============================================================
 # RESOLVE A RETURN (ADMIN)
 # ============================================================
-
 @app.route("/api/admin/returns/<int:return_id>/resolve", methods=["PUT"])
 @role_required("admin")
 def resolve_return(return_id):
 
-    from datetime import datetime
+    from datetime import datetime, timedelta
 
     ret = db.session.get(Return, return_id)
     if not ret:
@@ -2935,7 +4038,7 @@ def resolve_return(return_id):
         }), 400
 
     data = request.get_json() or {}
-    action = data.get("action")  # "approve" or "reject"
+    action = data.get("action")
     note = (data.get("admin_note") or "").strip()
 
     if action not in ("approve", "reject"):
@@ -2948,13 +4051,22 @@ def resolve_return(return_id):
         ret.admin_note = note or None
         ret.resolved_at = datetime.utcnow()
 
-        # If approved, mark the order as "returned"
-        if action == "approve":
-            order = db.session.get(Order, ret.order_id)
-            if order:
-                order.status = "returned"
+        order = db.session.get(Order, ret.order_id)
 
-        db.session.commit()
+        if action == "approve" and order:
+            order.status = "returned"
+            pickup_date = datetime.utcnow() + timedelta(days=2)
+
+            db.session.commit()
+
+            # ---- send return-approved email ----
+            send_return_approved_email(ret, order, pickup_date)
+
+        else:
+            db.session.commit()
+
+            if order:
+                send_return_rejected_email(ret, order, note)
 
         return jsonify({
             "message": f"Return {ret.status}",
@@ -2967,7 +4079,65 @@ def resolve_return(return_id):
 
     except Exception as e:
         db.session.rollback()
+        import traceback
+        traceback.print_exc()
         return jsonify({"message": str(e)}), 500
+
+# ============================================================
+# CHOOSE RESOLUTION: REFUND OR REPLACEMENT (CUSTOMER)
+# ============================================================
+
+@app.route("/api/returns/<int:return_id>/resolution", methods=["PUT"])
+@role_required("customer")
+def choose_return_resolution(return_id):
+
+    from datetime import datetime
+
+    user_id = get_jwt_identity()
+
+    ret = Return.query.filter_by(
+        return_id=return_id,
+        user_id=int(user_id)
+    ).first()
+
+    if not ret:
+        return jsonify({"message": "Return not found"}), 404
+
+    if ret.status != "approved":
+        return jsonify({
+            "message": "You can only choose a resolution for approved returns"
+        }), 403
+
+    if ret.resolution:
+        return jsonify({
+            "message": f"You already chose '{ret.resolution}'"
+        }), 400
+
+    data = request.get_json() or {}
+    resolution = data.get("resolution")
+
+    if resolution not in ("refund", "replacement"):
+        return jsonify({
+            "message": "resolution must be 'refund' or 'replacement'"
+        }), 400
+
+    ret.resolution = resolution
+    ret.resolution_chosen_at = datetime.utcnow()
+    db.session.commit()
+
+    # ---- send confirmation email ----
+    order = db.session.get(Order, ret.order_id)
+    if order:
+        send_return_resolution_email(ret, order)
+
+    return jsonify({
+        "message": f"Chose {resolution}",
+        "return": {
+            "return_id": ret.return_id,
+            "resolution": ret.resolution
+        }
+    }), 200
+
 # ============================================================
 # START
 # ============================================================

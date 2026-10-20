@@ -397,4 +397,83 @@
 .status-returned {
   background: #f1f1f5;
   color: #555;
+}/* =================================
+   RETURN RESOLUTION PICKER
+================================= */
+.return-resolution-picker {
+  margin-top: 1rem;
+  background: #f4f2ff;
+  border-radius: 12px;
+  padding: 1rem 1.2rem;
+  border-left: 4px solid #5b4bdb;
+}
+
+.resolution-title {
+  margin: 0 0 0.8rem;
+  font-weight: 700;
+  color: #4a3bc0;
+  font-size: 0.92rem;
+}
+
+.resolution-buttons {
+  display: flex;
+  gap: 0.7rem;
+  flex-wrap: wrap;
+}
+
+.resolution-btn {
+  flex: 1;
+  min-width: 140px;
+  padding: 0.75rem 1rem;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 0.88rem;
+  cursor: pointer;
+  font-family: inherit;
+  border: 2px solid transparent;
+  transition: transform 0.15s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.resolution-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+}
+
+.resolution-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.resolution-btn.refund {
+  background: #fff;
+  color: #c20017;
+  border-color: #ffc9d1;
+}
+
+.resolution-btn.refund:hover:not(:disabled) {
+  background: #eb001b;
+  color: #fff;
+  border-color: #eb001b;
+}
+
+.resolution-btn.replacement {
+  background: #fff;
+  color: #4a3bc0;
+  border-color: #d6d3f0;
+}
+
+.resolution-btn.replacement:hover:not(:disabled) {
+  background: #5b4bdb;
+  color: #fff;
+  border-color: #5b4bdb;
+}
+
+/* Return badges */
+.return-badge.return-rejected {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.return-info-banner.return-rejected {
+  background: #f8d7da;
+  color: #721c24;
 }

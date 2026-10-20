@@ -19,4 +19,10 @@ export const returnService = {
       method: 'PUT',
       body: JSON.stringify({ action, admin_note }),
     }),
+
+  chooseResolution: (returnId, resolution) =>
+    apiRequest(`/api/returns/${returnId}/resolution`, {
+      method: 'PUT',
+      body: JSON.stringify({ resolution }),
+  }),
 }

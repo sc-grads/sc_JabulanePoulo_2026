@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Search as SearchIcon } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { apiRequest } from "../services/api";
 import Navbar from "../components/Navbar";
@@ -10,9 +10,25 @@ import Toast from "../components/Toast";
 import "../styles/Home.css";
 import "../styles/AdminOrders.css";
 
-const STATUSES = [
-  "pending", "paid", "processing", "shipped", "delivered", "cancelled"
+// Full list for the filter dropdown
+const ALL_STATUSES = [
+  "pending",
+  "paid",
+  "processing",
+  "shipped",
+  "delivered",
+  "cancelled",
+  "returned",
 ];
+
+// Editable statuses for the per-order status dropdown
+const EDITABLE_STATUSES = [
+  "paid",
+  "shipped",
+  "delivered",
+  "cancelled",
+];
+
 const PER_PAGE = 5;
 
 const capitalize = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : "");
@@ -25,6 +41,7 @@ function AdminOrders() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [filter, setFilter] = useState("all");
+  const [search, setSearch] = useState("");
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   const [page, setPage] = useState(1);
@@ -33,7 +50,6 @@ function AdminOrders() {
 
   // Confirm modal state
   const [statusChange, setStatusChange] = useState(null);
-  // { order_id, oldStatus, newStatus }
   const [saving, setSaving] = useState(false);
 
   const [toast, setToast] = useState({ open: false, type: "success", message: "" });
@@ -52,12 +68,18 @@ function AdminOrders() {
       setTotalOrders(data.pagination?.total_orders || 0);
       setPage(targetPage);
       window.scrollTo({ top: 0, behavior: "smooth" });
-    } catch (err) { setError(err.message); }
-    finally { setLoading(false); }
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
-    if (!isAdmin) { navigate("/home"); return; }
+    if (!isAdmin) {
+      navigate("/home");
+      return;
+    }
     loadOrders(1);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAdmin, navigate]);
@@ -100,8 +122,22 @@ function AdminOrders() {
     }
   };
 
-  const filteredOrders =
-    filter === "all" ? orders : orders.filter((o) => o.status === filter);
+  // Filter by status AND search
+  const filteredOrders = orders.filter((o) => {
+    // Status filter
+    if (filter !== "all" && o.status !== filter) return false;
+
+    // Search filter
+    if (search.trim()) {
+      const term = search.trim().toLowerCase();
+      const matchesId = String(o.order_id).includes(term);
+      const matchesName = (o.customer_name || "").toLowerCase().includes(term);
+      const matchesEmail = (o.customer_email || "").toLowerCase().includes(term);
+      if (!matchesId && !matchesName && !matchesEmail) return false;
+    }
+
+    return true;
+  });
 
   return (
     <div className="admin-page">
@@ -121,22 +157,52 @@ function AdminOrders() {
 
         {error && <p className="form-error">{error}</p>}
 
-        <div className="orders-filter">
-          <label>Filter by status:</label>
-          <select value={filter} onChange={(e) => setFilter(e.target.value)}>
-            <option value="all">All ({orders.length})</option>
-            {STATUSES.map((s) => {
-              const count = orders.filter((o) => o.status === s).length;
-              return (
-                <option key={s} value={s}>{capitalize(s)} ({count})</option>
-              );
-            })}
-          </select>
+        {/* SEARCH + FILTER BAR */}
+        <div className="orders-toolbar">
+          <div className="orders-search">
+            <SearchIcon size={18} className="search-icon" />
+            <input
+              type="text"
+              placeholder="Search by order ID, customer name, or email…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+            {search && (
+              <button
+                type="button"
+                className="clear-search"
+                onClick={() => setSearch("")}
+                aria-label="Clear search"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+
+          <div className="orders-filter">
+            <label>Filter by status:</label>
+            <select value={filter} onChange={(e) => setFilter(e.target.value)}>
+              <option value="all">All ({orders.length})</option>
+              {ALL_STATUSES.map((s) => {
+                const count = orders.filter((o) => o.status === s).length;
+                return (
+                  <option key={s} value={s}>
+                    {capitalize(s)} ({count})
+                  </option>
+                );
+              })}
+            </select>
+          </div>
         </div>
 
         {loading && <p className="loading-text">Loading orders…</p>}
+
         {!loading && filteredOrders.length === 0 && (
-          <p className="no-results">No orders found.</p>
+          <p className="no-results">
+            {search
+              ? `No orders match "${search}"`
+              : "No orders found."}
+          </p>
         )}
 
         {!loading && filteredOrders.map((order) => (
@@ -148,7 +214,9 @@ function AdminOrders() {
                   {order.customer_name} — {order.customer_email}
                 </p>
                 <p className="order-date">
-                  {order.order_date ? new Date(order.order_date).toLocaleString() : "—"}
+                  {order.order_date
+                    ? new Date(order.order_date).toLocaleString()
+                    : "—"}
                 </p>
                 <p className="order-delivery">
                   {order.delivery_method === "delivery" ? " Delivery" : " Pickup"}
@@ -166,8 +234,15 @@ function AdminOrders() {
                   value={order.status}
                   onChange={(e) => requestStatusChange(order, e.target.value)}
                 >
-                  {STATUSES.map((s) => (
-                    <option key={s} value={s}>{capitalize(s)}</option>
+                  {!EDITABLE_STATUSES.includes(order.status) && (
+                    <option value={order.status} disabled>
+                      {capitalize(order.status)}
+                    </option>
+                  )}
+                  {EDITABLE_STATUSES.map((s) => (
+                    <option key={s} value={s}>
+                      {capitalize(s)}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -189,12 +264,11 @@ function AdminOrders() {
           </div>
         ))}
 
-        {!loading && totalPages > 1 && (
+        {!loading && totalPages > 1 && !search && (
           <Pagination currentPage={page} totalPages={totalPages} onPageChange={loadOrders} />
         )}
       </div>
 
-      {/* CONFIRM STATUS CHANGE MODAL */}
       <ConfirmModal
         open={!!statusChange}
         title={`Change status to "${capitalize(statusChange?.newStatus || "")}"?`}
@@ -226,7 +300,10 @@ function Pagination({ currentPage, totalPages, onPageChange }) {
   const MAX_VISIBLE = 9;
   let start = Math.max(1, currentPage - Math.floor(MAX_VISIBLE / 2));
   let end = start + MAX_VISIBLE - 1;
-  if (end > totalPages) { end = totalPages; start = Math.max(1, end - MAX_VISIBLE + 1); }
+  if (end > totalPages) {
+    end = totalPages;
+    start = Math.max(1, end - MAX_VISIBLE + 1);
+  }
   const pages = [];
   for (let i = start; i <= end; i++) pages.push(i);
   return (

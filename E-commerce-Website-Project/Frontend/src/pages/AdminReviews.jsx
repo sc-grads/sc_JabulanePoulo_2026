@@ -60,7 +60,7 @@ function AdminReviews() {
   const handleApprove = async (id) => {
     try {
       await reviewService.approveReview(id);
-      showToast("Review approved ✓");
+      showToast("Review approved ");
       loadReviews(tab, page);
     } catch (err) { showToast(err.message, "error"); }
   };
@@ -130,7 +130,7 @@ function AdminReviews() {
                     <p className="review-admin-author">by {r.book_author}</p>
                   </div>
                   <span className={`review-status ${r.is_approved ? "approved" : "pending"}`}>
-                    {r.is_approved ? "✓ Approved" : "Pending"}
+                    {r.is_approved ? " Approved" : "Pending"}
                   </span>
                 </div>
 

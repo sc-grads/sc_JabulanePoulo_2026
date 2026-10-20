@@ -185,12 +185,7 @@ function Home() {
           <h3>Books</h3>
           <p>Books Delivered. Imagination Unlimited.</p>
         </div>
-        <div className="footer-column">
-          <h3>Quick Links</h3>
-          <p>Home</p>
-          <p>About Us</p>
-          <p>Contact</p>
-        </div>
+        
         <div className="footer-column">
           <h3>Contact</h3>
           <p>Email: Jabulane@bookworm.com</p>

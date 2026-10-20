@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Menu, AlertTriangle } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { authService } from "../services/authService";
+import Navbar from "../components/Navbar";
 import NavDrawer from "../components/NavDrawer";
 import Toast from "../components/Toast";
 import "../styles/Home.css";
@@ -48,7 +49,7 @@ function Profile() {
   const [loading, setLoading] = useState(true);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
-  // Delete-account flow
+  // Delete flow
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [confirmText, setConfirmText] = useState("");
   const [deleting, setDeleting] = useState(false);
@@ -122,7 +123,7 @@ function Profile() {
       localStorage.setItem("user", JSON.stringify(res.user));
       if (typeof updateUser === "function") updateUser(res.user);
 
-      setAccountSuccess("Account updated successfully ✓");
+      setAccountSuccess("Account updated successfully ");
       setEditingAccount(false);
       setTimeout(() => setAccountSuccess(""), 2500);
     } catch (err) {
@@ -166,7 +167,6 @@ function Profile() {
   };
 
   const handleDeleteAccount = async () => {
-    // Require the user to type their exact email
     if (confirmText.trim().toLowerCase() !== profile.email.toLowerCase()) {
       showToast("Please type your email exactly to confirm", "error");
       return;
@@ -176,8 +176,6 @@ function Profile() {
 
     try {
       await authService.deleteMyAccount();
-
-      // Clear session and redirect
       logout();
       navigate("/signup");
     } catch (err) {
@@ -202,33 +200,16 @@ function Profile() {
   if (loading) {
     return (
       <div className="profile-page">
+        <Navbar onOpenDrawer={() => setDrawerOpen(true)} />
         <p className="loading-text">Loading profile…</p>
+        <NavDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
       </div>
     );
   }
 
   return (
     <div className="profile-page">
-      <nav className="navbar">
-        <h2 className="logo" onClick={() => navigate("/home")}>
-          Book Worm
-        </h2>
-        <div className="nav-actions">
-          <button
-            className="back-btn"
-            onClick={() => navigate(isAdmin ? "/admin/dashboard" : "/home")}
-          >
-             Back
-          </button>
-          <button
-            className="hamburger-btn"
-            onClick={() => setDrawerOpen(true)}
-            aria-label="Open menu"
-          >
-            <Menu size={22} />
-          </button>
-        </div>
-      </nav>
+      <Navbar onOpenDrawer={() => setDrawerOpen(true)} />
 
       <div className="profile-content">
         <div className="profile-header">
@@ -319,10 +300,7 @@ function Profile() {
             </form>
           ) : (
             <>
-              <div className="profile-row">
-                <span className="label">User ID</span>
-                <span className="value">{profile.user_id}</span>
-              </div>
+              
               <div className="profile-row">
                 <span className="label">First Name</span>
                 <span className="value">{profile.name}</span>
@@ -485,7 +463,7 @@ function Profile() {
           </div>
         )}
 
-        {/* DANGER ZONE — only for customers */}
+        {/* DANGER ZONE */}
         {isCustomer && (
           <div className="profile-card danger-zone">
             <div className="danger-header">
@@ -493,8 +471,7 @@ function Profile() {
               <h2>Danger Zone</h2>
             </div>
             <p className="danger-text">
-              Deleting your account will permanently remove your profile,
-              cart, wishlist, and reviews
+              Deleting your account will permanently remove your profile.
             </p>
             <button className="delete-account-btn" onClick={openDeleteModal}>
               Delete My Account
@@ -502,13 +479,15 @@ function Profile() {
           </div>
         )}
 
-        {/* QUICK ACTIONS */}
         
       </div>
 
       {/* DELETE ACCOUNT MODAL */}
       {showDeleteModal && (
-        <div className="danger-overlay" onClick={() => !deleting && setShowDeleteModal(false)}>
+        <div
+          className="danger-overlay"
+          onClick={() => !deleting && setShowDeleteModal(false)}
+        >
           <div className="danger-modal" onClick={(e) => e.stopPropagation()}>
             <div className="danger-modal-icon">
               <AlertTriangle size={32} />
@@ -516,8 +495,7 @@ function Profile() {
             <h2>Delete your account?</h2>
             <p>
               This action <strong>cannot be undone</strong>. Type your email
-              <strong> {profile.email} </strong>
-              below to confirm.
+              <strong> {profile.email} </strong> below to confirm.
             </p>
 
             <input
@@ -541,7 +519,8 @@ function Profile() {
                 onClick={handleDeleteAccount}
                 disabled={
                   deleting ||
-                  confirmText.trim().toLowerCase() !== profile.email.toLowerCase()
+                  confirmText.trim().toLowerCase() !==
+                    profile.email.toLowerCase()
                 }
               >
                 {deleting ? "Deleting…" : "Permanently Delete"}

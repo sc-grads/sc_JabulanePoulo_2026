@@ -93,6 +93,15 @@ function Navbar({ onOpenDrawer }) {
         >
           Books
         </button>
+        {/* ABOUT — only when logged out */}
+        {!isAuthenticated && (
+          <button
+            className={isActive("/about") ? "nav-link active" : "nav-link"}
+            onClick={() => navigate("/about")}
+        >
+          About
+        </button>
+  )}
 
         {isCustomer && (
           <>
